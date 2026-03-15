@@ -24,8 +24,8 @@ Acceptance criteria:
 
 ## Phase 1: App Shell and Design Foundation
 
-- [ ] `[P0]` Replace the current starter-style landing/dashboard feel with a neutral admin shell.
-- [ ] `[P0]` Create a single config-driven navigation source for sidebar and header usage.
+- [x] `[P0]` Replace the current starter-style landing/dashboard feel with a neutral admin shell.
+- [x] `[P0]` Create a single config-driven navigation source for sidebar and header usage.
 - [ ] `[P0]` Standardize breadcrumbs and page header structure.
 - [ ] `[P0]` Define reusable page container spacing rules.
 - [ ] `[P1]` Add shared empty states for list and detail pages.

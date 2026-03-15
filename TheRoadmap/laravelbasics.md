@@ -179,3 +179,61 @@ A Laravel boilerplate is not only code. It is also conventions, workflow, and re
 - before building modules, define the app shape
 - keep the starter domain-neutral
 - write down why something exists so future work stays consistent
+
+## Entry 002: Phase 1 Shell Foundation Batch 1
+
+### What we did
+
+We completed the first real Phase 1 shell batch:
+
+- replaced the placeholder dashboard with a real starter workspace page
+- centralized sidebar and resource navigation into one shared navigation file
+- removed the old starter-kit repository link pattern from the shell
+- updated branding so the shell reads from the Laravel app name instead of hardcoding "Laravel Starter Kit"
+
+### Laravel and frontend concepts involved
+
+- Inertia page composition
+- shared layout patterns
+- route helper usage through Wayfinder
+- centralized frontend configuration for navigation
+
+### Important files
+
+- `resources/js/navigation/app.ts`
+- `resources/js/components/AppSidebar.vue`
+- `resources/js/components/NavMain.vue`
+- `resources/js/components/NavFooter.vue`
+- `resources/js/components/AppLogo.vue`
+- `resources/js/components/AppSidebarHeader.vue`
+- `resources/js/pages/Dashboard.vue`
+- `resources/js/types/navigation.ts`
+
+### Why this approach fits Laravel
+
+Laravel with Inertia works best when page structure is predictable and routing remains the backend source of truth.
+
+By centralizing navigation:
+
+- frontend links stay consistent
+- future permission gating becomes easier
+- the shell stops scattering navigation definitions across multiple components
+
+By replacing the placeholder dashboard:
+
+- the starter now behaves like a real application shell
+- future phases can build on top of a stable layout instead of demo placeholders
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `npm run types:check`
+- `npm run build`
+- `php artisan test --compact tests/Feature/Auth/AuthenticationTest.php`
+
+### What to remember
+
+- create one navigation source before adding many modules
+- use route helpers instead of hardcoded internal URLs
+- finish shell cleanup early so every later module inherits the right layout

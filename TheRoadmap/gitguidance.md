@@ -104,13 +104,18 @@ Before considering a phase complete, review:
 
 ## Current Phase Record
 
-Current branch created for this documentation phase:
+Branch history so far:
 
 - `phase-0-roadmap-docs`
+- `phase-1-app-shell`
+
+Current active phase branch:
+
+- `phase-1-app-shell`
 
 Current phase purpose:
 
-- establish the planning and workflow foundation before code-heavy implementation begins
+- replace the starter shell with a reusable admin shell foundation
 
 ## Important Security Note
 
