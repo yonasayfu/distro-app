@@ -52,14 +52,14 @@ Acceptance criteria:
 
 ## Phase 3: RBAC Foundation
 
-- [ ] `[P0]` Install and configure Spatie Permission.
-- [ ] `[P0]` Create role and permission seeders.
-- [ ] `[P0]` Define a default role matrix for the boilerplate.
+- [x] `[P0]` Install and configure Spatie Permission.
+- [x] `[P0]` Create role and permission seeders.
+- [x] `[P0]` Define a default role matrix for the boilerplate.
 - [ ] `[P0]` Add policy conventions for admin modules.
 - [ ] `[P0]` Enforce permissions in routes and controllers.
-- [ ] `[P0]` Gate sidebar items by permission.
+- [x] `[P0]` Gate sidebar items by permission.
 - [ ] `[P0]` Add tests for unauthorized access and visible navigation rules.
-- [ ] `[P1]` Add helper props for frontend permission checks.
+- [x] `[P1]` Add helper props for frontend permission checks.
 
 Acceptance criteria:
 

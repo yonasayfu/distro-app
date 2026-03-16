@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -15,6 +16,25 @@ import {
 } from '@/components/ui/sidebar';
 import { appNavigation, appResourceLinks } from '@/navigation/app';
 import { dashboard } from '@/routes';
+import type { Auth, NavGroup } from '@/types';
+
+const page = usePage();
+const auth = computed(() => page.props.auth as Auth);
+
+const mainNavigation = computed<NavGroup[]>(() =>
+    appNavigation
+        .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => {
+                if (!item.permission) {
+                    return true;
+                }
+
+                return auth.value.permissions.includes(item.permission);
+            }),
+        }))
+        .filter((group) => group.items.length > 0),
+);
 </script>
 
 <template>
@@ -36,7 +56,7 @@ import { dashboard } from '@/routes';
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="appNavigation" />
+            <NavMain :items="mainNavigation" />
         </SidebarContent>
 
         <SidebarFooter>

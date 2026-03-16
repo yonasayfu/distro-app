@@ -19,6 +19,7 @@ export const appNavigation: NavGroup[] = [
                 title: 'Dashboard',
                 href: dashboard(),
                 icon: LayoutGrid,
+                permission: 'dashboard.view',
             },
         ],
     },

@@ -795,3 +795,488 @@ Programmatic checks run for this batch:
 - page spacing should come from shared layout primitives
 - loading, empty, and error states are part of the design system, not optional polish
 - quick actions belong in the shell, not scattered across individual pages
+
+## Entry 004: Phase 3 RBAC Foundation Batch 1
+
+### What we did
+
+We started the RBAC foundation and made it real in the application:
+
+- installed Spatie Permission
+- published the package config and migration
+- enabled role support on the `User` model
+- added default permissions and roles through a seeder
+- protected the dashboard with a real permission
+- exposed roles, permissions, and helper booleans to Inertia
+- made the sidebar permission-aware
+- made the database seeder safe to rerun while iterating
+
+### Code-level change log
+
+#### 1. `composer.json` and `composer.lock`
+
+Before:
+
+- the project did not include a dedicated RBAC package
+
+After:
+
+- we added:
+
+```json
++ "spatie/laravel-permission": "^7.0"
+```
+
+Installed version:
+
+- `spatie/laravel-permission` `7.2.3`
+
+Why:
+
+- Laravel has gates and policies built in, but a reusable boilerplate needs first-class role and permission tables plus assignment helpers
+- Spatie Permission is the standard package for this job in Laravel apps
+
+#### 2. `config/permission.php` and `database/migrations/2026_03_16_082039_create_permission_tables.php`
+
+Before:
+
+- no permission package config
+- no roles/permissions tables in the database
+
+After:
+
+- we published the package assets
+- Laravel now has the package config file
+- the project now includes the migration for:
+  - roles
+  - permissions
+  - model_has_roles
+  - model_has_permissions
+  - role_has_permissions
+
+Why:
+
+- roles and permissions need database storage before any UI or policy work can happen
+
+#### 3. `bootstrap/app.php`
+
+Before:
+
+- Laravel 12 middleware setup existed, but there were no aliases for Spatie permission middleware
+
+Before example:
+
+```php
+- $middleware->web(append: [
+-     HandleAppearance::class,
+-     HandleInertiaRequests::class,
+-     AddLinkHeadersForPreloadedAssets::class,
+- ]);
+```
+
+After:
+
+- we registered middleware aliases for:
+  - `role`
+  - `permission`
+  - `role_or_permission`
+
+After example:
+
+```php
++ $middleware->alias([
++     'role' => RoleMiddleware::class,
++     'permission' => PermissionMiddleware::class,
++     'role_or_permission' => RoleOrPermissionMiddleware::class,
++ ]);
+```
+
+Why:
+
+- in Laravel 12, middleware aliases are registered in `bootstrap/app.php`
+- route-level RBAC checks need these aliases
+
+#### 4. `app/Models/User.php`
+
+Before:
+
+- `User` had auth and 2FA support, but no role/permission behavior
+
+Before example:
+
+```php
+- use HasFactory, Notifiable, TwoFactorAuthenticatable;
+```
+
+After:
+
+- we added the Spatie trait:
+
+```php
++ use HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
+```
+
+Why:
+
+- `HasRoles` adds methods like:
+  - `assignRole()`
+  - `hasRole()`
+  - `givePermissionTo()`
+  - `can()`
+
+This is the bridge between the user model and RBAC behavior.
+
+#### 5. `app/Providers/AppServiceProvider.php`
+
+Before:
+
+- there was no global Admin override for authorization
+
+After:
+
+- we added a `Gate::before(...)` rule:
+
+```php
++ Gate::before(fn (User $user, string $ability): ?bool => $user->hasRole('Admin') ? true : null);
+```
+
+Why:
+
+- the Admin role should act as a superuser in the boilerplate
+- this keeps future policy code simpler because Admin does not need to be repeated in every policy rule
+
+#### 6. `database/seeders/RolePermissionSeeder.php`
+
+Before:
+
+- the new seeder file was empty
+
+After:
+
+- we added default permission creation
+- we added default roles:
+  - `Admin`
+  - `Manager`
+  - `Member`
+  - `ReadOnly`
+- we assigned permissions to each role
+- we reset the package permission cache before and after
+
+Representative code:
+
+```php
++ $permissions = [
++     'dashboard.view',
++     'users.view',
++     'users.create',
++     'users.update',
++     'users.delete',
++     'roles.view',
++     'roles.create',
++     'roles.update',
++     'roles.delete',
++     'notifications.view',
++     'activity-logs.view',
++ ];
+```
+
+Why:
+
+- a reusable starter should ship with a default access matrix
+- this gives us a base to expand later when Users, Roles, Notifications, and Activity Logs modules are built
+
+#### 7. `database/seeders/DatabaseSeeder.php`
+
+Before:
+
+- it created `test@example.com` directly with `User::factory()->create(...)`
+- rerunning `php artisan db:seed` could fail on duplicate email
+- the seeded user did not get a role
+
+Before example:
+
+```php
+- User::factory()->create([
+-     'name' => 'Test User',
+-     'email' => 'test@example.com',
+- ]);
+```
+
+After:
+
+- we call `RolePermissionSeeder`
+- we changed user creation to `updateOrCreate(...)`
+- we assign the `Admin` role to the seeded user
+
+After example:
+
+```php
++ $this->call(RolePermissionSeeder::class);
++
++ $user = User::query()->updateOrCreate([
++     'email' => 'test@example.com',
++ ], [
++     'name' => 'Test User',
++ ]);
++
++ $user->assignRole('Admin');
+```
+
+Why:
+
+- seeders should be safe to rerun during development
+- the default login should land in an authorized account for local testing
+
+#### 8. `app/Http/Middleware/HandleInertiaRequests.php`
+
+Before:
+
+- Inertia only received:
+  - app name
+  - authenticated user
+  - sidebar open state
+
+Before example:
+
+```php
+- 'auth' => [
+-     'user' => $request->user(),
+- ],
+```
+
+After:
+
+- Inertia now also receives:
+  - role names
+  - permission names
+  - helper `can` booleans
+
+After example:
+
+```php
++ 'auth' => [
++     'user' => $user,
++     'roles' => $user?->getRoleNames()->values()->all() ?? [],
++     'permissions' => $user?->getAllPermissions()->pluck('name')->values()->all() ?? [],
++     'can' => [
++         'viewDashboard' => $user?->can('dashboard.view') ?? false,
++         'manageUsers' => $user?->can('users.view') ?? false,
++         'manageRoles' => $user?->can('roles.view') ?? false,
++     ],
++ ],
+```
+
+Why:
+
+- Vue components need permission-aware data without making extra API calls
+- this is the Inertia way of exposing authenticated app context
+
+#### 9. `routes/web.php`
+
+Before:
+
+- the dashboard route only required:
+  - `auth`
+  - `verified`
+
+Before example:
+
+```php
+- Route::middleware(['auth', 'verified'])->group(function () {
+-     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+- });
+```
+
+After:
+
+- the dashboard route also requires `permission:dashboard.view`
+
+After example:
+
+```php
++ Route::middleware(['auth', 'verified', 'permission:dashboard.view'])->group(function () {
++     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
++ });
+```
+
+Why:
+
+- RBAC should protect real routes early
+- the dashboard became the first proof-of-concept protected page
+
+#### 10. `resources/js/types/auth.ts`
+
+Before:
+
+- frontend auth typing only expected:
+  - `user`
+
+After:
+
+- auth typing now includes:
+  - `user`
+  - `roles`
+  - `permissions`
+  - `can`
+
+Why:
+
+- once the backend shares more auth context, the frontend types should reflect that shape exactly
+
+#### 11. `resources/js/types/navigation.ts`
+
+Before:
+
+- `NavItem` had no permission metadata
+
+After:
+
+- we added:
+
+```ts
++ permission?: string;
+```
+
+Why:
+
+- navigation items need optional permission requirements so the shell can filter them
+
+#### 12. `resources/js/navigation/app.ts`
+
+Before:
+
+- navigation items had no permission requirement
+
+After:
+
+- the dashboard item is now permission-aware:
+
+```ts
++ {
++   title: 'Dashboard',
++   href: dashboard(),
++   icon: LayoutGrid,
++   permission: 'dashboard.view',
++ }
+```
+
+Why:
+
+- the first navigation item should already reflect the RBAC model
+
+#### 13. `resources/js/components/AppSidebar.vue`
+
+Before:
+
+- navigation rendered directly from the config without permission filtering
+
+After:
+
+- we read auth data from Inertia
+- we filter navigation items by permission
+- we remove empty groups after filtering
+
+Representative code:
+
+```ts
++ const mainNavigation = computed<NavGroup[]>(() =>
++     appNavigation
++         .map((group) => ({
++             ...group,
++             items: group.items.filter((item) => {
++                 if (!item.permission) {
++                     return true;
++                 }
++
++                 return auth.value.permissions.includes(item.permission);
++             }),
++         }))
++         .filter((group) => group.items.length > 0),
++ );
+```
+
+Why:
+
+- route protection alone is not enough
+- the sidebar should also hide links the user cannot use
+
+#### 14. `tests/Feature/DashboardTest.php`
+
+Before:
+
+- tests only proved:
+  - guests are redirected
+  - any authenticated user can visit the dashboard
+
+After:
+
+- we changed the test to match RBAC reality
+- we added:
+  - forbidden for authenticated users without permission
+  - success for authenticated users with permission
+
+Representative code:
+
+```php
++ test('authenticated users without dashboard permission are forbidden', function () {
++     Permission::findOrCreate('dashboard.view', 'web');
++     $user = User::factory()->create();
++     $this->actingAs($user);
++     $this->get(route('dashboard'))->assertForbidden();
++ });
+```
+
+Why:
+
+- once a route is permission-protected, tests must verify both allow and deny behavior
+
+### Laravel concepts involved
+
+- package installation and publishing
+- middleware aliasing in Laravel 12
+- role and permission assignment
+- seeders
+- Inertia shared props
+- route middleware authorization
+- feature tests with Pest
+
+### Important files
+
+- `bootstrap/app.php`
+- `app/Models/User.php`
+- `app/Providers/AppServiceProvider.php`
+- `app/Http/Middleware/HandleInertiaRequests.php`
+- `routes/web.php`
+- `database/seeders/RolePermissionSeeder.php`
+- `database/seeders/DatabaseSeeder.php`
+- `resources/js/components/AppSidebar.vue`
+- `resources/js/navigation/app.ts`
+- `tests/Feature/DashboardTest.php`
+
+### Why this approach fits Laravel
+
+This is the Laravel way because:
+
+- package config and migrations were published instead of being hidden custom code
+- middleware aliases were registered in `bootstrap/app.php`, which is the Laravel 12 pattern
+- authorization is enforced at the route level first
+- frontend permission awareness is provided through shared Inertia props
+- seeded defaults make local development reproducible
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan migrate --no-interaction`
+- `php artisan db:seed --no-interaction`
+- `php artisan test --compact tests/Feature/DashboardTest.php`
+- `npm run types:check`
+- `npm run build`
+- `vendor/bin/pint --dirty --format agent`
+
+### What to remember
+
+- install the RBAC package before building admin modules
+- protect at least one real route early so the RBAC layer is proven
+- make seeders idempotent during development
+- route protection and sidebar visibility should move together

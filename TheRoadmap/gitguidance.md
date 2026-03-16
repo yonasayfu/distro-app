@@ -108,14 +108,15 @@ Branch history so far:
 
 - `phase-0-roadmap-docs`
 - `phase-1-app-shell`
+- `phase-3-rbac-foundation`
 
 Current active phase branch:
 
-- `phase-1-app-shell`
+- `phase-3-rbac-foundation`
 
 Current phase purpose:
 
-- replace the starter shell with a reusable admin shell foundation
+- add the first RBAC foundation using roles, permissions, seeded defaults, and permission-aware navigation
 
 ## Important Security Note
 
