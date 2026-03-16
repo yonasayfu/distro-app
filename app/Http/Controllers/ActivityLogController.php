@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ActivityLog;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ActivityLogController extends Controller
+{
+    /**
+     * Display the activity log index.
+     */
+    public function index(Request $request): Response
+    {
+        $search = $request->string('search')->trim()->toString();
+        $event = $request->string('event')->trim()->toString();
+
+        $logs = ActivityLog::query()
+            ->with('actor')
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($logQuery) use ($search): void {
+                    $logQuery
+                        ->where('description', 'ilike', "%{$search}%")
+                        ->orWhere('event', 'ilike', "%{$search}%");
+                });
+            })
+            ->when($event !== '', fn ($query) => $query->where('event', $event))
+            ->latest('created_at')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn (ActivityLog $log): array => [
+                'id' => $log->id,
+                'event' => $log->event,
+                'description' => $log->description,
+                'actor' => $log->actor?->name,
+                'ipAddress' => $log->ip_address,
+                'createdAt' => $log->created_at?->toISOString(),
+                'properties' => $log->properties ?? [],
+            ]);
+
+        return Inertia::render('activity-logs/Index', [
+            'logs' => $logs,
+            'filters' => [
+                'search' => $search,
+                'event' => $event,
+            ],
+            'eventOptions' => ActivityLog::query()
+                ->select('event')
+                ->distinct()
+                ->orderBy('event')
+                ->pluck('event')
+                ->values()
+                ->all(),
+        ]);
+    }
+}

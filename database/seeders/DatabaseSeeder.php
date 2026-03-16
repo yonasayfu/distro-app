@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Notifications\SystemMessageNotification;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -58,6 +59,17 @@ class DatabaseSeeder extends Seeder
             ]);
 
             $user->syncRoles([$account['role']]);
+
+            if ($user->notifications()->doesntExist()) {
+                $user->notify(new SystemMessageNotification(
+                    title: 'Boilerplate access ready',
+                    message: "Your {$account['role']} account is ready for starter-kit review.",
+                    actionUrl: '/dashboard',
+                    actionLabel: 'Open dashboard',
+                ));
+            }
         }
+
+        $this->call(ActivityLogSeeder::class);
     }
 }

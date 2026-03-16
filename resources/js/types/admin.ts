@@ -63,3 +63,38 @@ export type FlashMessages = {
     success?: string | null;
     error?: string | null;
 };
+
+export type ManagedNotification = {
+    id: string;
+    title: string;
+    message: string;
+    actionUrl: string | null;
+    actionLabel: string | null;
+    level: string;
+    readAt: string | null;
+    createdAt: string | null;
+};
+
+export type NotificationStats = {
+    unreadCount: number;
+    totalCount: number;
+};
+
+export type NotificationFilters = {
+    read: string;
+};
+
+export type ManagedActivityLog = {
+    id: number;
+    event: string;
+    description: string;
+    actor: string | null;
+    ipAddress: string | null;
+    createdAt: string | null;
+    properties: Record<string, unknown>;
+};
+
+export type ActivityLogFilters = {
+    search: string;
+    event: string;
+};

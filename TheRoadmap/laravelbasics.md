@@ -2836,3 +2836,309 @@ Programmatic checks run for this batch:
 - version the API before clients appear
 - return RBAC context from `auth/me` so other clients can stay aligned with the web app
 - normalize API error bodies early so clients do not bind themselves to package-specific messages
+
+## Entry 009: Phase 7 Notifications and Activity Logs Baseline
+
+### What we did
+
+We replaced the notification and activity-log placeholders with real cross-cutting features:
+
+- database notifications now exist and are seeded
+- the header now shows a notification bell with unread count
+- the notifications page lists notifications and supports mark-one / mark-all read
+- activity logs are stored in a dedicated table
+- admin user and role actions now write activity log records
+- the activity-log page supports text and event filtering
+
+### Code-level change log
+
+#### 1. `database/migrations/2026_03_16_203229_create_activity_logs_table.php`
+
+Before:
+
+- `activity_logs` only had `id` and timestamps
+
+After:
+
+```php
++ $table->foreignId('actor_id')->nullable()->constrained('users')->nullOnDelete();
++ $table->string('event');
++ $table->string('description');
++ $table->nullableMorphs('subject');
++ $table->json('properties')->nullable();
++ $table->string('ip_address', 45)->nullable();
++ $table->timestamp('created_at')->useCurrent();
+```
+
+Why:
+
+- activity logs need actor, event, subject, and metadata to be useful
+- a generic `properties` JSON column keeps the baseline flexible without creating many special columns
+
+#### 2. `app/Models/ActivityLog.php` and `app/Support/ActivityLogger.php`
+
+Before:
+
+- `ActivityLog` was an empty model
+- there was no shared helper for writing logs
+
+After:
+
+- the model now defines fillable fields, casts, `actor()` and `subject()` relationships
+- `ActivityLogger::record(...)` centralizes event creation
+
+Representative diff:
+
+```php
++ public static function record(
++     ?User $actor,
++     string $event,
++     string $description,
++     ?Model $subject = null,
++     array $properties = [],
++     ?Request $request = null,
++ ): ActivityLog
+```
+
+Why:
+
+- once multiple controllers need the same logging pattern, use a shared helper instead of copy-pasting `ActivityLog::create(...)`
+
+#### 3. Database notifications baseline
+
+Files:
+
+- `database/migrations/2026_03_16_203825_create_notifications_table.php`
+- `app/Notifications/SystemMessageNotification.php`
+- `database/seeders/DatabaseSeeder.php`
+
+Before:
+
+- the app had notification permissions and a placeholder page, but no database notifications table and no reusable notification payload
+
+After:
+
+- Laravel’s notifications table was created
+- `SystemMessageNotification` now writes database notifications
+- the seeder creates starter notifications for seeded users
+
+Representative diff:
+
+```php
++ public function via(object $notifiable): array
++ {
++     return ['database'];
++ }
+```
+
+Why:
+
+- database notifications are the right baseline for an admin boilerplate because they support unread counts, lists, and future API feeds
+
+#### 4. `app/Http/Middleware/HandleInertiaRequests.php` and `resources/js/components/AppSidebarHeader.vue`
+
+Before:
+
+- the header had no notification signal
+- unread notification counts were not shared with Inertia
+
+After:
+
+```php
++ 'notificationCount' => $user?->unreadNotifications()->count() ?? 0,
+```
+
+And the header now renders a bell button plus unread badge when the user has `notifications.view`.
+
+Why:
+
+- a notification system is not useful if the shell does not surface unread state
+- sharing the count in Inertia keeps the header simple and avoids an extra request
+
+#### 5. `app/Http/Controllers/NotificationController.php`
+
+Before:
+
+- the controller was empty
+
+After:
+
+- `index()` loads paginated notifications with `read` filter support
+- `markRead()` marks one notification read
+- `markAllRead()` marks all unread notifications read
+- notification acknowledgement actions also write activity log entries
+
+Representative diff:
+
+```php
++ $request->user()
++     ->notifications()
++     ->when($readFilter === 'unread', fn ($query) => $query->whereNull('read_at'))
++     ->when($readFilter === 'read', fn ($query) => $query->whereNotNull('read_at'))
++     ->latest()
++     ->paginate(10)
+```
+
+Why:
+
+- notifications need the same server-driven filtering and pagination pattern as other resource modules
+- read actions belong on the server because unread state is persistent user data
+
+#### 6. `app/Http/Controllers/ActivityLogController.php`
+
+Before:
+
+- the controller was empty
+
+After:
+
+- `index()` loads paginated activity logs
+- supports text search and event filtering
+- returns event options for the page filter UI
+
+Why:
+
+- logs quickly become noisy; filtering is required from the start
+- server-side filtering keeps the pattern aligned with the rest of the admin UI
+
+#### 7. Logging admin actions in existing controllers
+
+Files:
+
+- `app/Http/Controllers/Admin/UserManagementController.php`
+- `app/Http/Controllers/Admin/RoleManagementController.php`
+
+Before:
+
+- user and role CRUD worked, but nothing recorded those changes in an audit trail
+
+After:
+
+- user create/update/role update/delete actions now log activity
+- role create/update/permission update/delete actions now log activity
+- user creation and role changes now also create database notifications for affected users
+
+Representative diff:
+
+```php
++ ActivityLogger::record(
++     actor: $request->user(),
++     event: 'users.roles-updated',
++     description: "Updated roles for {$user->email}.",
++     subject: $user,
++     properties: [
++         'roles' => $roles,
++     ],
++     request: $request,
++ );
+```
+
+Why:
+
+- an audit page is only useful if the existing admin actions actually feed it
+- logging at the controller boundary is a clear first step before extracting deeper domain events later
+
+#### 8. `resources/js/pages/notifications/Index.vue`
+
+Before:
+
+- the page only showed an empty placeholder
+
+After:
+
+- real notification stats cards
+- filter buttons for all/read/unread
+- paginated notification list
+- per-row mark-read action
+- “mark all read” action
+
+Why:
+
+- notifications are user-specific records, so the page should behave like a filtered resource list, not a static placeholder
+
+#### 9. `resources/js/pages/activity-logs/Index.vue`
+
+Before:
+
+- the page only showed an empty placeholder
+
+After:
+
+- real activity log table
+- shared resource toolbar for search
+- event dropdown filter
+- property payload preview
+- pagination
+
+Why:
+
+- this page now acts as the first real audit screen in the boilerplate
+
+#### 10. Tests
+
+Files:
+
+- `tests/Feature/Feature/Notifications/NotificationCenterTest.php`
+- `tests/Feature/Feature/ActivityLogs/ActivityLogIndexTest.php`
+
+After:
+
+- notification listing and unread count are tested
+- mark-one and mark-all read flows are tested
+- notification permission enforcement is tested
+- activity log listing and event filtering are tested
+- manager/member activity-log access differences are tested
+
+Why:
+
+- both modules are cross-cutting and permission-sensitive
+- tests prove the shell signal, page access, and persistence behavior work together
+
+### Laravel concepts involved
+
+- database notifications
+- Inertia shared props for shell-level unread counts
+- custom Eloquent audit model
+- shared logging helper
+- paginated filtered resource pages
+- controller-level event recording
+- Pest feature tests for cross-cutting modules
+
+### Important files
+
+- `database/migrations/2026_03_16_203229_create_activity_logs_table.php`
+- `database/migrations/2026_03_16_203825_create_notifications_table.php`
+- `app/Models/ActivityLog.php`
+- `app/Support/ActivityLogger.php`
+- `app/Notifications/SystemMessageNotification.php`
+- `app/Http/Controllers/NotificationController.php`
+- `app/Http/Controllers/ActivityLogController.php`
+- `app/Http/Middleware/HandleInertiaRequests.php`
+- `resources/js/components/AppSidebarHeader.vue`
+- `resources/js/pages/notifications/Index.vue`
+- `resources/js/pages/activity-logs/Index.vue`
+- `tests/Feature/Feature/Notifications/NotificationCenterTest.php`
+- `tests/Feature/Feature/ActivityLogs/ActivityLogIndexTest.php`
+
+### Why this approach fits Laravel
+
+Laravel already ships with a strong notification system, so using database notifications is the lowest-friction, most maintainable choice. For activity logs, a small custom model is better here than bringing in another package too early because the baseline events are still evolving.
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan make:notifications-table --no-interaction`
+- `php artisan migrate --no-interaction`
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `php artisan test --compact tests/Feature/Feature/Notifications/NotificationCenterTest.php tests/Feature/Feature/ActivityLogs/ActivityLogIndexTest.php tests/Feature/Admin/RoleCrudTest.php tests/Feature/Admin/UserCrudTest.php tests/Feature/RoleAccessTest.php`
+- `npm run types:check`
+- `npm run build`
+- `vendor/bin/pint --dirty --format agent`
+
+### What to remember
+
+- notifications need both storage and shell visibility to feel real
+- an audit log without consistent event naming becomes noise quickly
+- logging from controllers is a practical first step, then deeper domain events can come later
+- once a cross-cutting module exists in the shell, it should stop being a placeholder as soon as possible

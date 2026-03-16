@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreRoleRequest;
 use App\Http\Requests\Admin\UpdateRoleDetailsRequest;
 use App\Http\Requests\Admin\UpdateRoleRequest;
+use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -69,6 +70,17 @@ class RoleManagementController extends Controller
 
         $role->syncPermissions($request->validated('permissions', []));
 
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'roles.created',
+            description: "Created role {$role->name}.",
+            subject: $role,
+            properties: [
+                'permissions' => $request->validated('permissions', []),
+            ],
+            request: $request,
+        );
+
         return to_route('roles.edit', $role)->with('success', 'Role created successfully.');
     }
 
@@ -104,6 +116,17 @@ class RoleManagementController extends Controller
             'description' => $request->validated('description'),
         ])->save();
 
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'roles.updated',
+            description: "Updated role {$role->name} details.",
+            subject: $role,
+            properties: [
+                'description' => $role->description,
+            ],
+            request: $request,
+        );
+
         return to_route('roles.edit', $role)->with('success', 'Role details updated successfully.');
     }
 
@@ -120,17 +143,36 @@ class RoleManagementController extends Controller
 
         $role->syncPermissions($request->validated('permissions', []));
 
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'roles.permissions-updated',
+            description: "Updated permissions for role {$role->name}.",
+            subject: $role,
+            properties: [
+                'permissions' => $request->validated('permissions', []),
+            ],
+            request: $request,
+        );
+
         return to_route('roles.edit', $role)->with('success', 'Role permissions updated successfully.');
     }
 
     /**
      * Delete the selected role.
      */
-    public function destroy(Role $role): RedirectResponse
+    public function destroy(Request $request, Role $role): RedirectResponse
     {
         if ($this->isSystemRole($role)) {
             return to_route('roles.index')->with('error', 'System roles cannot be deleted.');
         }
+
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'roles.deleted',
+            description: "Deleted role {$role->name}.",
+            subject: $role,
+            request: $request,
+        );
 
         $role->delete();
 

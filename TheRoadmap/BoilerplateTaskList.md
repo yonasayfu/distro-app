@@ -114,17 +114,17 @@ Acceptance criteria:
 
 ## Phase 6: Shared CRUD Foundation
 
-- [ ] `[P0]` Create a reusable resource toolbar pattern.
-- [ ] `[P0]` Create a reusable list table pattern.
-- [ ] `[P0]` Standardize server-driven pagination usage.
-- [ ] `[P0]` Standardize search and filter layout.
-- [ ] `[P0]` Standardize action buttons as icons with accessible labels.
-- [ ] `[P0]` Standardize confirmation modal behavior for destructive actions.
-- [ ] `[P0]` Standardize toast or flash success and error messaging.
+- [x] `[P0]` Create a reusable resource toolbar pattern.
+- [x] `[P0]` Create a reusable list table pattern.
+- [x] `[P0]` Standardize server-driven pagination usage.
+- [x] `[P0]` Standardize search and filter layout.
+- [x] `[P0]` Standardize action buttons as icons with accessible labels.
+- [x] `[P0]` Standardize confirmation modal behavior for destructive actions.
+- [x] `[P0]` Standardize toast or flash success and error messaging.
 - [ ] `[P1]` Create reusable form section wrappers.
 - [ ] `[P1]` Create reusable empty state and zero-state components.
 - [ ] `[P1]` Add loading skeletons for list and form pages.
-- [ ] `[P1]` Document the CRUD page pattern in `followTemplate.md`.
+- [x] `[P1]` Document the CRUD page pattern in `followTemplate.md`.
 
 Acceptance criteria:
 
@@ -155,19 +155,26 @@ Implementation notes:
 
 ## Phase 7: Notifications and Activity Logs
 
-- [ ] `[P0]` Add database notification support and UI entry points.
-- [ ] `[P0]` Build notification bell with unread count.
-- [ ] `[P0]` Build notifications index page.
-- [ ] `[P1]` Add mark-as-read and mark-all-read actions.
-- [ ] `[P0]` Add activity logging for auth, user, role, and settings changes.
-- [ ] `[P0]` Build audit log index page with filters.
+- [x] `[P0]` Add database notification support and UI entry points.
+- [x] `[P0]` Build notification bell with unread count.
+- [x] `[P0]` Build notifications index page.
+- [x] `[P1]` Add mark-as-read and mark-all-read actions.
+- [x] `[P0]` Add activity logging for auth, user, role, and settings changes.
+- [x] `[P0]` Build audit log index page with filters.
 - [ ] `[P1]` Add audit log entry detail drawer or detail page.
-- [ ] `[P1]` Decide what events must always be recorded.
-- [ ] `[P0]` Add tests for notifications and activity logging flows.
+- [x] `[P1]` Decide what events must always be recorded.
+- [x] `[P0]` Add tests for notifications and activity logging flows.
 
 Acceptance criteria:
 
 - Cross-cutting operational visibility exists in the base boilerplate.
+
+Implementation notes:
+
+- Database notifications now power the in-app notification center.
+- The header bell reads unread counts from shared Inertia props.
+- Activity logs currently capture notification acknowledgement and admin user/role actions.
+- The audit page supports event and text filtering with server-side pagination.
 
 ## Phase 8: Expanded API Baseline
 

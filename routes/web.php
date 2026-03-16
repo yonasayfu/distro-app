@@ -1,9 +1,10 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::inertia('/', 'Welcome', [
@@ -71,11 +72,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:roles.delete')
         ->name('roles.destroy');
 
-    Route::get('notifications', fn () => Inertia::render('notifications/Index'))
+    Route::get('notifications', [NotificationController::class, 'index'])
         ->middleware('permission:notifications.view')
         ->name('notifications.index');
 
-    Route::get('activity-logs', fn () => Inertia::render('activity-logs/Index'))
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])
+        ->middleware('permission:notifications.view')
+        ->name('notifications.read');
+
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
+        ->middleware('permission:notifications.view')
+        ->name('notifications.read-all');
+
+    Route::get('activity-logs', [ActivityLogController::class, 'index'])
         ->middleware('permission:activity-logs.view')
         ->name('activity-logs.index');
 });

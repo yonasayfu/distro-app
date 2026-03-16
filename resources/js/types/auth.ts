@@ -17,7 +17,10 @@ export type Auth = {
         viewDashboard: boolean;
         manageUsers: boolean;
         manageRoles: boolean;
+        viewNotifications: boolean;
+        viewActivityLogs: boolean;
     };
+    notificationCount: number;
 };
 
 export type SharedFlash = {

@@ -7,6 +7,8 @@ use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Http\Requests\Admin\UpdateUserRolesRequest;
 use App\Models\User;
+use App\Notifications\SystemMessageNotification;
+use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -66,6 +68,23 @@ class UserManagementController extends Controller
         ]);
 
         $user->syncRoles($request->validated('roles', []));
+        $user->notify(new SystemMessageNotification(
+            title: 'Your account was created',
+            message: 'An administrator created your account and assigned your initial access.',
+            actionUrl: '/dashboard',
+            actionLabel: 'Open dashboard',
+        ));
+
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'users.created',
+            description: "Created user {$user->email}.",
+            subject: $user,
+            properties: [
+                'roles' => $request->validated('roles', []),
+            ],
+            request: $request,
+        );
 
         return to_route('users.edit', $user)->with('success', 'User created successfully.');
     }
@@ -105,6 +124,18 @@ class UserManagementController extends Controller
 
         $user->save();
 
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'users.updated',
+            description: "Updated user {$user->email}.",
+            subject: $user,
+            properties: [
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            request: $request,
+        );
+
         return to_route('users.edit', $user)->with('success', 'User details updated successfully.');
     }
 
@@ -122,6 +153,23 @@ class UserManagementController extends Controller
         }
 
         $user->syncRoles($roles);
+        $user->notify(new SystemMessageNotification(
+            title: 'Your access changed',
+            message: 'An administrator updated your assigned roles. Refresh your session if your navigation changed.',
+            actionUrl: '/dashboard',
+            actionLabel: 'Review workspace',
+        ));
+
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'users.roles-updated',
+            description: "Updated roles for {$user->email}.",
+            subject: $user,
+            properties: [
+                'roles' => $roles,
+            ],
+            request: $request,
+        );
 
         return to_route('users.edit', $user)->with('success', 'User roles updated successfully.');
     }
@@ -134,6 +182,14 @@ class UserManagementController extends Controller
         if ($request->user()?->is($user)) {
             return to_route('users.index')->with('error', 'You cannot delete the currently signed-in user.');
         }
+
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'users.deleted',
+            description: "Deleted user {$user->email}.",
+            subject: $user,
+            request: $request,
+        );
 
         $user->delete();
 

@@ -16,10 +16,10 @@ Suggested branch pattern:
 - `phase-1-app-shell`
 - `phase-2-auth-polish`
 - `phase-3-rbac-foundation`
-- `phase-4-admin-core`
-- `phase-5-shared-crud`
-- `phase-6-notifications-activity`
-- `phase-7-api-baseline`
+- `phase-4-rbac-management`
+- `phase-5-admin-crud`
+- `phase-5-5-api-foundation`
+- `phase-7-notifications-activity`
 - `phase-8-dx-operations`
 
 ### 2. Commit at Logical Milestones
@@ -111,14 +111,15 @@ Branch history so far:
 - `phase-3-rbac-foundation`
 - `phase-5-admin-crud`
 - `phase-5-5-api-foundation`
+- `phase-7-notifications-activity`
 
 Current active phase branch:
 
-- `phase-5-5-api-foundation`
+- `phase-7-notifications-activity`
 
 Current phase purpose:
 
-- add the first Sanctum-based `/api/v1` contract so RBAC works for mobile and other clients as well as the web UI
+- turn notifications and activity logs into real database-backed cross-cutting modules and expose their status in the app shell
 
 ## Important Security Note
 

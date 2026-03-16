@@ -152,6 +152,19 @@ Rules:
 - Email is a channel, not the only notification experience.
 - Notifications should be generic and reusable, not asset-specific.
 
+Current baseline now implemented:
+
+- Header bell with unread count
+- Full notifications page
+- Mark one as read
+- Mark all as read
+- Notification payload fields:
+  - `title`
+  - `message`
+  - `action_url`
+  - `action_label`
+  - `level`
+
 ## 10. Activity Logging Pattern
 
 The activity log is not just a database feature. It must also have a readable admin UI.
@@ -169,6 +182,24 @@ Rules:
 - Define the activity matrix before implementation grows.
 - Keep event naming consistent.
 - Make logs useful for support and debugging, not just technically present.
+
+Current baseline now implemented:
+
+- `users.created`
+- `users.updated`
+- `users.roles-updated`
+- `users.deleted`
+- `roles.created`
+- `roles.updated`
+- `roles.permissions-updated`
+- `roles.deleted`
+- `notifications.read`
+- `notifications.read-all`
+
+Recommended event naming rule:
+
+- use `module.action`
+- keep event keys stable once clients or reports depend on them
 
 ## 11. Auth and Settings Pattern
 

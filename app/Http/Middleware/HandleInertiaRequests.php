@@ -48,7 +48,10 @@ class HandleInertiaRequests extends Middleware
                     'viewDashboard' => $user?->can('dashboard.view') ?? false,
                     'manageUsers' => $user?->can('users.view') ?? false,
                     'manageRoles' => $user?->can('roles.view') ?? false,
+                    'viewNotifications' => $user?->can('notifications.view') ?? false,
+                    'viewActivityLogs' => $user?->can('activity-logs.view') ?? false,
                 ],
+                'notificationCount' => $user?->unreadNotifications()->count() ?? 0,
             ],
             'flash' => [
                 'success' => fn (): ?string => $request->session()->get('success'),
