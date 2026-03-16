@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ArrowRight, Blocks, ShieldCheck, Sparkles } from 'lucide-vue-next';
+import { ArrowRight, Blocks, SearchX, ShieldCheck, Sparkles } from 'lucide-vue-next';
+import EmptyState from '@/components/EmptyState.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import LoadingState from '@/components/LoadingState.vue';
+import PageContainer from '@/components/PageContainer.vue';
+import PageErrorState from '@/components/PageErrorState.vue';
+import PageHeader from '@/components/PageHeader.vue';
 import { edit as editAppearance } from '@/routes/appearance';
 import { dashboard } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
@@ -56,24 +61,24 @@ const quickLinks = [
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="min-h-full bg-[radial-gradient(circle_at_top_left,#fef3c7,transparent_28%),radial-gradient(circle_at_top_right,#dbeafe,transparent_24%)] p-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_24%)]">
+        <PageContainer class="bg-[radial-gradient(circle_at_top_left,#fef3c7,transparent_28%),radial-gradient(circle_at_top_right,#dbeafe,transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_24%)]">
+            <PageHeader
+                title="Build the reusable admin shell before adding modules."
+                description="This starter now acts like a real project workspace instead of a demo page. The next phases will add RBAC, user administration, notifications, activity logs, and API foundations on top of this shell."
+            >
+                <template #eyebrow>
+                    <div class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium tracking-[0.2em] text-amber-900 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                        <Sparkles class="size-3.5" />
+                        Phase 1 workspace
+                    </div>
+                </template>
+            </PageHeader>
+
             <section
                 class="overflow-hidden rounded-[1.75rem] border border-border/70 bg-card/90 p-6 shadow-sm backdrop-blur xl:p-8"
             >
                 <div class="grid gap-10 xl:grid-cols-[1.7fr_1fr]">
                     <div class="space-y-6">
-                        <div class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium tracking-[0.2em] text-amber-900 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-                            <Sparkles class="size-3.5" />
-                            Phase 1 workspace
-                        </div>
-                        <div class="space-y-4">
-                            <h1 class="max-w-3xl text-3xl font-semibold tracking-tight text-foreground xl:text-4xl">
-                                Build the reusable admin shell before adding modules.
-                            </h1>
-                            <p class="max-w-2xl text-sm leading-6 text-muted-foreground xl:text-base">
-                                This starter now acts like a real project workspace instead of a demo page. The next phases will add RBAC, user administration, notifications, activity logs, and API foundations on top of this shell.
-                            </p>
-                        </div>
                         <div class="grid gap-3 md:grid-cols-3">
                             <article
                                 v-for="track in starterTracks"
@@ -166,6 +171,22 @@ const quickLinks = [
                     </div>
                 </div>
             </section>
-        </div>
+
+            <section class="grid gap-4 xl:grid-cols-3">
+                <LoadingState />
+                <EmptyState
+                    title="Empty states are now reusable"
+                    description="Future list and detail pages can use one consistent zero-state pattern instead of inventing a different placeholder every time."
+                    :icon="SearchX"
+                />
+                <PageErrorState
+                    title="Error presentation pattern"
+                    :errors="[
+                        'Show actionable, human-readable errors near the page content.',
+                        'Reuse this shell-level pattern for future failed states.',
+                    ]"
+                />
+            </section>
+        </PageContainer>
     </AppLayout>
 </template>

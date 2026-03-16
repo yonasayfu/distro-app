@@ -520,3 +520,278 @@ Programmatic checks run for this batch:
 - use route helpers instead of hardcoded internal URLs
 - finish shell cleanup early so every later module inherits the right layout
 - when documenting progress, record file-by-file before/after changes, not just high-level goals
+
+## Entry 003: Phase 1 Shell Foundation Batch 2
+
+### What we did
+
+We completed the second shell batch:
+
+- added a reusable page header component
+- added a reusable page container for spacing consistency
+- added reusable empty, loading, and page-error state components
+- added shell-level quick actions in the top header
+- updated the dashboard to use these shared shell primitives
+
+### Code-level change log
+
+#### 1. `resources/js/components/PageHeader.vue`
+
+Before:
+
+- pages created their own top section manually
+- title, description, and action placement were not standardized
+
+After:
+
+- we created a shared `PageHeader` component
+- it supports:
+  - title
+  - description
+  - optional eyebrow slot
+  - optional actions slot
+
+Representative code:
+
+```vue
++ <PageHeader
++   title="Build the reusable admin shell before adding modules."
++   description="This starter now acts like a real project workspace..."
++ >
++   <template #eyebrow>...</template>
++   <template #actions>...</template>
++ </PageHeader>
+```
+
+Why:
+
+- page headers are repeated across most admin pages
+- standardizing them early prevents each module from inventing a different structure
+
+#### 2. `resources/js/components/PageContainer.vue`
+
+Before:
+
+- page spacing was handled ad hoc inside page components with local `p-4` or similar classes
+- that makes spacing drift over time
+
+After:
+
+- we created a shared page container with consistent horizontal and vertical spacing
+
+Representative code:
+
+```vue
++ <div class="flex min-h-full flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
++   <slot />
++ </div>
+```
+
+Why:
+
+- shell spacing should be inherited, not reinvented on every page
+
+#### 3. `resources/js/components/EmptyState.vue`
+
+Before:
+
+- there was no reusable empty-state component for future CRUD pages
+
+After:
+
+- we created `EmptyState.vue`
+- it supports:
+  - icon
+  - title
+  - description
+  - optional actions slot
+
+Representative code:
+
+```vue
++ <EmptyState
++   title="Empty states are now reusable"
++   description="Future list and detail pages can use one consistent zero-state pattern..."
++   :icon="SearchX"
++ />
+```
+
+Why:
+
+- lists and details often need a zero-state
+- this should be one reusable pattern, not many inconsistent placeholders
+
+#### 4. `resources/js/components/LoadingState.vue`
+
+Before:
+
+- there was no reusable shell-level loading pattern
+
+After:
+
+- we created `LoadingState.vue`
+- it uses neutral animated blocks as a simple skeleton
+
+Representative code:
+
+```vue
++ <div class="h-4 w-28 animate-pulse rounded-full bg-muted" />
++ <div class="h-8 w-1/3 animate-pulse rounded-full bg-muted" />
+```
+
+Why:
+
+- loading feedback should be consistent and reusable
+- skeletons help future CRUD pages feel responsive while waiting for data
+
+#### 5. `resources/js/components/PageErrorState.vue`
+
+Before:
+
+- we had `AlertError.vue`, but no page-level wrapper pattern for error sections
+
+After:
+
+- we created `PageErrorState.vue`
+- it wraps `AlertError.vue` inside a shell-friendly section container
+
+Representative code:
+
+```vue
++ <section class="rounded-[1.5rem] border border-border/70 bg-card/80 px-6 py-6 shadow-sm">
++   <AlertError :errors="errors" :title="title" />
++ </section>
+```
+
+Why:
+
+- field errors and page errors are different
+- this gives future pages a standard way to show content-level failures
+
+#### 6. `resources/js/components/AppSidebarHeader.vue`
+
+Before:
+
+- the top shell header only had:
+  - sidebar trigger
+  - breadcrumbs
+- no reusable quick actions were present
+
+Before example:
+
+```vue
+- <div class="flex items-center gap-2">
+-   <SidebarTrigger class="-ml-1" />
+-   <Breadcrumbs ... />
+- </div>
+```
+
+After:
+
+- we added:
+  - appearance toggle button
+  - settings shortcut button
+- the appearance toggle uses the existing `useAppearance()` composable
+
+After example:
+
+```ts
++ const { resolvedAppearance, updateAppearance } = useAppearance();
++
++ const toggleAppearance = (): void => {
++   updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
++ };
+```
+
+```vue
++ <Button ... @click="toggleAppearance">
++   <SunMedium v-if="resolvedAppearance === 'dark'" />
++   <MoonStar v-else />
++ </Button>
++ <Button ... as-child>
++   <Link :href="editProfile()">...</Link>
++ </Button>
+```
+
+Why:
+
+- quick actions should be available everywhere in the shell
+- a global appearance toggle is useful in a reusable starter
+- settings should be easy to reach without relying only on the user dropdown
+
+#### 7. `resources/js/pages/Dashboard.vue`
+
+Before:
+
+- the dashboard already had the first shell rewrite from Batch 1
+- but it still owned its own page spacing and top-structure composition
+
+After:
+
+- it now uses:
+  - `PageContainer`
+  - `PageHeader`
+  - `LoadingState`
+  - `EmptyState`
+  - `PageErrorState`
+
+Representative code:
+
+```vue
++ <PageContainer ...>
++   <PageHeader ... />
++   ...
++   <section class="grid gap-4 xl:grid-cols-3">
++     <LoadingState />
++     <EmptyState ... />
++     <PageErrorState ... />
++   </section>
++ </PageContainer>
+```
+
+Why:
+
+- the dashboard is now the first real consumer of the shared shell primitives
+- this proves the components are not just theoretical helpers
+
+### Laravel and frontend concepts involved
+
+- component composition in Vue
+- Inertia shared shell patterns
+- reusable state presentation
+- composables for cross-page behavior
+
+### Important files
+
+- `resources/js/components/PageHeader.vue`
+- `resources/js/components/PageContainer.vue`
+- `resources/js/components/EmptyState.vue`
+- `resources/js/components/LoadingState.vue`
+- `resources/js/components/PageErrorState.vue`
+- `resources/js/components/AppSidebarHeader.vue`
+- `resources/js/pages/Dashboard.vue`
+
+### Why this approach fits Laravel
+
+Laravel with Inertia benefits from stable page primitives:
+
+- routes and controllers stay simple
+- pages remain thin
+- shared components carry the layout and interaction conventions
+
+This is similar to how Laravel encourages shared middleware, Form Requests, and reusable views on the backend: common structure should be centralized.
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `npm run build`
+- `npm run types:check`
+- `php artisan test --compact tests/Feature/DashboardTest.php`
+
+### What to remember
+
+- standardize the shell before building many modules
+- page spacing should come from shared layout primitives
+- loading, empty, and error states are part of the design system, not optional polish
+- quick actions belong in the shell, not scattered across individual pages

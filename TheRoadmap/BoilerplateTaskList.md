@@ -26,12 +26,12 @@ Acceptance criteria:
 
 - [x] `[P0]` Replace the current starter-style landing/dashboard feel with a neutral admin shell.
 - [x] `[P0]` Create a single config-driven navigation source for sidebar and header usage.
-- [ ] `[P0]` Standardize breadcrumbs and page header structure.
-- [ ] `[P0]` Define reusable page container spacing rules.
-- [ ] `[P1]` Add shared empty states for list and detail pages.
-- [ ] `[P1]` Add shared loading or skeleton states.
-- [ ] `[P1]` Add shared error presentation pattern.
-- [ ] `[P1]` Standardize header quick actions.
+- [x] `[P0]` Standardize breadcrumbs and page header structure.
+- [x] `[P0]` Define reusable page container spacing rules.
+- [x] `[P1]` Add shared empty states for list and detail pages.
+- [x] `[P1]` Add shared loading or skeleton states.
+- [x] `[P1]` Add shared error presentation pattern.
+- [x] `[P1]` Standardize header quick actions.
 
 Acceptance criteria:
 
