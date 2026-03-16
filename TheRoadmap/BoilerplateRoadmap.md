@@ -172,7 +172,34 @@ Acceptance:
 - Unauthorized users cannot see or use restricted features.
 - Future modules can follow the same authorization pattern.
 
-### Phase 4: Admin Core Modules
+### Phase 4: RBAC Management and Role Experience
+
+Goal:
+Turn RBAC from a backend-only setup into a fully manageable admin feature with clear role-specific experiences.
+
+Tasks:
+
+- Seed dedicated demo users for each default role so access differences can be tested immediately.
+- Add admin-only role management pages.
+- Add detailed permission assignment so Admin can control what each role can access.
+- Ensure sidebar items, pages, page actions, CRUD actions, print, export, and future module actions all read from permission checks.
+- Ensure newly created users inherit access dynamically based on assigned roles instead of hardcoded UI conditions.
+- Define a repeatable rule for future modules: every new page or action must register a permission and surface it in role management.
+
+Deliverables:
+
+- Dedicated role demo credentials
+- Admin-only role management flow
+- Detailed permission matrix UI
+- Permission-driven sidebar and action visibility
+
+Acceptance:
+
+- Each role can be tested with its own account.
+- Admin can control access without editing code for normal role changes.
+- Non-admin users only see and access what belongs to their assigned role or direct permissions.
+
+### Phase 5: Admin Core Modules
 
 Goal:
 Ship the first reusable modules that every admin-oriented starter usually needs.
@@ -195,7 +222,7 @@ Acceptance:
 
 - The boilerplate can manage its own users and access model.
 
-### Phase 5: Shared CRUD Foundation
+### Phase 6: Shared CRUD Foundation
 
 Goal:
 Build the reusable UI and interaction layer for future modules.
@@ -221,7 +248,7 @@ Acceptance:
 
 - A future module can be added by following one stable CRUD template.
 
-### Phase 6: Notifications and Activity Logs
+### Phase 7: Notifications and Activity Logs
 
 Goal:
 Add cross-cutting features that make the starter operationally useful.
@@ -245,7 +272,7 @@ Acceptance:
 - Users can receive in-app notifications.
 - Admins can inspect key actions across the system.
 
-### Phase 7: API Baseline
+### Phase 8: API Baseline
 
 Goal:
 Prepare the boilerplate for mobile or third-party integrations.
@@ -269,7 +296,7 @@ Acceptance:
 
 - A future project can extend the API without redesigning auth or response structure.
 
-### Phase 8: Developer Experience and Operations
+### Phase 9: Developer Experience and Operations
 
 Goal:
 Make the boilerplate easy to start, validate, and deploy.
@@ -293,7 +320,7 @@ Acceptance:
 - A fresh clone has a predictable setup path.
 - Quality checks are documented and automated.
 
-### Phase 9: Optional Extensions
+### Phase 10: Optional Extensions
 
 Goal:
 Keep future upgrades organized without polluting V1.
@@ -326,8 +353,9 @@ Build in this order:
 7. Phase 6
 8. Phase 7
 9. Phase 8
+10. Phase 9
 
-Only then consider Phase 9.
+Only then consider Phase 10.
 
 ## V1 Exit Criteria
 

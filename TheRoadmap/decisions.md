@@ -75,3 +75,36 @@ Implication:
 
 - each phase starts with a new branch
 - each meaningful task batch should be committed and pushed
+
+## D-006: RBAC Is Permission-Driven, Not Cosmetic
+
+Decision:
+
+- roles and permissions must control real access to routes, sidebar items, page actions, CRUD operations, print/export actions, and future module capabilities
+
+Reason:
+
+- role-based apps become unreliable when the sidebar, pages, and actions drift apart
+- the same RBAC system should drive both backend authorization and frontend visibility
+
+Implication:
+
+- every new module should define explicit permissions
+- every new page or action should be tied to permission checks
+- Admin manages role access through the UI rather than hardcoded conditions for normal changes
+
+## D-007: Seeded Role Demo Accounts Are Required
+
+Decision:
+
+- the boilerplate should ship with dedicated demo credentials for each default role
+
+Reason:
+
+- it makes role testing immediate
+- it prevents confusion when verifying whether RBAC really works
+
+Implication:
+
+- default seeders should create clearly labeled role-based test accounts
+- tests and manual QA can validate access differences quickly

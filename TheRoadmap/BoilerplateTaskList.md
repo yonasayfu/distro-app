@@ -65,7 +65,27 @@ Acceptance criteria:
 
 - Authorization is enforced at route, controller, and UI levels.
 
-## Phase 4: Admin Core Modules
+## Phase 4: RBAC Management and Role Experience
+
+- [ ] `[P0]` Seed dedicated demo accounts for each default role: `Admin`, `Manager`, `Member`, `ReadOnly`, and a guest-like restricted role if kept.
+- [ ] `[P0]` Create admin-only role management pages.
+- [ ] `[P0]` Create detailed permission assignment UI for each role.
+- [ ] `[P0]` Ensure role changes affect sidebar visibility dynamically.
+- [ ] `[P0]` Ensure role changes affect page access dynamically.
+- [ ] `[P0]` Ensure role changes affect CRUD actions dynamically.
+- [ ] `[P1]` Ensure print and export actions are permission-aware.
+- [ ] `[P1]` Add direct-permission support when a user needs exceptions beyond role defaults.
+- [ ] `[P0]` Establish the future-module rule: every new page, action, print, or export capability must map to a permission.
+- [ ] `[P0]` Add tests proving each role sees only its allowed routes and navigation.
+
+Acceptance criteria:
+
+- Each role has a testable seeded account.
+- Admin can manage role access from the UI.
+- Sidebar, pages, and actions change immediately based on assigned roles and permissions.
+- Access control is not hardcoded per page outside the shared RBAC system.
+
+## Phase 5: Admin Core Modules
 
 - [ ] `[P0]` Build Users index page.
 - [ ] `[P0]` Build Users create page.
@@ -83,7 +103,7 @@ Acceptance criteria:
 
 - The boilerplate can manage users and access control without external setup.
 
-## Phase 5: Shared CRUD Foundation
+## Phase 6: Shared CRUD Foundation
 
 - [ ] `[P0]` Create a reusable resource toolbar pattern.
 - [ ] `[P0]` Create a reusable list table pattern.
@@ -101,7 +121,7 @@ Acceptance criteria:
 
 - Future modules can follow one repeatable page structure.
 
-## Phase 6: Notifications and Activity Logs
+## Phase 7: Notifications and Activity Logs
 
 - [ ] `[P0]` Add database notification support and UI entry points.
 - [ ] `[P0]` Build notification bell with unread count.
@@ -117,7 +137,7 @@ Acceptance criteria:
 
 - Cross-cutting operational visibility exists in the base boilerplate.
 
-## Phase 7: API Baseline
+## Phase 8: API Baseline
 
 - [ ] `[P0]` Install and configure Sanctum.
 - [ ] `[P0]` Create `/api/v1` route structure.
@@ -133,7 +153,7 @@ Acceptance criteria:
 
 - The API can serve as the base for mobile or third-party consumers.
 
-## Phase 8: Developer Experience and Operations
+## Phase 9: Developer Experience and Operations
 
 - [ ] `[P0]` Write a real project README.
 - [ ] `[P0]` Write local setup instructions.
@@ -147,7 +167,7 @@ Acceptance criteria:
 
 - A new clone is easy to install and validate.
 
-## Phase 9: Optional Extensions
+## Phase 10: Optional Extensions
 
 - [ ] `[P2]` Impersonation
 - [ ] `[P2]` Export and print foundation
@@ -169,7 +189,7 @@ If implementation starts immediately, do this first:
 - [ ] `[P0]` Finalize scope decision and identity model.
 - [ ] `[P0]` Upgrade the app shell and navigation.
 - [ ] `[P0]` Add RBAC.
-- [ ] `[P0]` Build Users and Roles modules.
+- [ ] `[P0]` Build RBAC management and Users/Roles modules.
 - [ ] `[P0]` Lock in reusable CRUD patterns.
 
 This first slice gives the boilerplate its real shape. Everything after that becomes much easier to add cleanly.
