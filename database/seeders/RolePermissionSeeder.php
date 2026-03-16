@@ -38,6 +38,7 @@ class RolePermissionSeeder extends Seeder
         $manager = Role::findOrCreate('Manager', 'web');
         $member = Role::findOrCreate('Member', 'web');
         $readOnly = Role::findOrCreate('ReadOnly', 'web');
+        $external = Role::findOrCreate('External', 'web');
 
         $admin->syncPermissions($permissions);
         $manager->syncPermissions([
@@ -48,6 +49,9 @@ class RolePermissionSeeder extends Seeder
             'dashboard.view',
         ]);
         $readOnly->syncPermissions([
+            'dashboard.view',
+        ]);
+        $external->syncPermissions([
             'dashboard.view',
         ]);
 

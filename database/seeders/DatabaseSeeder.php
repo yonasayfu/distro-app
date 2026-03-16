@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,12 +16,48 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
 
-        $user = User::query()->updateOrCreate([
-            'email' => 'test@example.com',
-        ], [
-            'name' => 'Test User',
-        ]);
+        $accounts = [
+            [
+                'name' => 'Admin User',
+                'email' => 'admin@example.com',
+                'role' => 'Admin',
+            ],
+            [
+                'name' => 'Manager User',
+                'email' => 'manager@example.com',
+                'role' => 'Manager',
+            ],
+            [
+                'name' => 'Member User',
+                'email' => 'member@example.com',
+                'role' => 'Member',
+            ],
+            [
+                'name' => 'Read Only User',
+                'email' => 'readonly@example.com',
+                'role' => 'ReadOnly',
+            ],
+            [
+                'name' => 'External User',
+                'email' => 'external@example.com',
+                'role' => 'External',
+            ],
+            [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'role' => 'Admin',
+            ],
+        ];
 
-        $user->assignRole('Admin');
+        foreach ($accounts as $account) {
+            $user = User::query()->updateOrCreate([
+                'email' => $account['email'],
+            ], [
+                'name' => $account['name'],
+                'password' => Hash::make('password'),
+            ]);
+
+            $user->syncRoles([$account['role']]);
+        }
     }
 }

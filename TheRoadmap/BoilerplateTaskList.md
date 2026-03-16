@@ -67,7 +67,7 @@ Acceptance criteria:
 
 ## Phase 4: RBAC Management and Role Experience
 
-- [ ] `[P0]` Seed dedicated demo accounts for each default role: `Admin`, `Manager`, `Member`, `ReadOnly`, and a guest-like restricted role if kept.
+- [x] `[P0]` Seed dedicated demo accounts for each default role: `Admin`, `Manager`, `Member`, `ReadOnly`, and a guest-like restricted role if kept.
 - [ ] `[P0]` Create admin-only role management pages.
 - [ ] `[P0]` Create detailed permission assignment UI for each role.
 - [ ] `[P0]` Ensure role changes affect sidebar visibility dynamically.
@@ -84,6 +84,10 @@ Acceptance criteria:
 - Admin can manage role access from the UI.
 - Sidebar, pages, and actions change immediately based on assigned roles and permissions.
 - Access control is not hardcoded per page outside the shared RBAC system.
+
+Implementation notes:
+
+- Admin-only placeholder pages for `Users` and `Roles` now exist as the first visible proof of RBAC-driven navigation and route protection.
 
 ## Phase 5: Admin Core Modules
 

@@ -2,18 +2,23 @@ import {
     BookOpenText,
     LayoutGrid,
     Palette,
+    Shield,
     ShieldCheck,
     UserCog,
+    Users,
 } from 'lucide-vue-next';
 import { dashboard } from '@/routes';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
+import { index as rolesIndex } from '@/routes/roles';
+import { index as usersIndex } from '@/routes/users';
 import type { NavGroup } from '@/types';
 
 export const appNavigation: NavGroup[] = [
     {
         title: 'Workspace',
+        description: 'Shared for all signed-in users',
         items: [
             {
                 title: 'Dashboard',
@@ -25,6 +30,7 @@ export const appNavigation: NavGroup[] = [
     },
     {
         title: 'Account',
+        description: 'Common account management pages',
         items: [
             {
                 title: 'Profile',
@@ -40,6 +46,24 @@ export const appNavigation: NavGroup[] = [
                 title: 'Appearance',
                 href: editAppearance(),
                 icon: Palette,
+            },
+        ],
+    },
+    {
+        title: 'Administration',
+        description: 'Visible only when the signed-in user can manage access',
+        items: [
+            {
+                title: 'Users',
+                href: usersIndex(),
+                icon: Users,
+                permission: 'users.view',
+            },
+            {
+                title: 'Roles',
+                href: rolesIndex(),
+                icon: Shield,
+                permission: 'roles.view',
             },
         ],
     },

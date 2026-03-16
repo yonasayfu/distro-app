@@ -1280,3 +1280,380 @@ Programmatic checks run for this batch:
 - protect at least one real route early so the RBAC layer is proven
 - make seeders idempotent during development
 - route protection and sidebar visibility should move together
+
+## Entry 005: Phase 3 RBAC Foundation Batch 2
+
+### What we did
+
+We added the first visible role-specific experience:
+
+- seeded dedicated demo credentials for each role
+- added an `Administration` sidebar group that only appears when permissions allow it
+- added admin-only placeholder pages for `Users` and `Roles`
+- added route protection for those pages
+- added tests proving role-based route differences
+- added a sidebar access summary so the current role is visible in the UI
+
+### Role demo credentials
+
+The seeder now creates these reusable local accounts with password `password`:
+
+- `admin@example.com` -> `Admin`
+- `manager@example.com` -> `Manager`
+- `member@example.com` -> `Member`
+- `readonly@example.com` -> `ReadOnly`
+- `external@example.com` -> `External`
+- `test@example.com` -> `Admin`
+
+### Code-level change log
+
+#### 1. `database/seeders/DatabaseSeeder.php`
+
+Before:
+
+- only one local account was created
+- there was no easy way to log in as different roles and compare access
+
+Before example:
+
+```php
+- $user = User::query()->updateOrCreate([
+-     'email' => 'test@example.com',
+- ], [
+-     'name' => 'Test User',
+- ]);
+-
+- $user->assignRole('Admin');
+```
+
+After:
+
+- we now seed multiple dedicated accounts
+- each account is assigned a role
+- each seeded account gets password `password`
+- we use `syncRoles()` so reruns stay consistent
+
+After example:
+
+```php
++ $accounts = [
++     ['name' => 'Admin User', 'email' => 'admin@example.com', 'role' => 'Admin'],
++     ['name' => 'Manager User', 'email' => 'manager@example.com', 'role' => 'Manager'],
++     ['name' => 'Member User', 'email' => 'member@example.com', 'role' => 'Member'],
++     ['name' => 'Read Only User', 'email' => 'readonly@example.com', 'role' => 'ReadOnly'],
++     ['name' => 'External User', 'email' => 'external@example.com', 'role' => 'External'],
++ ];
+```
+
+Why:
+
+- role testing becomes immediate
+- you can now log in as each role and verify the sidebar and routes directly
+
+#### 2. `database/seeders/RolePermissionSeeder.php`
+
+Before:
+
+- the default roles ended at:
+  - `Admin`
+  - `Manager`
+  - `Member`
+  - `ReadOnly`
+
+After:
+
+- we added `External`
+
+After example:
+
+```php
++ $external = Role::findOrCreate('External', 'web');
++ $external->syncPermissions([
++     'dashboard.view',
++ ]);
+```
+
+Why:
+
+- you asked for a guest-like restricted role
+- to avoid confusion with Laravel's unauthenticated `guest`, we implemented a signed-in restricted role called `External`
+
+#### 3. `resources/js/navigation/app.ts`
+
+Before:
+
+- the sidebar only had:
+  - `Workspace`
+  - `Account`
+- there was no admin-only navigation group
+
+After:
+
+- we added `Administration`
+- that group includes:
+  - `Users`
+  - `Roles`
+- both items carry permission requirements
+
+After example:
+
+```ts
++ {
++   title: 'Administration',
++   description: 'Visible only when the signed-in user can manage access',
++   items: [
++     {
++       title: 'Users',
++       href: usersIndex(),
++       icon: Users,
++       permission: 'users.view',
++     },
++     {
++       title: 'Roles',
++       href: rolesIndex(),
++       icon: Shield,
++       permission: 'roles.view',
++     },
++   ],
++ }
+```
+
+Why:
+
+- this creates the first real example of:
+  - common sidebar areas for everyone
+  - role-specific or permission-specific sidebar areas for privileged users
+
+#### 4. `resources/js/types/navigation.ts`
+
+Before:
+
+- `NavGroup` only had:
+  - `title`
+  - `items`
+
+After:
+
+- we added:
+
+```ts
++ description?: string;
+```
+
+Why:
+
+- grouped sidebars are easier to understand when each section can explain why it exists
+
+#### 5. `resources/js/components/NavMain.vue`
+
+Before:
+
+- group labels rendered, but there was no descriptive text below them
+
+After:
+
+- each group can now display a short description
+
+After example:
+
+```vue
++ <p
++   v-if="group.description"
++   class="px-2 pb-2 text-xs leading-5 text-muted-foreground"
++ >
++   {{ group.description }}
++ </p>
+```
+
+Why:
+
+- this helps distinguish:
+  - common/shared groups
+  - admin-only groups
+
+#### 6. `resources/js/components/AppSidebar.vue`
+
+Before:
+
+- the sidebar filtered items by permission, but there was no visible role summary
+
+After:
+
+- we added `roleSummary`
+- we added a small access panel in the sidebar header
+
+After example:
+
+```ts
++ const roleSummary = computed(() => {
++     if (auth.value.roles.length === 0) {
++         return 'No role assigned';
++     }
++
++     return auth.value.roles.join(', ');
++ });
+```
+
+```vue
++ <div class="mt-4 rounded-2xl border border-sidebar-border/70 bg-background/80 px-3 py-3 text-xs leading-5 text-muted-foreground">
++   <div class="font-medium text-foreground">Current access</div>
++   <div class="mt-1">{{ roleSummary }}</div>
++ </div>
+```
+
+Why:
+
+- role-aware apps should make the current access context visible
+- this helps manual verification while developing the boilerplate
+
+#### 7. `routes/web.php`
+
+Before:
+
+- only the dashboard was permission-protected in the browser routes
+
+After:
+
+- we added two admin-only pages:
+  - `/admin/users`
+  - `/admin/roles`
+- each uses permission middleware
+
+After example:
+
+```php
++ Route::inertia('admin/users', 'admin/Users/Index')
++     ->middleware('permission:users.view')
++     ->name('users.index');
++
++ Route::inertia('admin/roles', 'admin/Roles/Index')
++     ->middleware('permission:roles.view')
++     ->name('roles.index');
+```
+
+Why:
+
+- role-specific sidebars are only meaningful when the routes behind them are also protected
+
+#### 8. `resources/js/pages/admin/Users/Index.vue`
+
+Before:
+
+- no admin users page existed
+
+After:
+
+- we added an admin-only placeholder page for future user management
+
+Why:
+
+- this is the first visible proof that the Admin role gets access to pages other roles do not
+- later this page will become the real Users CRUD module
+
+#### 9. `resources/js/pages/admin/Roles/Index.vue`
+
+Before:
+
+- no roles management page existed
+
+After:
+
+- we added an admin-only placeholder page for future detailed role and permission management
+
+Why:
+
+- this is the correct future home for the checkbox-based role permission editor you described
+
+#### 10. `resources/js/routes/users/index.ts` and `resources/js/routes/roles/index.ts`
+
+Before:
+
+- there were no frontend helpers for the new admin routes
+
+After:
+
+- we added simple route helpers for:
+  - `/admin/users`
+  - `/admin/roles`
+
+Why:
+
+- frontend navigation should not hardcode internal app URLs more than necessary
+
+#### 11. `tests/Feature/RoleAccessTest.php`
+
+Before:
+
+- the generated test file was empty
+
+After:
+
+- we added role-based access tests:
+  - Admin can access Users and Roles pages
+  - Manager cannot access Users or Roles pages
+  - ReadOnly can access Dashboard but not Users or Roles pages
+
+After example:
+
+```php
++ test('manager cannot access users or roles pages', function () {
++     $this->seed(RolePermissionSeeder::class);
++     $user = User::factory()->create();
++     $user->assignRole('Manager');
++     $this->actingAs($user);
++
++     $this->get(route('users.index'))->assertForbidden();
++     $this->get(route('roles.index'))->assertForbidden();
++ });
+```
+
+Why:
+
+- RBAC is only trustworthy when the differences between roles are tested explicitly
+
+### Laravel concepts involved
+
+- seeders for reusable local credentials
+- permission-protected Inertia routes
+- permission-aware navigation
+- feature tests for role access behavior
+
+### Important files
+
+- `database/seeders/DatabaseSeeder.php`
+- `database/seeders/RolePermissionSeeder.php`
+- `resources/js/navigation/app.ts`
+- `resources/js/components/AppSidebar.vue`
+- `resources/js/components/NavMain.vue`
+- `routes/web.php`
+- `resources/js/pages/admin/Users/Index.vue`
+- `resources/js/pages/admin/Roles/Index.vue`
+- `tests/Feature/RoleAccessTest.php`
+
+### Why this approach fits Laravel
+
+Laravel apps are easiest to reason about when authorization is layered consistently:
+
+- seeders provide predictable demo accounts
+- routes provide backend enforcement
+- Inertia pages provide the frontend experience
+- sidebar visibility reflects the same permission system as the routes
+
+This prevents the common problem you mentioned: all users seeing all sidebar items even when they cannot actually use them.
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan db:seed --no-interaction`
+- `php artisan test --compact tests/Feature/RoleAccessTest.php tests/Feature/DashboardTest.php`
+- `npm run types:check`
+- `npm run build`
+- `vendor/bin/pint --dirty --format agent`
+
+### What to remember
+
+- role-specific credentials are extremely useful during development
+- sidebar visibility and route protection should always agree
+- admin-only placeholder pages are a good step before building full CRUD modules
+- the future checkbox-style role editor belongs in the Roles management module

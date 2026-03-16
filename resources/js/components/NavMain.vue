@@ -24,6 +24,12 @@ const { isCurrentUrl } = useCurrentUrl();
         class="px-2 py-0 not-first:mt-4"
     >
         <SidebarGroupLabel>{{ group.title }}</SidebarGroupLabel>
+        <p
+            v-if="group.description"
+            class="px-2 pb-2 text-xs leading-5 text-muted-foreground"
+        >
+            {{ group.description }}
+        </p>
         <SidebarMenu>
             <SidebarMenuItem
                 v-for="item in group.items"

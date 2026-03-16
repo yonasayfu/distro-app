@@ -17,4 +17,5 @@ export type NavItem = {
 export type NavGroup = {
     title: string;
     items: NavItem[];
+    description?: string;
 };

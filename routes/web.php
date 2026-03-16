@@ -11,4 +11,14 @@ Route::middleware(['auth', 'verified', 'permission:dashboard.view'])->group(func
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 });
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::inertia('admin/users', 'admin/Users/Index')
+        ->middleware('permission:users.view')
+        ->name('users.index');
+
+    Route::inertia('admin/roles', 'admin/Roles/Index')
+        ->middleware('permission:roles.view')
+        ->name('roles.index');
+});
+
 require __DIR__.'/settings.php';
