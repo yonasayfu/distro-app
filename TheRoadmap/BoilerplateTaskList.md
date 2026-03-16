@@ -130,6 +130,29 @@ Acceptance criteria:
 
 - Future modules can follow one repeatable page structure.
 
+## Phase 5.5: Early API Foundation
+
+- [x] `[P0]` Install and configure Sanctum.
+- [x] `[P0]` Create `/api/v1` route structure.
+- [x] `[P0]` Add auth endpoints for login, logout, and current user.
+- [x] `[P1]` Add one protected admin example endpoint for user management listing.
+- [x] `[P0]` Standardize API unauthenticated and forbidden responses.
+- [ ] `[P0]` Standardize API validation error format more explicitly if custom shaping is needed later.
+- [ ] `[P1]` Add notification feed endpoint.
+- [ ] `[P1]` Add broader admin summary endpoints.
+- [x] `[P0]` Add Pest API smoke tests.
+
+Acceptance criteria:
+
+- Token-based API access works.
+- The current-user endpoint returns RBAC context for other clients.
+- At least one protected admin API route proves shared authorization behavior outside Inertia.
+
+Implementation notes:
+
+- This was intentionally implemented early so mobile or third-party clients do not need a second authorization model later.
+- The current scope is baseline only, not a full public API for every module.
+
 ## Phase 7: Notifications and Activity Logs
 
 - [ ] `[P0]` Add database notification support and UI entry points.
@@ -146,17 +169,17 @@ Acceptance criteria:
 
 - Cross-cutting operational visibility exists in the base boilerplate.
 
-## Phase 8: API Baseline
+## Phase 8: Expanded API Baseline
 
-- [ ] `[P0]` Install and configure Sanctum.
-- [ ] `[P0]` Create `/api/v1` route structure.
-- [ ] `[P0]` Add auth endpoints for login, logout, and current user.
+- [x] `[P0]` Install and configure Sanctum.
+- [x] `[P0]` Create `/api/v1` route structure.
+- [x] `[P0]` Add auth endpoints for login, logout, and current user.
 - [ ] `[P1]` Add notification feed endpoint.
 - [ ] `[P1]` Add admin summary or user-management summary endpoint.
-- [ ] `[P0]` Standardize API error format.
-- [ ] `[P0]` Standardize API pagination format.
+- [x] `[P0]` Standardize API error format for unauthenticated and forbidden responses.
+- [ ] `[P0]` Standardize API pagination format more formally across future endpoints.
 - [ ] `[P1]` Add OpenAPI or Postman artifacts.
-- [ ] `[P0]` Add Pest API smoke tests.
+- [x] `[P0]` Add Pest API smoke tests.
 
 Acceptance criteria:
 

@@ -222,6 +222,34 @@ Acceptance:
 
 - The boilerplate can manage its own users and access model.
 
+### Phase 5.5: Early API Foundation
+
+Goal:
+Establish the first reusable API contract early so RBAC is shared across web and non-web clients instead of being bolted on later.
+
+Tasks:
+
+- Install Sanctum and the API scaffold.
+- Create `/api/v1` route structure.
+- Add token login, logout, and current-user endpoints.
+- Return roles and permissions in the authenticated user payload.
+- Add one permission-protected admin example endpoint.
+- Standardize unauthenticated and forbidden API responses.
+- Add focused Pest API tests.
+
+Deliverables:
+
+- Sanctum token auth
+- Versioned API routes
+- Current-user RBAC payload
+- One protected admin API example
+
+Acceptance:
+
+- Mobile or third-party clients can authenticate with tokens.
+- The same permission model now protects both web and API entry points.
+- The API baseline exists early without forcing a full API expansion yet.
+
 ### Phase 6: Shared CRUD Foundation
 
 Goal:

@@ -110,14 +110,15 @@ Branch history so far:
 - `phase-1-app-shell`
 - `phase-3-rbac-foundation`
 - `phase-5-admin-crud`
+- `phase-5-5-api-foundation`
 
 Current active phase branch:
 
-- `phase-5-admin-crud`
+- `phase-5-5-api-foundation`
 
 Current phase purpose:
 
-- build real Users and Roles CRUD pages, reusable admin list patterns, flash messaging, and visibly distinct role-based navigation
+- add the first Sanctum-based `/api/v1` contract so RBAC works for mobile and other clients as well as the web UI
 
 ## Important Security Note
 

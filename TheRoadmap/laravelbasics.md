@@ -2510,3 +2510,329 @@ Programmatic checks run for this batch:
 - if roles look identical in the sidebar, the permission matrix is usually too weak, not the sidebar code
 - always protect at least one recovery role and the current admin session from destructive mistakes
 - when a CRUD pattern repeats twice, extract the UI primitives instead of duplicating another table or filter bar
+
+## Entry 008: Phase 5.5 Early API Foundation
+
+### What we did
+
+We added the first real API baseline so the same RBAC system can be reused by mobile or other non-Inertia clients:
+
+- installed Sanctum with Laravel’s API scaffold
+- added token-based login and logout
+- added `/api/v1/auth/me`
+- added `/api/v1/admin/users` as the first permission-protected example endpoint
+- returned roles and permissions in the authenticated user payload
+- standardized API `401` and `403` JSON responses
+
+### Code-level change log
+
+#### 1. `composer.json`, `config/sanctum.php`, and the Sanctum migration
+
+Before:
+
+- the project had no token-auth package installed
+- there was no API routes file
+- there was no `personal_access_tokens` table
+
+After:
+
+- `laravel/sanctum` was installed through `php artisan install:api`
+- Laravel published `config/sanctum.php`
+- Laravel published `database/migrations/2026_03_16_202511_create_personal_access_tokens_table.php`
+- Laravel published `routes/api.php`
+
+Why:
+
+- for mobile or third-party clients, session-auth alone is not enough
+- Sanctum is Laravel’s default lightweight choice for token-auth APIs
+
+#### 2. `app/Models/User.php`
+
+Before:
+
+- `User` had roles and Fortify traits, but it could not issue API tokens
+
+After:
+
+```php
++ use Laravel\Sanctum\HasApiTokens;
+...
++ use HasApiTokens, HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
+```
+
+Why:
+
+- Sanctum tokens are created from the authenticatable model
+- if `HasApiTokens` is missing, the API auth layer is incomplete
+
+#### 3. `routes/api.php`
+
+Before:
+
+- Laravel’s default API scaffold only exposes a single `GET /api/user` endpoint
+
+After:
+
+```php
++ Route::prefix('v1')->group(function (): void {
++     Route::prefix('auth')->group(function (): void {
++         Route::post('login', [AuthTokenController::class, 'store'])->middleware('guest');
++         Route::middleware('auth:sanctum')->group(function (): void {
++             Route::get('me', CurrentUserController::class);
++             Route::post('logout', [AuthTokenController::class, 'destroy']);
++         });
++     });
++
++     Route::middleware('auth:sanctum')->group(function (): void {
++         Route::get('admin/users', AdminUserController::class)
++             ->middleware('permission:users.view');
++     });
++ });
+```
+
+Why:
+
+- versioning early avoids later route churn for clients
+- `auth/me` is the canonical endpoint other clients need immediately
+- one protected admin endpoint proves that API and web access rules share the same permission model
+
+#### 4. `app/Http/Controllers/Api/V1/AuthTokenController.php`
+
+Before:
+
+- the controller was an empty stub
+
+After:
+
+- `store()` authenticates credentials and issues a personal access token
+- `destroy()` revokes the current token
+
+Representative diff:
+
+```php
++ $token = $user->createToken($request->validated('device_name'))->plainTextToken;
++
++ return response()->json([
++     'message' => 'Authenticated successfully.',
++     'token' => $token,
++     'token_type' => 'Bearer',
++     'user' => new AuthUserResource($user),
++ ]);
+```
+
+Why:
+
+- a token login endpoint should return both the token and the authenticated user’s RBAC context
+- revoking only the current token is the right baseline for mobile logout
+
+#### 5. `app/Http/Requests/Api/V1/LoginApiRequest.php`
+
+Before:
+
+- the request class was an empty stub with `authorize(): false`
+
+After:
+
+- it validates `email`, `password`, and `device_name`
+- it authenticates credentials with Laravel auth
+- it throws a validation error for bad credentials
+
+Representative diff:
+
+```php
++ if (! Auth::attempt($this->only('email', 'password'))) {
++     throw ValidationException::withMessages([
++         'email' => ['The provided credentials are incorrect.'],
++     ]);
++ }
+```
+
+Why:
+
+- keeping credential validation in a Form Request matches the same thin-controller pattern used elsewhere in the app
+- failed login belongs to validation-style feedback for this baseline
+
+#### 6. `app/Http/Controllers/Api/V1/CurrentUserController.php` and `AuthUserResource.php`
+
+Before:
+
+- there was no structured current-user API payload
+
+After:
+
+- `/api/v1/auth/me` returns a dedicated resource
+- the resource includes:
+  - `id`
+  - `name`
+  - `email`
+  - `email_verified_at`
+  - `roles`
+  - `permissions`
+
+Representative diff:
+
+```php
++ 'roles' => $this->resource->getRoleNames()->values()->all(),
++ 'permissions' => $this->resource->getAllPermissions()->pluck('name')->values()->all(),
+```
+
+Why:
+
+- this is the minimum payload a mobile client needs to shape navigation and protect UI locally
+- it keeps RBAC data explicit instead of forcing every client to infer it separately
+
+#### 7. `app/Http/Controllers/Api/V1/AdminUserController.php` and `AdminUserResource.php`
+
+Before:
+
+- there was no protected admin API example
+
+After:
+
+- `/api/v1/admin/users` returns paginated users
+- it supports `search`
+- it is protected by `auth:sanctum` and `permission:users.view`
+
+Representative diff:
+
+```php
++ $users = User::query()
++     ->with('roles')
++     ->when($search !== '', function ($query) use ($search): void {
++         ...
++     })
++     ->orderBy('name')
++     ->paginate(10)
++     ->withQueryString();
+```
+
+Why:
+
+- one real protected endpoint is better than many placeholder API routes
+- it proves the API path can reuse the same Eloquent, pagination, and permission patterns as the web layer
+
+#### 8. `bootstrap/app.php`
+
+Before:
+
+- unauthenticated and forbidden API requests relied on framework/package defaults
+- Spatie’s permission middleware returned its own package message
+
+After:
+
+- API `401` is normalized to:
+
+```json
+{ "message": "Unauthenticated." }
+```
+
+- API `403` is normalized to:
+
+```json
+{ "message": "Forbidden." }
+```
+
+Representative diff:
+
+```php
++ $exceptions->render(function (UnauthorizedException $exception, $request) {
++     if ($request->is('api/*')) {
++         return response()->json([
++             'message' => 'Forbidden.',
++         ], 403);
++     }
++ });
+```
+
+Why:
+
+- clients should not need to special-case framework vs package error messages
+- a predictable error contract is part of the API baseline
+
+#### 9. API tests
+
+Files:
+
+- `tests/Feature/Api/AuthApiTest.php`
+- `tests/Feature/Api/AdminUsersApiTest.php`
+
+After:
+
+- we now test:
+  - successful token login
+  - `auth/me`
+  - logout token revocation
+  - invalid credential rejection
+  - admin access to `/api/v1/admin/users`
+  - forbidden member access
+  - unauthenticated API access
+
+Representative diff:
+
+```php
++ $this->withHeader('Authorization', "Bearer {$token}")
++     ->getJson('/api/v1/admin/users')
++     ->assertForbidden()
++     ->assertJsonPath('message', 'Forbidden.');
+```
+
+Why:
+
+- API auth and RBAC are security-sensitive; they need direct feature tests
+- this proves the mobile/client-facing contract before more endpoints are added
+
+### Laravel concepts involved
+
+- Sanctum personal access tokens
+- versioned API routing
+- Form Requests for API login validation
+- API Resources for stable JSON payloads
+- shared RBAC between web middleware and API middleware
+- exception rendering for API-specific error contracts
+- Pest feature tests for token-auth endpoints
+
+### Important files
+
+- `composer.json`
+- `config/sanctum.php`
+- `database/migrations/2026_03_16_202511_create_personal_access_tokens_table.php`
+- `app/Models/User.php`
+- `routes/api.php`
+- `bootstrap/app.php`
+- `app/Http/Controllers/Api/V1/AuthTokenController.php`
+- `app/Http/Controllers/Api/V1/CurrentUserController.php`
+- `app/Http/Controllers/Api/V1/AdminUserController.php`
+- `app/Http/Requests/Api/V1/LoginApiRequest.php`
+- `app/Http/Resources/Api/V1/AuthUserResource.php`
+- `app/Http/Resources/Api/V1/AdminUserResource.php`
+- `tests/Feature/Api/AuthApiTest.php`
+- `tests/Feature/Api/AdminUsersApiTest.php`
+
+### Why this approach fits Laravel
+
+Laravel already has the pieces for this:
+
+- Sanctum for tokens
+- route middleware for auth and permissions
+- Form Requests for validation
+- Resources for JSON payloads
+- exception rendering for API-specific responses
+
+So the right move was not to invent a parallel auth system. It was to extend the existing Laravel stack in the same style as the web app.
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan install:api --without-migration-prompt --no-interaction`
+- `php artisan migrate --no-interaction`
+- `php artisan test --compact tests/Feature/Api/AuthApiTest.php tests/Feature/Api/AdminUsersApiTest.php`
+- `php artisan route:list --path=api/v1`
+- `vendor/bin/pint --dirty --format agent`
+
+### What to remember
+
+- if a project may later need mobile or third-party clients, establish the token-auth baseline early
+- version the API before clients appear
+- return RBAC context from `auth/me` so other clients can stay aligned with the web app
+- normalize API error bodies early so clients do not bind themselves to package-specific messages
