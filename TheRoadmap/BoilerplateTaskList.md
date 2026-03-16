@@ -56,9 +56,9 @@ Acceptance criteria:
 - [x] `[P0]` Create role and permission seeders.
 - [x] `[P0]` Define a default role matrix for the boilerplate.
 - [ ] `[P0]` Add policy conventions for admin modules.
-- [ ] `[P0]` Enforce permissions in routes and controllers.
+- [x] `[P0]` Enforce permissions in routes and controllers.
 - [x] `[P0]` Gate sidebar items by permission.
-- [ ] `[P0]` Add tests for unauthorized access and visible navigation rules.
+- [x] `[P0]` Add tests for unauthorized access and visible navigation rules.
 - [x] `[P1]` Add helper props for frontend permission checks.
 
 Acceptance criteria:
@@ -68,15 +68,15 @@ Acceptance criteria:
 ## Phase 4: RBAC Management and Role Experience
 
 - [x] `[P0]` Seed dedicated demo accounts for each default role: `Admin`, `Manager`, `Member`, `ReadOnly`, and a guest-like restricted role if kept.
-- [ ] `[P0]` Create admin-only role management pages.
-- [ ] `[P0]` Create detailed permission assignment UI for each role.
-- [ ] `[P0]` Ensure role changes affect sidebar visibility dynamically.
-- [ ] `[P0]` Ensure role changes affect page access dynamically.
+- [x] `[P0]` Create admin-only role management pages.
+- [x] `[P0]` Create detailed permission assignment UI for each role.
+- [x] `[P0]` Ensure role changes affect sidebar visibility dynamically.
+- [x] `[P0]` Ensure role changes affect page access dynamically.
 - [ ] `[P0]` Ensure role changes affect CRUD actions dynamically.
 - [ ] `[P1]` Ensure print and export actions are permission-aware.
 - [ ] `[P1]` Add direct-permission support when a user needs exceptions beyond role defaults.
-- [ ] `[P0]` Establish the future-module rule: every new page, action, print, or export capability must map to a permission.
-- [ ] `[P0]` Add tests proving each role sees only its allowed routes and navigation.
+- [x] `[P0]` Establish the future-module rule: every new page, action, print, or export capability must map to a permission.
+- [x] `[P0]` Add tests proving each role sees only its allowed routes and navigation.
 
 Acceptance criteria:
 
@@ -87,19 +87,22 @@ Acceptance criteria:
 
 Implementation notes:
 
-- Admin-only placeholder pages for `Users` and `Roles` now exist as the first visible proof of RBAC-driven navigation and route protection.
+- `Users` and `Roles` are now real admin modules backed by controllers, Form Requests, and Inertia pages.
+- Role permissions can be updated from the UI, except for the protected `Admin` recovery role.
+- User role assignments can be updated from the UI, with a guard that prevents the current admin from removing their own `Admin` role.
+- Sidebar visibility remains permission-driven because the shared Inertia auth payload still reads the current user's effective permissions on every request.
 
 ## Phase 5: Admin Core Modules
 
-- [ ] `[P0]` Build Users index page.
+- [x] `[P0]` Build Users index page.
 - [ ] `[P0]` Build Users create page.
 - [ ] `[P0]` Build Users edit page.
 - [ ] `[P1]` Build Users detail page if needed for audit and notification context.
-- [ ] `[P0]` Build Roles index page.
+- [x] `[P0]` Build Roles index page.
 - [ ] `[P0]` Build Roles create page.
 - [ ] `[P0]` Build Roles edit page.
-- [ ] `[P1]` Add role assignment inside user management.
-- [ ] `[P1]` Add permission assignment flow where appropriate.
+- [x] `[P1]` Add role assignment inside user management.
+- [x] `[P1]` Add permission assignment flow where appropriate.
 - [ ] `[P0]` Use Form Requests for all validation.
 - [ ] `[P0]` Add tests for CRUD and authorization.
 

@@ -358,6 +358,414 @@ Why:
 - types should match the actual UI structure
 - once the shell became grouped, the type system needed to express that correctly
 
+## Entry 006: Phase 4 RBAC Management Batch 1
+
+### What we did
+
+We turned the placeholder `Roles` and `Users` pages into real RBAC management screens:
+
+- roles can now be edited from the UI using permission checkboxes
+- users can now be assigned roles from the UI
+- Laravel now validates those updates with dedicated Form Requests
+- route protection and sidebar visibility stay tied to the same permission system
+
+This is the point where RBAC stopped being only setup code and became an actual admin workflow.
+
+### Code-level change log
+
+#### 1. `routes/web.php`
+
+Before:
+
+- `users.index` and `roles.index` were plain `Route::inertia(...)` placeholder pages
+- there were no update routes for changing permissions or user roles
+
+Before example:
+
+```php
+- Route::inertia('admin/users', 'admin/Users/Index')
+-     ->middleware('permission:users.view')
+-     ->name('users.index');
+-
+- Route::inertia('admin/roles', 'admin/Roles/Index')
+-     ->middleware('permission:roles.view')
+-     ->name('roles.index');
+```
+
+After:
+
+- we replaced the placeholder routes with controller-backed routes
+- we added a `PUT` route for role permission updates
+- we added a `PUT` route for user role updates
+
+After example:
+
+```php
++ Route::get('admin/users', [UserManagementController::class, 'index'])
++     ->middleware('permission:users.view')
++     ->name('users.index');
++
++ Route::put('admin/users/{user}/roles', [UserManagementController::class, 'updateRoles'])
++     ->middleware('permission:users.update')
++     ->name('users.roles.update');
++
++ Route::get('admin/roles', [RoleManagementController::class, 'index'])
++     ->middleware('permission:roles.view')
++     ->name('roles.index');
++
++ Route::put('admin/roles/{role}', [RoleManagementController::class, 'update'])
++     ->middleware('permission:roles.update')
++     ->name('roles.update');
+```
+
+Why:
+
+- once a page needs real data and form submission, it should move from `Route::inertia()` into a controller
+- route middleware remains the first authorization barrier
+- this keeps the frontend aligned with Laravel named routes and Wayfinder generation
+
+#### 2. `app/Http/Controllers/Admin/RoleManagementController.php`
+
+Before:
+
+- the controller existed only as an empty stub
+
+Before example:
+
+```php
+- class RoleManagementController extends Controller
+- {
+-     //
+- }
+```
+
+After:
+
+- `index()` now returns the role management Inertia page
+- roles are loaded with their permissions and user counts
+- permissions are grouped by module prefix like `dashboard`, `users`, and `roles`
+- `update()` now syncs permissions for editable roles
+- the `Admin` role is intentionally protected as a stable recovery role
+
+Representative diff:
+
+```php
++ 'roles' => Role::query()
++     ->with('permissions')
++     ->withCount('users')
++     ->orderBy('name')
++     ->get()
++     ->map(fn (Role $role): array => [
++         'id' => $role->id,
++         'name' => $role->name,
++         'permissions' => $role->permissions->pluck('name')->values()->all(),
++         'usersCount' => $role->users_count,
++         'editable' => $role->name !== 'Admin',
++     ]),
+```
+
+And:
+
+```php
++ public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
++ {
++     if ($role->name === 'Admin') {
++         return to_route('roles.index')->withErrors([
++             'permissions' => 'The Admin role is managed automatically and cannot be edited from this screen.',
++         ]);
++     }
++
++     $role->syncPermissions($request->validated('permissions', []));
++
++     return to_route('roles.index');
++ }
+```
+
+Why:
+
+- `syncPermissions()` is the right Spatie method when the screen edits the full permission set for a role
+- grouping permissions in the controller keeps the Vue page simpler
+- protecting `Admin` avoids a common boilerplate failure mode where the only recovery role gets accidentally restricted
+
+#### 3. `app/Http/Controllers/Admin/UserManagementController.php`
+
+Before:
+
+- this controller was also only an empty stub
+
+After:
+
+- `index()` now returns users with their assigned roles
+- available roles are also loaded so the page can render assignment checkboxes
+- `updateRoles()` now syncs the selected roles onto a user
+- a self-protection rule prevents the current admin from removing their own `Admin` role from this screen
+
+Representative diff:
+
+```php
++ 'users' => User::query()
++     ->with('roles')
++     ->orderBy('name')
++     ->get()
++     ->map(fn (User $user): array => [
++         'id' => $user->id,
++         'name' => $user->name,
++         'email' => $user->email,
++         'roles' => $user->roles->pluck('name')->values()->all(),
++         'isCurrentUser' => request()->user()?->is($user) ?? false,
++     ]),
+```
+
+And:
+
+```php
++ $user->syncRoles($roles);
+```
+
+Why:
+
+- `syncRoles()` is the correct Spatie method when the screen submits the full current role set
+- eager loading `roles` avoids N+1 queries
+- protecting the current admin from removing their own admin role keeps the control panel recoverable during setup
+
+#### 4. `app/Http/Requests/Admin/UpdateRoleRequest.php` and `app/Http/Requests/Admin/UpdateUserRolesRequest.php`
+
+Before:
+
+- both requests returned `authorize(): false`
+- neither request had validation rules
+
+Before example:
+
+```php
+- public function authorize(): bool
+- {
+-     return false;
+- }
+```
+
+After:
+
+- each request now checks the relevant permission in `authorize()`
+- each request validates an array payload
+- each request includes custom validation messages
+
+Representative diff:
+
+```php
++ public function authorize(): bool
++ {
++     return $this->user()?->can('roles.update') ?? false;
++ }
++
++ public function rules(): array
++ {
++     return [
++         'permissions' => ['present', 'array'],
++         'permissions.*' => ['string', 'distinct', 'exists:permissions,name'],
++     ];
++ }
+```
+
+Why:
+
+- Form Requests keep controllers thin
+- `authorize()` gives Laravel a second authorization layer after route middleware
+- validating `present` arrays is important because checkbox-based forms may intentionally submit empty sets
+
+#### 5. `resources/js/components/admin/RolePermissionCard.vue`
+
+Before:
+
+- there was no reusable role editor component
+- the roles page only showed an empty placeholder state
+
+After:
+
+- each role is now rendered as a real editable card
+- the card uses `useForm()` from Inertia to manage checkbox state
+- checkboxes call a `togglePermission()` helper and submit to the generated Wayfinder route
+
+Representative diff:
+
+```ts
++ const form = useForm<{ permissions: string[] }>({
++     permissions: [...props.role.permissions],
++ });
++
++ const togglePermission = (permission: string, checked: boolean | 'indeterminate'): void => {
++     const nextPermissions = new Set(form.permissions);
++     ...
++     form.permissions = [...nextPermissions].sort((left, right) =>
++         left.localeCompare(right),
++     );
++ };
++
++ form.put(updateRole(props.role.id).url, {
++     preserveScroll: true,
++ });
+```
+
+Why:
+
+- `useForm()` is the clean Inertia pattern for a server-backed form without building a separate API
+- one card per role keeps the page readable as permissions grow
+- using the generated route helper avoids hardcoded URLs in Vue
+
+#### 6. `resources/js/components/admin/UserRoleCard.vue`
+
+Before:
+
+- there was no reusable user-role editor component
+
+After:
+
+- each user is now shown with role checkboxes
+- the component submits to the generated nested route under `@/routes/users/roles`
+- current-session users get an explicit note about the self-protection rule
+
+Representative diff:
+
+```ts
++ import { update } from '@/routes/users/roles';
++
++ const form = useForm<{ roles: string[] }>({
++     roles: [...props.user.roles],
++ });
++
++ form.put(update(props.user.id).url, {
++     preserveScroll: true,
++ });
+```
+
+Why:
+
+- the nested route shape makes the intent explicit: this endpoint updates a user's roles, not the full user record
+- splitting role assignment into its own component keeps the page logic small and reusable
+
+#### 7. `resources/js/pages/admin/Roles/Index.vue` and `resources/js/pages/admin/Users/Index.vue`
+
+Before:
+
+- both pages were placeholder screens using `EmptyState`
+
+Before example:
+
+```vue
+- <EmptyState
+-     title="Detailed role management comes next"
+-     description="This placeholder proves the route and permission wiring."
+- />
+```
+
+After:
+
+- each page now receives real props from Laravel
+- each page renders the new editor components
+- page headers now explain the live RBAC behavior instead of showing placeholder text
+
+After example:
+
+```vue
++ <RolePermissionCard
++     v-for="role in roles"
++     :key="role.id"
++     :role="role"
++     :permission-groups="permissionGroups"
++ />
+```
+
+Why:
+
+- Inertia pages should stay page-focused and delegate row/card editing to smaller components
+- this keeps the boilerplate maintainable when later CRUD fields are added
+
+#### 8. `resources/js/types/admin.ts` and generated route helpers
+
+Before:
+
+- there were no dedicated frontend types for managed roles, managed users, or grouped permissions
+- the generated route files only had the old index routes
+
+After:
+
+- we added explicit admin types for role and user management props
+- we regenerated Wayfinder route helpers after changing `routes/web.php`
+- new frontend routes now exist for:
+  - `roles.update`
+  - `users.roles.update`
+
+Representative diff:
+
+```ts
++ export type ManagedRole = {
++     id: number;
++     name: string;
++     permissions: string[];
++     usersCount: number;
++     editable: boolean;
++ };
+```
+
+Why:
+
+- strong page prop typing matters once backend data becomes structured
+- regenerating Wayfinder after route changes is required so frontend imports remain valid
+
+#### 9. `tests/Feature/Admin/RoleManagementTest.php` and `tests/Feature/Admin/UserManagementTest.php`
+
+Before:
+
+- these tests did not exist
+
+After:
+
+- we added targeted feature tests for:
+  - admin can update role permissions
+  - admin role cannot be edited from the management screen
+  - manager cannot update roles without permission
+  - admin can update another user's roles
+  - admin cannot remove their own admin role
+  - manager cannot update another user's roles
+
+Representative diff:
+
+```php
++ $this->actingAs($admin)
++     ->put(route('roles.update', $managerRole), [
++         'permissions' => [
++             'dashboard.view',
++             'notifications.view',
++             'roles.view',
++         ],
++     ])
++     ->assertRedirect(route('roles.index'));
+```
+
+Why:
+
+- this batch changes security-sensitive behavior
+- feature tests are the fastest way to prove route middleware, Form Request authorization, controller logic, and Spatie sync methods work together
+
+### Laravel concepts used in this batch
+
+- controller-backed Inertia pages
+- Form Requests for validation and authorization
+- named routes with route middleware
+- Spatie Permission:
+  - `syncPermissions()`
+  - `syncRoles()`
+- eager loading with `with('roles')` and `with('permissions')`
+- Wayfinder route generation after backend route changes
+- Pest feature tests for authorization and data updates
+
+### What to remember
+
+- use `Route::inertia()` for simple static pages, but move to controllers once a page needs structured data or mutation logic
+- use `syncPermissions()` and `syncRoles()` when the submitted form represents the full selected set
+- keep at least one protected recovery role so the boilerplate cannot lock itself out during setup
+- RBAC is only trustworthy when the same permission system drives routes, controller authorization, sidebar visibility, and tests
+
 #### 6. `resources/js/components/AppLogo.vue`
 
 Before:

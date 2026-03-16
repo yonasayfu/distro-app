@@ -1,0 +1,60 @@
+<?php
+
+use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
+use Spatie\Permission\Models\Role;
+
+test('admin can update a role permission set', function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('Admin');
+
+    $managerRole = Role::findByName('Manager');
+
+    expect($managerRole->hasPermissionTo('roles.view'))->toBeFalse();
+
+    $this->actingAs($admin)
+        ->put(route('roles.update', $managerRole), [
+            'permissions' => [
+                'dashboard.view',
+                'notifications.view',
+                'roles.view',
+            ],
+        ])
+        ->assertRedirect(route('roles.index'));
+
+    expect($managerRole->fresh()->hasPermissionTo('roles.view'))->toBeTrue();
+});
+
+test('admin role cannot be edited from the role management screen', function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('Admin');
+
+    $role = Role::findByName('Admin');
+
+    $this->actingAs($admin)
+        ->from(route('roles.index'))
+        ->put(route('roles.update', $role), [
+            'permissions' => ['dashboard.view'],
+        ])
+        ->assertRedirect(route('roles.index'))
+        ->assertSessionHasErrors('permissions');
+});
+
+test('manager cannot update roles without the update permission', function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $manager = User::factory()->create();
+    $manager->assignRole('Manager');
+
+    $role = Role::findByName('Member');
+
+    $this->actingAs($manager)
+        ->put(route('roles.update', $role), [
+            'permissions' => ['dashboard.view'],
+        ])
+        ->assertForbidden();
+});
