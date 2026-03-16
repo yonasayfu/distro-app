@@ -10,6 +10,57 @@ use Spatie\Permission\PermissionRegistrar;
 class RolePermissionSeeder extends Seeder
 {
     /**
+     * Default boilerplate roles that should always exist.
+     *
+     * @var array<string, array{description: string, permissions: array<int, string>}>
+     */
+    private const DEFAULT_ROLES = [
+        'Admin' => [
+            'description' => 'Full-access recovery role for managing the entire boilerplate.',
+            'permissions' => [
+                'dashboard.view',
+                'users.view',
+                'users.create',
+                'users.update',
+                'users.delete',
+                'roles.view',
+                'roles.create',
+                'roles.update',
+                'roles.delete',
+                'notifications.view',
+                'activity-logs.view',
+            ],
+        ],
+        'Manager' => [
+            'description' => 'Operational role with visibility into shared activity and inbox-style features.',
+            'permissions' => [
+                'dashboard.view',
+                'notifications.view',
+                'activity-logs.view',
+            ],
+        ],
+        'Member' => [
+            'description' => 'Standard internal user with dashboard and notification access.',
+            'permissions' => [
+                'dashboard.view',
+                'notifications.view',
+            ],
+        ],
+        'ReadOnly' => [
+            'description' => 'Signed-in user with read-only access to the shared workspace.',
+            'permissions' => [
+                'dashboard.view',
+            ],
+        ],
+        'External' => [
+            'description' => 'Restricted external account with only the base workspace available.',
+            'permissions' => [
+                'dashboard.view',
+            ],
+        ],
+    ];
+
+    /**
      * Run the database seeds.
      */
     public function run(): void
@@ -34,26 +85,19 @@ class RolePermissionSeeder extends Seeder
             Permission::findOrCreate($permission, 'web');
         }
 
-        $admin = Role::findOrCreate('Admin', 'web');
-        $manager = Role::findOrCreate('Manager', 'web');
-        $member = Role::findOrCreate('Member', 'web');
-        $readOnly = Role::findOrCreate('ReadOnly', 'web');
-        $external = Role::findOrCreate('External', 'web');
+        foreach (self::DEFAULT_ROLES as $name => $definition) {
+            $role = Role::query()->updateOrCreate(
+                [
+                    'name' => $name,
+                    'guard_name' => 'web',
+                ],
+                [
+                    'description' => $definition['description'],
+                ],
+            );
 
-        $admin->syncPermissions($permissions);
-        $manager->syncPermissions([
-            'dashboard.view',
-            'notifications.view',
-        ]);
-        $member->syncPermissions([
-            'dashboard.view',
-        ]);
-        $readOnly->syncPermissions([
-            'dashboard.view',
-        ]);
-        $external->syncPermissions([
-            'dashboard.view',
-        ]);
+            $role->syncPermissions($definition['permissions']);
+        }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

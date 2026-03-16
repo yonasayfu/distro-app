@@ -15,14 +15,14 @@ test('admin can update a role permission set', function () {
     expect($managerRole->hasPermissionTo('roles.view'))->toBeFalse();
 
     $this->actingAs($admin)
-        ->put(route('roles.update', $managerRole), [
+        ->put(route('roles.permissions.update', $managerRole), [
             'permissions' => [
                 'dashboard.view',
                 'notifications.view',
                 'roles.view',
             ],
         ])
-        ->assertRedirect(route('roles.index'));
+        ->assertRedirect(route('roles.edit', $managerRole));
 
     expect($managerRole->fresh()->hasPermissionTo('roles.view'))->toBeTrue();
 });
@@ -36,11 +36,11 @@ test('admin role cannot be edited from the role management screen', function () 
     $role = Role::findByName('Admin');
 
     $this->actingAs($admin)
-        ->from(route('roles.index'))
-        ->put(route('roles.update', $role), [
+        ->from(route('roles.edit', $role))
+        ->put(route('roles.permissions.update', $role), [
             'permissions' => ['dashboard.view'],
         ])
-        ->assertRedirect(route('roles.index'))
+        ->assertRedirect(route('roles.edit', $role))
         ->assertSessionHasErrors('permissions');
 });
 
@@ -53,7 +53,7 @@ test('manager cannot update roles without the update permission', function () {
     $role = Role::findByName('Member');
 
     $this->actingAs($manager)
-        ->put(route('roles.update', $role), [
+        ->put(route('roles.permissions.update', $role), [
             'permissions' => ['dashboard.view'],
         ])
         ->assertForbidden();

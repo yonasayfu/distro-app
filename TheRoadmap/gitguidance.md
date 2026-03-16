@@ -109,14 +109,15 @@ Branch history so far:
 - `phase-0-roadmap-docs`
 - `phase-1-app-shell`
 - `phase-3-rbac-foundation`
+- `phase-5-admin-crud`
 
 Current active phase branch:
 
-- `phase-3-rbac-foundation`
+- `phase-5-admin-crud`
 
 Current phase purpose:
 
-- add the first RBAC foundation using roles, permissions, seeded defaults, and permission-aware navigation
+- build real Users and Roles CRUD pages, reusable admin list patterns, flash messaging, and visibly distinct role-based navigation
 
 ## Important Security Note
 

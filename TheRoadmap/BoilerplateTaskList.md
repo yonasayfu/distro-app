@@ -72,7 +72,7 @@ Acceptance criteria:
 - [x] `[P0]` Create detailed permission assignment UI for each role.
 - [x] `[P0]` Ensure role changes affect sidebar visibility dynamically.
 - [x] `[P0]` Ensure role changes affect page access dynamically.
-- [ ] `[P0]` Ensure role changes affect CRUD actions dynamically.
+- [x] `[P0]` Ensure role changes affect CRUD actions dynamically.
 - [ ] `[P1]` Ensure print and export actions are permission-aware.
 - [ ] `[P1]` Add direct-permission support when a user needs exceptions beyond role defaults.
 - [x] `[P0]` Establish the future-module rule: every new page, action, print, or export capability must map to a permission.
@@ -91,24 +91,26 @@ Implementation notes:
 - Role permissions can be updated from the UI, except for the protected `Admin` recovery role.
 - User role assignments can be updated from the UI, with a guard that prevents the current admin from removing their own `Admin` role.
 - Sidebar visibility remains permission-driven because the shared Inertia auth payload still reads the current user's effective permissions on every request.
+- Notifications and activity-log placeholder pages now exist so `Admin`, `Manager`, `Member`, and restricted roles do not all see the same sidebar structure.
 
 ## Phase 5: Admin Core Modules
 
 - [x] `[P0]` Build Users index page.
-- [ ] `[P0]` Build Users create page.
-- [ ] `[P0]` Build Users edit page.
+- [x] `[P0]` Build Users create page.
+- [x] `[P0]` Build Users edit page.
 - [ ] `[P1]` Build Users detail page if needed for audit and notification context.
 - [x] `[P0]` Build Roles index page.
-- [ ] `[P0]` Build Roles create page.
-- [ ] `[P0]` Build Roles edit page.
+- [x] `[P0]` Build Roles create page.
+- [x] `[P0]` Build Roles edit page.
 - [x] `[P1]` Add role assignment inside user management.
 - [x] `[P1]` Add permission assignment flow where appropriate.
-- [ ] `[P0]` Use Form Requests for all validation.
-- [ ] `[P0]` Add tests for CRUD and authorization.
+- [x] `[P0]` Use Form Requests for all validation.
+- [x] `[P0]` Add tests for CRUD and authorization.
 
 Acceptance criteria:
 
 - The boilerplate can manage users and access control without external setup.
+- Index pages now use shared search, table, pagination, and destructive-action patterns instead of module-specific one-off markup.
 
 ## Phase 6: Shared CRUD Foundation
 

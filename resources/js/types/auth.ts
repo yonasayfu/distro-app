@@ -20,6 +20,11 @@ export type Auth = {
     };
 };
 
+export type SharedFlash = {
+    success?: string | null;
+    error?: string | null;
+};
+
 export type TwoFactorConfigContent = {
     title: string;
     description: string;

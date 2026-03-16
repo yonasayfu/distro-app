@@ -1,14 +1,18 @@
 import {
+    Bell,
     BookOpenText,
     LayoutGrid,
     Palette,
     Shield,
     ShieldCheck,
+    ScrollText,
     UserCog,
     Users,
 } from 'lucide-vue-next';
+import { index as activityLogsIndex } from '@/routes/activity-logs';
 import { dashboard } from '@/routes';
 import { edit as editAppearance } from '@/routes/appearance';
+import { index as notificationsIndex } from '@/routes/notifications';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import { index as rolesIndex } from '@/routes/roles';
@@ -25,6 +29,24 @@ export const appNavigation: NavGroup[] = [
                 href: dashboard(),
                 icon: LayoutGrid,
                 permission: 'dashboard.view',
+            },
+        ],
+    },
+    {
+        title: 'Updates',
+        description: 'Permission-aware cross-project modules',
+        items: [
+            {
+                title: 'Notifications',
+                href: notificationsIndex(),
+                icon: Bell,
+                permission: 'notifications.view',
+            },
+            {
+                title: 'Activity logs',
+                href: activityLogsIndex(),
+                icon: ScrollText,
+                permission: 'activity-logs.view',
             },
         ],
     },

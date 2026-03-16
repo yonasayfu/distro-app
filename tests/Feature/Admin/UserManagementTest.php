@@ -16,7 +16,7 @@ test('admin can update another users roles', function () {
         ->put(route('users.roles.update', $targetUser), [
             'roles' => ['Manager'],
         ])
-        ->assertRedirect(route('users.index'));
+        ->assertRedirect(route('users.edit', $targetUser));
 
     expect($targetUser->fresh()->hasRole('Manager'))->toBeTrue()
         ->and($targetUser->fresh()->hasRole('Member'))->toBeFalse();
@@ -29,11 +29,11 @@ test('admin cannot remove their own admin role from this screen', function () {
     $admin->assignRole('Admin');
 
     $this->actingAs($admin)
-        ->from(route('users.index'))
+        ->from(route('users.edit', $admin))
         ->put(route('users.roles.update', $admin), [
             'roles' => ['Member'],
         ])
-        ->assertRedirect(route('users.index'))
+        ->assertRedirect(route('users.edit', $admin))
         ->assertSessionHasErrors('roles');
 });
 

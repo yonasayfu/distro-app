@@ -13,9 +13,11 @@ test('admin can access users and roles pages', function () {
 
     $this->get(route('users.index'))->assertOk();
     $this->get(route('roles.index'))->assertOk();
+    $this->get(route('notifications.index'))->assertOk();
+    $this->get(route('activity-logs.index'))->assertOk();
 });
 
-test('manager cannot access users or roles pages', function () {
+test('manager can access permission-backed shared modules but not admin pages', function () {
     $this->seed(RolePermissionSeeder::class);
 
     $user = User::factory()->create();
@@ -25,9 +27,26 @@ test('manager cannot access users or roles pages', function () {
 
     $this->get(route('users.index'))->assertForbidden();
     $this->get(route('roles.index'))->assertForbidden();
+    $this->get(route('notifications.index'))->assertOk();
+    $this->get(route('activity-logs.index'))->assertOk();
 });
 
-test('read only role can still access dashboard but not administration pages', function () {
+test('member sees notifications but not admin pages or activity logs', function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $user = User::factory()->create();
+    $user->assignRole('Member');
+
+    $this->actingAs($user);
+
+    $this->get(route('dashboard'))->assertOk();
+    $this->get(route('notifications.index'))->assertOk();
+    $this->get(route('activity-logs.index'))->assertForbidden();
+    $this->get(route('users.index'))->assertForbidden();
+    $this->get(route('roles.index'))->assertForbidden();
+});
+
+test('read only role only gets the base workspace', function () {
     $this->seed(RolePermissionSeeder::class);
 
     $user = User::factory()->create();
@@ -36,12 +55,8 @@ test('read only role can still access dashboard but not administration pages', f
     $this->actingAs($user);
 
     $this->get(route('dashboard'))->assertOk();
+    $this->get(route('notifications.index'))->assertForbidden();
+    $this->get(route('activity-logs.index'))->assertForbidden();
     $this->get(route('users.index'))->assertForbidden();
     $this->get(route('roles.index'))->assertForbidden();
-});
-
-test('example', function () {
-    $response = $this->get('/');
-
-    $response->assertStatus(200);
 });

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreRoleRequest;
+use App\Http\Requests\Admin\UpdateRoleDetailsRequest;
 use App\Http\Requests\Admin\UpdateRoleRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,58 +16,125 @@ use Spatie\Permission\Models\Role;
 
 class RoleManagementController extends Controller
 {
+    private const SYSTEM_ROLE_NAMES = ['Admin', 'Manager', 'Member', 'ReadOnly', 'External'];
+
     /**
      * Show the role management page.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->string('search')->trim()->toString();
+
         return Inertia::render('admin/Roles/Index', [
             'roles' => Role::query()
-                ->with('permissions')
                 ->withCount('users')
+                ->withCount('permissions')
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($roleQuery) use ($search): void {
+                        $roleQuery
+                            ->where('name', 'ilike', "%{$search}%")
+                            ->orWhere('description', 'ilike', "%{$search}%");
+                    });
+                })
                 ->orderBy('name')
-                ->get()
-                ->map(fn (Role $role): array => [
-                    'id' => $role->id,
-                    'name' => $role->name,
-                    'permissions' => $role->permissions->pluck('name')->values()->all(),
-                    'usersCount' => $role->users_count,
-                    'editable' => $role->name !== 'Admin',
-                ])
-                ->values()
-                ->all(),
-            'permissionGroups' => Permission::query()
-                ->orderBy('name')
-                ->get()
-                ->groupBy(fn (Permission $permission): string => str($permission->name)->before('.')->toString())
-                ->map(fn (Collection $permissions, string $group): array => [
-                    'key' => $group,
-                    'title' => str($group)->replace('-', ' ')->title()->toString(),
-                    'permissions' => $permissions->map(fn (Permission $permission): array => [
-                        'name' => $permission->name,
-                        'label' => $this->permissionLabel($permission->name),
-                        'description' => $this->permissionDescription($permission->name),
-                    ])->values()->all(),
-                ])
-                ->values()
-                ->all(),
+                ->paginate(10)
+                ->withQueryString()
+                ->through(fn (Role $role): array => $this->roleSummary($role)),
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
+    }
+
+    /**
+     * Show the role creation page.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('admin/Roles/Create', [
+            'permissionGroups' => $this->permissionGroups(),
+        ]);
+    }
+
+    /**
+     * Persist a new role.
+     */
+    public function store(StoreRoleRequest $request): RedirectResponse
+    {
+        $role = Role::query()->create([
+            'name' => $request->validated('name'),
+            'guard_name' => 'web',
+            'description' => $request->validated('description'),
+        ]);
+
+        $role->syncPermissions($request->validated('permissions', []));
+
+        return to_route('roles.edit', $role)->with('success', 'Role created successfully.');
+    }
+
+    /**
+     * Show the role edit page.
+     */
+    public function edit(Role $role): Response
+    {
+        $role->load('permissions');
+
+        return Inertia::render('admin/Roles/Edit', [
+            'role' => [
+                ...$this->roleSummary($role),
+                'permissions' => $role->permissions->pluck('name')->values()->all(),
+            ],
+            'permissionGroups' => $this->permissionGroups(),
+        ]);
+    }
+
+    /**
+     * Update the selected role's metadata.
+     */
+    public function update(UpdateRoleDetailsRequest $request, Role $role): RedirectResponse
+    {
+        if ($this->isSystemRole($role) && $role->name !== $request->validated('name')) {
+            return to_route('roles.edit', $role)->withErrors([
+                'name' => 'System role names are fixed because other access rules depend on them.',
+            ]);
+        }
+
+        $role->forceFill([
+            'name' => $request->validated('name'),
+            'description' => $request->validated('description'),
+        ])->save();
+
+        return to_route('roles.edit', $role)->with('success', 'Role details updated successfully.');
     }
 
     /**
      * Update the selected role's permissions.
      */
-    public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
+    public function updatePermissions(UpdateRoleRequest $request, Role $role): RedirectResponse
     {
         if ($role->name === 'Admin') {
-            return to_route('roles.index')->withErrors([
+            return to_route('roles.edit', $role)->withErrors([
                 'permissions' => 'The Admin role is managed automatically and cannot be edited from this screen.',
             ]);
         }
 
         $role->syncPermissions($request->validated('permissions', []));
 
-        return to_route('roles.index');
+        return to_route('roles.edit', $role)->with('success', 'Role permissions updated successfully.');
+    }
+
+    /**
+     * Delete the selected role.
+     */
+    public function destroy(Role $role): RedirectResponse
+    {
+        if ($this->isSystemRole($role)) {
+            return to_route('roles.index')->with('error', 'System roles cannot be deleted.');
+        }
+
+        $role->delete();
+
+        return to_route('roles.index')->with('success', 'Role deleted successfully.');
     }
 
     private function permissionLabel(string $permission): string
@@ -94,5 +164,55 @@ class RoleManagementController extends Controller
             'activity-logs.view' => 'Allows access to future activity and audit log pages.',
             default => 'Controls access to this capability across routes, sidebar items, and UI actions.',
         };
+    }
+
+    /**
+     * Get grouped permissions for the role editor UI.
+     *
+     * @return array<int, array{key: string, title: string, permissions: array<int, array{name: string, label: string, description: string}>}>
+     */
+    private function permissionGroups(): array
+    {
+        return Permission::query()
+            ->orderBy('name')
+            ->get()
+            ->groupBy(fn (Permission $permission): string => str($permission->name)->before('.')->toString())
+            ->map(fn (Collection $permissions, string $group): array => [
+                'key' => $group,
+                'title' => str($group)->replace('-', ' ')->title()->toString(),
+                'permissions' => $permissions->map(fn (Permission $permission): array => [
+                    'name' => $permission->name,
+                    'label' => $this->permissionLabel($permission->name),
+                    'description' => $this->permissionDescription($permission->name),
+                ])->values()->all(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Normalize a role for table and page props.
+     *
+     * @return array{id: int, name: string, description: string|null, permissions: array<int, string>, usersCount: int, permissionsCount: int, isSystem: bool, canDelete: bool}
+     */
+    private function roleSummary(Role $role): array
+    {
+        return [
+            'id' => $role->id,
+            'name' => $role->name,
+            'description' => $role->description,
+            'permissions' => $role->relationLoaded('permissions')
+                ? $role->permissions->pluck('name')->values()->all()
+                : [],
+            'usersCount' => $role->users_count ?? $role->users()->count(),
+            'permissionsCount' => $role->permissions_count ?? $role->permissions()->count(),
+            'isSystem' => $this->isSystemRole($role),
+            'canDelete' => ! $this->isSystemRole($role),
+        ];
+    }
+
+    private function isSystemRole(Role $role): bool
+    {
+        return in_array($role->name, self::SYSTEM_ROLE_NAMES, true);
     }
 }

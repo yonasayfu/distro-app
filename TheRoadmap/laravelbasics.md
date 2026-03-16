@@ -2065,3 +2065,448 @@ Programmatic checks run for this batch:
 - sidebar visibility and route protection should always agree
 - admin-only placeholder pages are a good step before building full CRUD modules
 - the future checkbox-style role editor belongs in the Roles management module
+
+## Entry 007: Phase 5 Admin CRUD and Shared Resource Pattern
+
+### What we did
+
+We converted the admin module from “management placeholders plus inline editing” into a proper CRUD structure:
+
+- added role metadata with a database migration
+- created real index/create/edit flows for `Roles`
+- created real index/create/edit flows for `Users`
+- added delete actions for custom roles and non-current users
+- added reusable search, table, pagination, confirm-delete, and flash-message components
+- expanded the permission matrix so roles now produce visibly different sidebars
+
+### Code-level change log
+
+#### 1. `database/migrations/2026_03_16_195118_add_description_to_roles_table.php`
+
+Before:
+
+- the Spatie `roles` table only stored `name` and `guard_name`
+- there was no metadata field for describing what a role is for
+
+After:
+
+```php
++ Schema::table('roles', function (Blueprint $table) {
++     $table->text('description')->nullable()->after('name');
++ });
+```
+
+Why:
+
+- a reusable boilerplate needs role metadata, not just internal identifiers
+- `description` makes the future role-management UI understandable to admins
+
+#### 2. `database/seeders/RolePermissionSeeder.php`
+
+Before:
+
+- role seeding used `findOrCreate()`
+- the demo roles were missing descriptions
+- the permission matrix made several roles look almost identical in the sidebar
+
+After:
+
+- we introduced a single `DEFAULT_ROLES` map
+- each seeded role now has a description and a permission bundle
+- `Manager`, `Member`, `ReadOnly`, and `External` now differ more clearly
+
+Representative diff:
+
+```php
++ private const DEFAULT_ROLES = [
++     'Manager' => [
++         'description' => 'Operational role with visibility into shared activity and inbox-style features.',
++         'permissions' => [
++             'dashboard.view',
++             'notifications.view',
++             'activity-logs.view',
++         ],
++     ],
++     'Member' => [
++         'description' => 'Standard internal user with dashboard and notification access.',
++         'permissions' => [
++             'dashboard.view',
++             'notifications.view',
++         ],
++     ],
++ ];
+```
+
+Why:
+
+- the sidebar cannot look different per role unless the permission matrix actually differs per role
+- centralizing seeded roles reduces drift between docs, tests, and live behavior
+
+#### 3. `routes/web.php`
+
+Before:
+
+- `Users` and `Roles` only had index pages
+- there were no create/edit/destroy CRUD routes
+- there were no permission-aware `Notifications` or `Activity logs` pages
+
+After:
+
+- we added:
+  - `users.create`, `users.store`, `users.edit`, `users.update`, `users.destroy`
+  - `roles.create`, `roles.store`, `roles.edit`, `roles.update`, `roles.destroy`
+  - `roles.permissions.update`
+  - `notifications.index`
+  - `activity-logs.index`
+
+Representative diff:
+
+```php
++ Route::get('admin/users/create', [UserManagementController::class, 'create'])
++     ->middleware('permission:users.create')
++     ->name('users.create');
++
++ Route::delete('admin/users/{user}', [UserManagementController::class, 'destroy'])
++     ->middleware('permission:users.delete')
++     ->name('users.destroy');
+```
+
+Why:
+
+- CRUD needs distinct routes for list/create/edit/delete actions
+- action-level route permissions are the backend source of truth for RBAC
+- separate routes for `notifications` and `activity-logs` make role-based navigation visibly different now, not only later
+
+#### 4. `app/Http/Controllers/Admin/RoleManagementController.php`
+
+Before:
+
+- the controller only handled role listing and permission syncing
+- the index page was effectively an inline permission editor
+
+After:
+
+- `index()` now supports search and server pagination
+- `create()` and `store()` create new roles
+- `edit()` returns one role plus grouped permissions
+- `update()` handles role metadata
+- `updatePermissions()` handles permission syncing
+- `destroy()` deletes only non-system roles
+
+Representative diff:
+
+```php
++ public function destroy(Role $role): RedirectResponse
++ {
++     if ($this->isSystemRole($role)) {
++         return to_route('roles.index')->with('error', 'System roles cannot be deleted.');
++     }
++
++     $role->delete();
++
++     return to_route('roles.index')->with('success', 'Role deleted successfully.');
++ }
+```
+
+Why:
+
+- CRUD is cleaner when metadata editing and permission editing are separate actions
+- protecting system roles prevents the boilerplate from deleting its own baseline identity model
+- pagination and filtering belong in the controller because Laravel owns query construction
+
+#### 5. `app/Http/Controllers/Admin/UserManagementController.php`
+
+Before:
+
+- the controller handled a list page plus inline role syncing
+
+After:
+
+- `index()` now supports search and pagination
+- `create()` and `store()` create users
+- `edit()` shows details plus role assignment
+- `update()` handles name/email/password changes
+- `destroy()` blocks self-delete
+- `updateRoles()` remains dedicated to role syncing
+
+Representative diff:
+
+```php
++ if ($validated['password'] !== null && $validated['password'] !== '') {
++     $user->password = Hash::make($validated['password']);
++ }
++
++ if ($user->isDirty('email')) {
++     $user->email_verified_at = null;
++ }
+```
+
+Why:
+
+- updating a user record and updating role assignments are related but different responsibilities
+- resetting email verification on email change follows standard Laravel account behavior
+- blocking self-delete and self-role-lockout avoids admin recovery problems
+
+#### 6. Form Requests for admin CRUD
+
+Files:
+
+- `app/Http/Requests/Admin/StoreRoleRequest.php`
+- `app/Http/Requests/Admin/UpdateRoleDetailsRequest.php`
+- `app/Http/Requests/Admin/StoreUserRequest.php`
+- `app/Http/Requests/Admin/UpdateUserRequest.php`
+- existing `UpdateRoleRequest.php`
+- existing `UpdateUserRolesRequest.php`
+
+Before:
+
+- create/edit requests for users and roles did not exist
+
+After:
+
+- each CRUD path has a dedicated Form Request
+- validation moved out of controllers
+- authorization is checked at the request level as well as the route level
+
+Representative diff:
+
+```php
++ 'password' => ['required', 'string', 'confirmed', Password::defaults()],
++ 'roles' => ['present', 'array'],
++ 'roles.*' => ['string', 'distinct', 'exists:roles,name'],
+```
+
+Why:
+
+- this is the Laravel way: thin controllers, explicit validation classes
+- `Password::defaults()` keeps password rules aligned with your application defaults
+
+#### 7. Shared Inertia flash layer
+
+Files:
+
+- `app/Http/Middleware/HandleInertiaRequests.php`
+- `resources/js/components/FlashMessages.vue`
+- `resources/js/layouts/app/AppSidebarLayout.vue`
+
+Before:
+
+- success and error session messages were not shared globally into Inertia pages
+
+After:
+
+```php
++ 'flash' => [
++     'success' => fn (): ?string => $request->session()->get('success'),
++     'error' => fn (): ?string => $request->session()->get('error'),
++ ],
+```
+
+And then the layout renders one shared flash component for all pages.
+
+Why:
+
+- CRUD pages need consistent feedback after create/update/delete actions
+- this avoids repeating flash markup in every page component
+
+#### 8. Shared resource-list components
+
+Files:
+
+- `resources/js/components/admin/ResourceToolbar.vue`
+- `resources/js/components/admin/ResourceTable.vue`
+- `resources/js/components/admin/ResourcePagination.vue`
+- `resources/js/components/admin/ActionIconLink.vue`
+- `resources/js/components/admin/ConfirmActionDialog.vue`
+
+Before:
+
+- the project had no reusable list/filter/action pattern for future modules
+
+After:
+
+- search bars, table wrappers, pagination, edit buttons, and confirm-delete dialogs are reusable
+
+Representative diff:
+
+```vue
++ <ResourceToolbar
++     v-model:search="search"
++     search-placeholder="Search users by name or email"
++     @submit="submitSearch"
++     @reset="resetSearch"
++ />
+```
+
+Why:
+
+- this is the beginning of the shared CRUD foundation phase
+- new modules should not keep reinventing table/filter/delete behavior
+
+#### 9. `resources/js/pages/admin/...`
+
+Before:
+
+- `Users` and `Roles` pages were placeholders or inline editors
+
+After:
+
+- `Roles/Index.vue` is now a searchable list page with edit/delete actions
+- `Roles/Create.vue` and `Roles/Edit.vue` are real forms
+- `Users/Index.vue` is now a searchable list page with edit/delete actions
+- `Users/Create.vue` and `Users/Edit.vue` are real forms
+
+Representative diff:
+
+```vue
++ <ActionIconLink
++     :href="editUser(user.id)"
++     label="Edit user"
++     :icon="SquarePen"
++ />
++
++ <ConfirmActionDialog
++     v-if="!user.isCurrentUser"
++     title="Delete user"
++     ...
++ />
+```
+
+Why:
+
+- CRUD index pages should summarize records and expose actions
+- create/edit pages should hold the actual form complexity
+
+#### 10. `resources/js/navigation/app.ts` and permission-aware sidebar differences
+
+Before:
+
+- only `Users` and `Roles` made the sidebar meaningfully different
+
+After:
+
+- we added permission-aware navigation entries for:
+  - `Notifications`
+  - `Activity logs`
+
+Representative diff:
+
+```ts
++ {
++   title: 'Notifications',
++   href: notificationsIndex(),
++   icon: Bell,
++   permission: 'notifications.view',
++ },
++ {
++   title: 'Activity logs',
++   href: activityLogsIndex(),
++   icon: ScrollText,
++   permission: 'activity-logs.view',
++ },
+```
+
+Why:
+
+- this directly answers the earlier problem of roles appearing to have the same sidebar
+- now the permission matrix produces visibly different navigation for different seeded roles
+
+#### 11. Tests
+
+Files:
+
+- `tests/Feature/Admin/RoleCrudTest.php`
+- `tests/Feature/Admin/UserCrudTest.php`
+- `tests/Feature/Admin/RoleManagementTest.php`
+- `tests/Feature/Admin/UserManagementTest.php`
+- `tests/Feature/RoleAccessTest.php`
+
+Before:
+
+- CRUD behavior for users and roles was not tested
+- sidebar-related route differences between `Manager`, `Member`, and `ReadOnly` were too shallow
+
+After:
+
+- we added tests for create/update/delete user flows
+- we added tests for create/update/delete role flows
+- we updated management tests for the new route structure
+- we expanded role-access tests to cover notifications and activity logs
+
+Representative diff:
+
+```php
++ test('manager can access permission-backed shared modules but not admin pages', function () {
++     ...
++     $this->get(route('notifications.index'))->assertOk();
++     $this->get(route('activity-logs.index'))->assertOk();
++ });
+```
+
+Why:
+
+- once CRUD and role-driven navigation exist, they need direct feature coverage
+- otherwise the first refactor will silently break access boundaries
+
+### Laravel concepts involved
+
+- schema migrations on package tables
+- controller-backed Inertia CRUD pages
+- Form Requests for authorization and validation
+- server-side search and pagination
+- session flash data shared through Inertia middleware
+- route-level permission gating
+- Spatie role/permission syncing
+- Pest feature tests for CRUD and authorization
+
+### Important files
+
+- `database/migrations/2026_03_16_195118_add_description_to_roles_table.php`
+- `database/seeders/RolePermissionSeeder.php`
+- `routes/web.php`
+- `app/Http/Controllers/Admin/RoleManagementController.php`
+- `app/Http/Controllers/Admin/UserManagementController.php`
+- `app/Http/Middleware/HandleInertiaRequests.php`
+- `resources/js/components/FlashMessages.vue`
+- `resources/js/components/admin/ResourceToolbar.vue`
+- `resources/js/components/admin/ResourceTable.vue`
+- `resources/js/components/admin/ResourcePagination.vue`
+- `resources/js/pages/admin/Roles/Index.vue`
+- `resources/js/pages/admin/Roles/Create.vue`
+- `resources/js/pages/admin/Roles/Edit.vue`
+- `resources/js/pages/admin/Users/Index.vue`
+- `resources/js/pages/admin/Users/Create.vue`
+- `resources/js/pages/admin/Users/Edit.vue`
+- `tests/Feature/Admin/RoleCrudTest.php`
+- `tests/Feature/Admin/UserCrudTest.php`
+- `tests/Feature/RoleAccessTest.php`
+
+### Why this approach fits Laravel
+
+Laravel works best when:
+
+- routes express capability boundaries
+- controllers shape page data
+- Form Requests own validation
+- Inertia pages stay focused on UI composition
+- reusable UI pieces are pulled out once a pattern repeats
+
+That is exactly what this batch did. We moved from ad hoc admin pages toward a repeatable Laravel admin-module structure.
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan migrate --no-interaction`
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `php artisan test --compact tests/Feature/Admin/RoleCrudTest.php tests/Feature/Admin/UserCrudTest.php tests/Feature/Admin/RoleManagementTest.php tests/Feature/Admin/UserManagementTest.php tests/Feature/RoleAccessTest.php tests/Feature/DashboardTest.php`
+- `npm run types:check`
+- `npm run build`
+- `vendor/bin/pint --dirty --format agent`
+
+### What to remember
+
+- once a list page starts getting real data and actions, move to a proper CRUD structure instead of stacking more inline controls
+- if roles look identical in the sidebar, the permission matrix is usually too weak, not the sidebar code
+- always protect at least one recovery role and the current admin session from destructive mistakes
+- when a CRUD pattern repeats twice, extract the UI primitives instead of duplicating another table or filter bar

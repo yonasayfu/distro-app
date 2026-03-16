@@ -1,9 +1,12 @@
 export type ManagedRole = {
     id: number;
     name: string;
+    description: string | null;
     permissions: string[];
     usersCount: number;
-    editable: boolean;
+    permissionsCount: number;
+    isSystem: boolean;
+    canDelete: boolean;
 };
 
 export type ManagedUser = {
@@ -19,6 +22,7 @@ export type ManagedUser = {
 export type RoleOption = {
     name: string;
     label: string;
+    description: string | null;
     usersCount: number;
 };
 
@@ -32,4 +36,30 @@ export type PermissionGroup = {
     key: string;
     title: string;
     permissions: PermissionDefinition[];
+};
+
+export type ResourceFilters = {
+    search: string;
+};
+
+export type PaginationLink = {
+    url: string | null;
+    label: string;
+    active: boolean;
+};
+
+export type PaginatedResource<T> = {
+    data: T[];
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    links: PaginationLink[];
+    per_page: number;
+    to: number | null;
+    total: number;
+};
+
+export type FlashMessages = {
+    success?: string | null;
+    error?: string | null;
 };
