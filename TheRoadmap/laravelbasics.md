@@ -3142,3 +3142,416 @@ Programmatic checks run for this batch:
 - an audit log without consistent event naming becomes noise quickly
 - logging from controllers is a practical first step, then deeper domain events can come later
 - once a cross-cutting module exists in the shell, it should stop being a placeholder as soon as possible
+
+## Entry 010: Phase 7 Extension and Notification-Audit API Slice
+
+This batch finished the remaining Phase 7 gap and extended Phase 8 enough for mobile and other clients to reuse the same notification and audit systems.
+
+### What problem we were solving
+
+Before this batch:
+
+- clicking the bell only navigated to the notifications page
+- there was no in-header preview or empty state
+- audit logs had only a list page, not a detail view
+- activity coverage was still too narrow because settings and auth changes were not consistently recorded
+- mobile or other clients had no notification or activity-log API endpoints
+
+After this batch:
+
+- the bell opens a real preview dropdown and still works when there are zero notifications
+- audit entries now have a dedicated detail page
+- auth and settings changes now create activity log records
+- notifications and activity logs now have API endpoints protected by the same RBAC rules
+
+### File-by-file change record
+
+#### 1. `app/Http/Middleware/HandleInertiaRequests.php`
+
+Before:
+
+- only `notificationCount` was shared to the shell
+- the header knew the unread number, but not the actual recent notification items
+
+After:
+
+```php
++ 'notificationPreview' => $user?->notifications()
++     ->latest()
++     ->limit(5)
++     ->get()
++     ->map(fn (DatabaseNotification $notification): array => [
++         'id' => $notification->id,
++         'title' => $notification->data['title'] ?? 'Notification',
++         'message' => $notification->data['message'] ?? '',
++         'actionUrl' => $notification->data['action_url'] ?? null,
++         'actionLabel' => $notification->data['action_label'] ?? null,
++         'level' => $notification->data['level'] ?? 'info',
++         'readAt' => $notification->read_at?->toISOString(),
++         'createdAt' => $notification->created_at?->toISOString(),
++     ])
++     ->values()
++     ->all() ?? [],
+```
+
+Why:
+
+- a bell without preview behaves like a simple link, not a notification control
+- sharing a small preview list through Inertia keeps the shell fast and avoids a second request every time the header renders
+
+#### 2. `resources/js/components/NotificationBell.vue`
+
+Before:
+
+- there was no dedicated notification component in the header
+- the bell could not show empty state, preview items, or quick actions
+
+After:
+
+- added a reusable dropdown-based notification bell component
+- shows unread count
+- shows the latest five notifications
+- supports `Mark read`
+- supports `Mark all read`
+- shows an empty card when nothing exists yet
+
+Representative diff:
+
+```vue
++ <DropdownMenuContent align="end" :side-offset="8" class="w-96 rounded-2xl p-0">
++     <DropdownMenuLabel class="flex items-center justify-between px-4 py-3">
++         <div class="text-sm font-semibold">Notifications</div>
++     </DropdownMenuLabel>
++     <DropdownMenuGroup v-if="preview.length > 0">
++         ...
++     </DropdownMenuGroup>
++     <div v-else class="px-4 py-6 text-center">
++         <div class="text-sm font-medium">No notifications yet</div>
++     </div>
++ </DropdownMenuContent>
+```
+
+Why:
+
+- the user explicitly needed feedback when clicking the bell, even when the list is empty
+- making this its own component keeps `AppSidebarHeader.vue` small and lets later modules reuse the same pattern
+
+#### 3. `resources/js/components/AppSidebarHeader.vue`
+
+Before:
+
+- the header manually rendered the bell button and badge
+- the behavior was limited to a link
+
+After:
+
+```vue
+- <Button v-if="auth.can.viewNotifications" ...>
+-     <Link :href="notificationsIndex()">
+-         <Bell class="size-4" />
+-         ...
+-     </Link>
+- </Button>
++ <NotificationBell />
+```
+
+Why:
+
+- the shell should consume a reusable notification control, not embed preview logic inline
+
+#### 4. `app/Http/Controllers/ActivityLogController.php`
+
+Before:
+
+- only the audit index existed
+- rows did not link to a detailed audit view
+
+After:
+
+- `index()` now includes more context for each row:
+  - `actorEmail`
+  - `subjectType`
+  - `subjectId`
+- added `show(ActivityLog $activityLog)` for a dedicated detail page
+
+Representative diff:
+
+```php
++ public function show(ActivityLog $activityLog): Response
++ {
++     $activityLog->load('actor');
++
++     return Inertia::render('activity-logs/Show', [
++         'log' => [
++             'id' => $activityLog->id,
++             'event' => $activityLog->event,
++             'subjectType' => $activityLog->subject_type,
++             'subjectId' => $activityLog->subject_id,
++             'properties' => $activityLog->properties ?? [],
++         ],
++     ]);
++ }
+```
+
+Why:
+
+- a list page is enough for scanning, but debugging or auditing usually needs the exact payload and subject reference
+
+#### 5. `resources/js/pages/activity-logs/Index.vue` and `resources/js/pages/activity-logs/Show.vue`
+
+Before:
+
+- the list page had no detail navigation
+- there was no dedicated audit detail page
+
+After:
+
+- added `View` action per audit row
+- added a real detail page with:
+  - event badge
+  - created time
+  - description
+  - full JSON payload
+  - actor information
+  - subject reference
+  - IP address
+
+Why:
+
+- this is the minimum useful audit workflow: scan on the index, inspect on the detail page
+
+#### 6. `app/Http/Controllers/Settings/ProfileController.php` and `app/Http/Controllers/Settings/SecurityController.php`
+
+Before:
+
+- profile update, profile delete, and password update changed data but left no audit record
+
+After:
+
+```php
++ ActivityLogger::record(
++     actor: $request->user(),
++     event: 'settings.profile-updated',
++     description: 'Updated profile settings.',
++     subject: $request->user(),
++     properties: [
++         'email_changed' => $request->user()->wasChanged('email'),
++         'name_changed' => $request->user()->wasChanged('name'),
++     ],
++     request: $request,
++ );
+```
+
+And:
+
+- `settings.profile-deleted`
+- `settings.password-updated`
+
+Why:
+
+- settings changes matter operationally and are often the first user-driven audit events support teams need
+
+#### 7. `app/Providers/AppServiceProvider.php`
+
+Before:
+
+- web login and logout were not recorded automatically
+
+After:
+
+```php
++ Event::listen(function (Login $event): void {
++     ActivityLogger::record(
++         actor: $event->user,
++         event: 'auth.login',
++         description: 'Signed in successfully.',
++         subject: $event->user,
++     );
++ });
+```
+
+And:
+
+- added the matching `Logout` listener for `auth.logout`
+
+Why:
+
+- auth events are true cross-cutting events and should not depend on controller-specific code paths
+- Laravel already dispatches these events, so listening centrally is the cleanest approach
+
+#### 8. `app/Http/Controllers/Api/V1/AuthTokenController.php`
+
+Before:
+
+- API login and logout created or revoked tokens, but did not leave an audit trail
+
+After:
+
+- added:
+  - `auth.api-login`
+  - `auth.api-logout`
+
+Why:
+
+- once mobile or third-party access exists, API auth activity becomes part of the same audit surface as web auth activity
+
+#### 9. `app/Http/Controllers/Api/V1/NotificationApiController.php`
+
+Before:
+
+- there were no notification API endpoints
+
+After:
+
+- `index()` returns paginated notifications with read filtering
+- `show()` returns one notification
+- `update()` marks one notification as read
+- `destroy()` marks all notifications as read
+
+Representative diff:
+
+```php
++ Route::get('notifications', [NotificationApiController::class, 'index'])
++     ->middleware('permission:notifications.view');
++ Route::put('notifications/{notification}/read', [NotificationApiController::class, 'update'])
++     ->middleware('permission:notifications.view');
++ Route::post('notifications/read-all', [NotificationApiController::class, 'destroy'])
++     ->middleware('permission:notifications.view');
+```
+
+Why:
+
+- this gives mobile or external clients the same notification backbone as the web UI
+- permission middleware ensures the API does not become a second, weaker access path
+
+#### 10. `app/Http/Controllers/Api/V1/ActivityLogApiController.php`
+
+Before:
+
+- audit data was web-only
+
+After:
+
+- `index()` returns filtered paginated audit entries
+- `show()` returns one audit entry
+
+Why:
+
+- once admins or support tools move outside the Inertia UI, the audit surface still needs a stable backend contract
+
+#### 11. `app/Http/Resources/Api/V1/NotificationResource.php` and `app/Http/Resources/Api/V1/ActivityLogResource.php`
+
+Before:
+
+- the generated resources were empty
+
+After:
+
+- notification resource now returns:
+  - `id`
+  - `title`
+  - `message`
+  - `action_url`
+  - `action_label`
+  - `level`
+  - `read_at`
+  - `created_at`
+- activity log resource now returns:
+  - `event`
+  - `description`
+  - `actor`
+  - `actor_email`
+  - `subject_type`
+  - `subject_id`
+  - `ip_address`
+  - `properties`
+  - `created_at`
+
+Why:
+
+- API clients need a stable explicit response shape, not raw model dumping
+
+#### 12. `tests/...`
+
+Files:
+
+- `tests/Feature/Feature/Notifications/NotificationCenterTest.php`
+- `tests/Feature/Feature/ActivityLogs/ActivityLogIndexTest.php`
+- `tests/Feature/Settings/ProfileUpdateTest.php`
+- `tests/Feature/Settings/SecurityTest.php`
+- `tests/Feature/Feature/Api/NotificationApiTest.php`
+- `tests/Feature/Feature/Api/ActivityLogApiTest.php`
+- `tests/Feature/Api/AuthApiTest.php`
+- `tests/Feature/Auth/AuthenticationTest.php`
+
+After:
+
+- bell preview shared props are tested
+- empty preview state is tested
+- audit detail page is tested
+- profile update/delete audit events are tested
+- password update audit event is tested
+- API notification endpoints are tested
+- API activity-log endpoints are tested
+- web login/logout and API login/logout audit events are tested
+
+Why:
+
+- this batch crosses shell UI, settings controllers, auth flows, and API endpoints
+- without tests, it would be too easy for one client path to drift away from the others
+
+### Laravel concepts involved
+
+- Inertia shared props for shell previews
+- dropdown-based reusable Vue shell controls
+- Laravel auth event listeners
+- controller-level audit logging for settings changes
+- API Resources for stable JSON contracts
+- shared RBAC middleware across web and API routes
+- Wayfinder regeneration after new routes
+
+### Important files
+
+- `app/Http/Middleware/HandleInertiaRequests.php`
+- `resources/js/components/NotificationBell.vue`
+- `resources/js/components/AppSidebarHeader.vue`
+- `app/Http/Controllers/ActivityLogController.php`
+- `resources/js/pages/activity-logs/Show.vue`
+- `app/Http/Controllers/Settings/ProfileController.php`
+- `app/Http/Controllers/Settings/SecurityController.php`
+- `app/Providers/AppServiceProvider.php`
+- `app/Http/Controllers/Api/V1/NotificationApiController.php`
+- `app/Http/Controllers/Api/V1/ActivityLogApiController.php`
+- `app/Http/Resources/Api/V1/NotificationResource.php`
+- `app/Http/Resources/Api/V1/ActivityLogResource.php`
+- `routes/api.php`
+- `routes/web.php`
+
+### Why this approach fits Laravel
+
+Laravel already gives strong primitives for all of this:
+
+- `DatabaseNotification` for in-app notifications
+- auth events for login and logout logging
+- Inertia shared props for shell-level data
+- API Resources for explicit JSON contracts
+- route middleware for keeping RBAC identical across web and API
+
+That means this extension stays inside Laravel’s normal patterns instead of adding custom infrastructure too early.
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `vendor/bin/pint --dirty --format agent`
+- `php artisan test --compact tests/Feature/Feature/Notifications/NotificationCenterTest.php tests/Feature/Feature/ActivityLogs/ActivityLogIndexTest.php tests/Feature/Settings/ProfileUpdateTest.php tests/Feature/Settings/SecurityTest.php tests/Feature/Feature/Api/NotificationApiTest.php tests/Feature/Feature/Api/ActivityLogApiTest.php tests/Feature/Api/AuthApiTest.php tests/Feature/Auth/AuthenticationTest.php`
+- `npm run types:check`
+- `npm run build`
+
+### What to remember
+
+- a header notification bell should still be useful before any real notifications exist
+- if web and API clients will share RBAC later, start sharing the same notification and audit endpoints early
+- audit detail pages matter once logs start storing JSON properties
+- auth and settings events are part of the platform layer, not just app-specific behavior

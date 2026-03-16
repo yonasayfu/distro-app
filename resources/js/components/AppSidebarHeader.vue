@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
-import { Bell, MoonStar, Settings2, SunMedium } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
+import { MoonStar, Settings2, SunMedium } from 'lucide-vue-next';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import { Badge } from '@/components/ui/badge';
+import NotificationBell from '@/components/NotificationBell.vue';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppearance } from '@/composables/useAppearance';
-import { index as notificationsIndex } from '@/routes/notifications';
 import { edit as editProfile } from '@/routes/profile';
-import type { Auth, BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem } from '@/types';
 
 withDefaults(
     defineProps<{
@@ -21,8 +19,6 @@ withDefaults(
 );
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
-const page = usePage();
-const auth = computed(() => page.props.auth as Auth);
 
 const toggleAppearance = (): void => {
     updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
@@ -40,25 +36,7 @@ const toggleAppearance = (): void => {
             </template>
         </div>
         <div class="ml-auto flex items-center gap-2">
-            <Button
-                v-if="auth.can.viewNotifications"
-                variant="ghost"
-                size="sm"
-                class="rounded-full"
-                as-child
-            >
-                <Link :href="notificationsIndex()">
-                    <Bell class="size-4" />
-                    <span>Notifications</span>
-                    <Badge
-                        v-if="auth.notificationCount > 0"
-                        variant="secondary"
-                        class="ml-1"
-                    >
-                        {{ auth.notificationCount }}
-                    </Badge>
-                </Link>
-            </Button>
+            <NotificationBell />
             <Button
                 variant="ghost"
                 size="icon-sm"

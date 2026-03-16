@@ -53,3 +53,32 @@ test('manager can access the activity log index but member cannot', function () 
         ->get(route('activity-logs.index'))
         ->assertForbidden();
 });
+
+test('activity log detail page displays the recorded payload', function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('Admin');
+
+    $log = ActivityLog::factory()->create([
+        'actor_id' => $admin->id,
+        'event' => 'settings.profile-updated',
+        'description' => 'Updated profile settings.',
+        'subject_type' => User::class,
+        'subject_id' => $admin->id,
+        'properties' => [
+            'email_changed' => true,
+        ],
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('activity-logs.show', $log))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('activity-logs/Show')
+            ->where('log.id', $log->id)
+            ->where('log.event', 'settings.profile-updated')
+            ->where('log.subjectType', User::class)
+            ->where('log.properties.email_changed', true),
+        );
+});

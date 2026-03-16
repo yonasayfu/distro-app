@@ -161,7 +161,7 @@ Implementation notes:
 - [x] `[P1]` Add mark-as-read and mark-all-read actions.
 - [x] `[P0]` Add activity logging for auth, user, role, and settings changes.
 - [x] `[P0]` Build audit log index page with filters.
-- [ ] `[P1]` Add audit log entry detail drawer or detail page.
+- [x] `[P1]` Add audit log entry detail drawer or detail page.
 - [x] `[P1]` Decide what events must always be recorded.
 - [x] `[P0]` Add tests for notifications and activity logging flows.
 
@@ -172,16 +172,17 @@ Acceptance criteria:
 Implementation notes:
 
 - Database notifications now power the in-app notification center.
-- The header bell reads unread counts from shared Inertia props.
-- Activity logs currently capture notification acknowledgement and admin user/role actions.
+- The header bell now includes a live preview dropdown and empty state from shared Inertia props.
+- Activity logs now capture auth, notification, admin user/role, and settings actions.
 - The audit page supports event and text filtering with server-side pagination.
+- Audit entries now have a dedicated detail page for payload inspection.
 
 ## Phase 8: Expanded API Baseline
 
 - [x] `[P0]` Install and configure Sanctum.
 - [x] `[P0]` Create `/api/v1` route structure.
 - [x] `[P0]` Add auth endpoints for login, logout, and current user.
-- [ ] `[P1]` Add notification feed endpoint.
+- [x] `[P1]` Add notification feed endpoint.
 - [ ] `[P1]` Add admin summary or user-management summary endpoint.
 - [x] `[P0]` Standardize API error format for unauthenticated and forbidden responses.
 - [ ] `[P0]` Standardize API pagination format more formally across future endpoints.
@@ -191,6 +192,12 @@ Implementation notes:
 Acceptance criteria:
 
 - The API can serve as the base for mobile or third-party consumers.
+
+Implementation notes:
+
+- Notifications now expose list, detail, mark-read, and mark-all-read API endpoints.
+- Activity logs now expose list and detail API endpoints with the same permission model as the web UI.
+- Auth, notifications, and audit flows now share the same event and permission backbone across web and API clients.
 
 ## Phase 9: Developer Experience and Operations
 

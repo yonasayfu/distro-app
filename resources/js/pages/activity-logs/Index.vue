@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { Search, ScrollText } from 'lucide-vue-next';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ArrowUpRight, Search, ScrollText } from 'lucide-vue-next';
 import { ref } from 'vue';
 import ResourcePagination from '@/components/admin/ResourcePagination.vue';
 import ResourceTable from '@/components/admin/ResourceTable.vue';
@@ -8,9 +8,10 @@ import ResourceToolbar from '@/components/admin/ResourceToolbar.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index as activityLogsIndex } from '@/routes/activity-logs';
+import { index as activityLogsIndex, show as activityLogsShow } from '@/routes/activity-logs';
 import type {
     ActivityLogFilters,
     BreadcrumbItem,
@@ -120,6 +121,7 @@ const resetFilters = (): void => {
                         <th class="px-4 py-3 font-medium">Actor</th>
                         <th class="px-4 py-3 font-medium">IP</th>
                         <th class="px-4 py-3 font-medium">Created</th>
+                        <th class="px-4 py-3 font-medium text-right">Actions</th>
                     </tr>
                 </template>
 
@@ -149,6 +151,16 @@ const resetFilters = (): void => {
                         </td>
                         <td class="px-4 py-4 text-sm text-muted-foreground">
                             {{ log.createdAt ? new Date(log.createdAt).toLocaleString() : 'N/A' }}
+                        </td>
+                        <td class="px-4 py-4">
+                            <div class="flex justify-end">
+                                <Button as-child variant="ghost" size="sm">
+                                    <Link :href="activityLogsShow(log.id)">
+                                        <ArrowUpRight class="size-4" />
+                                        View
+                                    </Link>
+                                </Button>
+                            </div>
                         </td>
                     </tr>
                 </template>

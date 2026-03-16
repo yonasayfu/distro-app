@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -35,6 +36,7 @@ test('api login returns a bearer token and the current users rbac context', func
         ]);
 
     expect(PersonalAccessToken::query()->count())->toBe(1);
+    expect(ActivityLog::query()->where('event', 'auth.api-login')->exists())->toBeTrue();
 });
 
 test('api me returns the authenticated user with roles and permissions', function () {
@@ -66,6 +68,7 @@ test('api logout revokes the current token', function () {
         ->assertJsonPath('message', 'Logged out successfully.');
 
     expect(PersonalAccessToken::query()->count())->toBe(0);
+    expect(ActivityLog::query()->where('event', 'auth.api-logout')->exists())->toBeTrue();
 });
 
 test('api login rejects invalid credentials', function () {

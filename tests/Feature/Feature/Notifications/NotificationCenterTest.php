@@ -24,6 +24,7 @@ test('notification center lists notifications and shares unread count', function
             ->component('notifications/Index')
             ->where('stats.unreadCount', 1)
             ->where('auth.notificationCount', 1)
+            ->has('auth.notificationPreview', 1)
             ->has('notifications.data', 1),
         );
 });
@@ -66,4 +67,19 @@ test('users without notification permission cannot access the notification cente
     $this->actingAs($user)
         ->get(route('notifications.index'))
         ->assertForbidden();
+});
+
+test('notification preview remains available even with no notifications', function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $user = User::factory()->create();
+    $user->assignRole('Member');
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.notificationCount', 0)
+            ->has('auth.notificationPreview', 0),
+        );
 });

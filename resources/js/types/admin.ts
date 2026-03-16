@@ -89,6 +89,9 @@ export type ManagedActivityLog = {
     event: string;
     description: string;
     actor: string | null;
+    actorEmail: string | null;
+    subjectType: string | null;
+    subjectId: number | string | null;
     ipAddress: string | null;
     createdAt: string | null;
     properties: Record<string, unknown>;

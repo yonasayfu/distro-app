@@ -35,6 +35,9 @@ class ActivityLogController extends Controller
                 'event' => $log->event,
                 'description' => $log->description,
                 'actor' => $log->actor?->name,
+                'actorEmail' => $log->actor?->email,
+                'subjectType' => $log->subject_type,
+                'subjectId' => $log->subject_id,
                 'ipAddress' => $log->ip_address,
                 'createdAt' => $log->created_at?->toISOString(),
                 'properties' => $log->properties ?? [],
@@ -53,6 +56,29 @@ class ActivityLogController extends Controller
                 ->pluck('event')
                 ->values()
                 ->all(),
+        ]);
+    }
+
+    /**
+     * Display a single activity log entry.
+     */
+    public function show(ActivityLog $activityLog): Response
+    {
+        $activityLog->load('actor');
+
+        return Inertia::render('activity-logs/Show', [
+            'log' => [
+                'id' => $activityLog->id,
+                'event' => $activityLog->event,
+                'description' => $activityLog->description,
+                'actor' => $activityLog->actor?->name,
+                'actorEmail' => $activityLog->actor?->email,
+                'subjectType' => $activityLog->subject_type,
+                'subjectId' => $activityLog->subject_id,
+                'ipAddress' => $activityLog->ip_address,
+                'createdAt' => $activityLog->created_at?->toISOString(),
+                'properties' => $activityLog->properties ?? [],
+            ],
         ]);
     }
 }

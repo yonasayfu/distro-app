@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\LoginApiRequest;
 use App\Http\Resources\Api\V1\AuthUserResource;
+use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,6 +20,17 @@ class AuthTokenController extends Controller
 
         $token = $user->createToken($request->validated('device_name'))->plainTextToken;
 
+        ActivityLogger::record(
+            actor: $user,
+            event: 'auth.api-login',
+            description: 'Issued a personal access token.',
+            subject: $user,
+            properties: [
+                'device_name' => $request->validated('device_name'),
+            ],
+            request: $request,
+        );
+
         return response()->json([
             'message' => 'Authenticated successfully.',
             'token' => $token,
@@ -32,6 +44,14 @@ class AuthTokenController extends Controller
      */
     public function destroy(Request $request): JsonResponse
     {
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'auth.api-logout',
+            description: 'Revoked the current personal access token.',
+            subject: $request->user(),
+            request: $request,
+        );
+
         $request->user()?->currentAccessToken()?->delete();
 
         return response()->json([

@@ -288,6 +288,7 @@ Tasks:
 - Add database notification usage pattern.
 - Add activity logging for auth, admin, and settings changes.
 - Build admin audit log UI with filters and detail view.
+- Add bell preview and empty-state behavior so the shell stays informative even before data exists.
 
 Deliverables:
 
@@ -309,7 +310,7 @@ Tasks:
 
 - Add Sanctum.
 - Add `/api/v1` routing structure.
-- Create auth, profile, and notification endpoints.
+- Create auth, profile, notification, and activity-log endpoints.
 - Standardize pagination and error envelope.
 - Add OpenAPI or Postman artifacts.
 - Add API tests with Pest.
@@ -323,6 +324,7 @@ Deliverables:
 Acceptance:
 
 - A future project can extend the API without redesigning auth or response structure.
+- Mobile and web clients can consume notifications and audit data through the same RBAC model.
 
 ### Phase 9: Developer Experience and Operations
 

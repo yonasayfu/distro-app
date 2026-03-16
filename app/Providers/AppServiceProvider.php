@@ -3,9 +3,13 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Support\ActivityLogger;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -50,5 +54,27 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+
+        Event::listen(function (Login $event): void {
+            ActivityLogger::record(
+                actor: $event->user,
+                event: 'auth.login',
+                description: 'Signed in successfully.',
+                subject: $event->user,
+            );
+        });
+
+        Event::listen(function (Logout $event): void {
+            if ($event->user === null) {
+                return;
+            }
+
+            ActivityLogger::record(
+                actor: $event->user,
+                event: 'auth.logout',
+                description: 'Signed out successfully.',
+                subject: $event->user,
+            );
+        });
     }
 }

@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ActivityLogApiController;
 use App\Http\Controllers\Api\V1\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
+use App\Http\Controllers\Api\V1\NotificationApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -16,6 +18,18 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('notifications', [NotificationApiController::class, 'index'])
+            ->middleware('permission:notifications.view');
+        Route::get('notifications/{notification}', [NotificationApiController::class, 'show'])
+            ->middleware('permission:notifications.view');
+        Route::put('notifications/{notification}/read', [NotificationApiController::class, 'update'])
+            ->middleware('permission:notifications.view');
+        Route::post('notifications/read-all', [NotificationApiController::class, 'destroy'])
+            ->middleware('permission:notifications.view');
+        Route::get('activity-logs', [ActivityLogApiController::class, 'index'])
+            ->middleware('permission:activity-logs.view');
+        Route::get('activity-logs/{activityLog}', [ActivityLogApiController::class, 'show'])
+            ->middleware('permission:activity-logs.view');
         Route::get('admin/users', AdminUserController::class)
             ->middleware('permission:users.view');
     });

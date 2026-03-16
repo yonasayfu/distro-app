@@ -1,3 +1,5 @@
+import type { ManagedNotification } from './admin';
+
 export type User = {
     id: number;
     name: string;
@@ -21,6 +23,7 @@ export type Auth = {
         viewActivityLogs: boolean;
     };
     notificationCount: number;
+    notificationPreview: ManagedNotification[];
 };
 
 export type SharedFlash = {

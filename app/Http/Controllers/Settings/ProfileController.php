@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Support\ActivityLogger;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,18 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'settings.profile-updated',
+            description: 'Updated profile settings.',
+            subject: $request->user(),
+            properties: [
+                'email_changed' => $request->user()->wasChanged('email'),
+                'name_changed' => $request->user()->wasChanged('name'),
+            ],
+            request: $request,
+        );
+
         return to_route('profile.edit');
     }
 
@@ -47,6 +60,14 @@ class ProfileController extends Controller
     public function destroy(ProfileDeleteRequest $request): RedirectResponse
     {
         $user = $request->user();
+
+        ActivityLogger::record(
+            actor: $user,
+            event: 'settings.profile-deleted',
+            description: 'Deleted the signed-in profile.',
+            subject: $user,
+            request: $request,
+        );
 
         Auth::logout();
 

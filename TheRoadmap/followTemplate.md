@@ -155,6 +155,8 @@ Rules:
 Current baseline now implemented:
 
 - Header bell with unread count
+- Header bell dropdown preview
+- Header bell empty state when nothing has been sent yet
 - Full notifications page
 - Mark one as read
 - Mark all as read
@@ -185,6 +187,8 @@ Rules:
 
 Current baseline now implemented:
 
+- Audit list page
+- Audit detail page
 - `users.created`
 - `users.updated`
 - `users.roles-updated`
@@ -193,6 +197,13 @@ Current baseline now implemented:
 - `roles.updated`
 - `roles.permissions-updated`
 - `roles.deleted`
+- `auth.login`
+- `auth.logout`
+- `auth.api-login`
+- `auth.api-logout`
+- `settings.profile-updated`
+- `settings.profile-deleted`
+- `settings.password-updated`
 - `notifications.read`
 - `notifications.read-all`
 

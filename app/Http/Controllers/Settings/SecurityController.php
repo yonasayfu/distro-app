@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
+use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -52,6 +53,14 @@ class SecurityController extends Controller implements HasMiddleware
         $request->user()->update([
             'password' => $request->password,
         ]);
+
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'settings.password-updated',
+            description: 'Updated the account password.',
+            subject: $request->user(),
+            request: $request,
+        );
 
         return back();
     }

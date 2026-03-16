@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
@@ -20,6 +21,7 @@ test('users can authenticate using the login screen', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+    expect(ActivityLog::query()->where('event', 'auth.login')->exists())->toBeTrue();
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
@@ -66,6 +68,7 @@ test('users can logout', function () {
 
     $this->assertGuest();
     $response->assertRedirect(route('home'));
+    expect(ActivityLog::query()->where('event', 'auth.logout')->exists())->toBeTrue();
 });
 
 test('users are rate limited', function () {

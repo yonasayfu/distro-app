@@ -25,16 +25,7 @@ class NotificationController extends Controller
             ->latest()
             ->paginate(10)
             ->withQueryString()
-            ->through(fn (DatabaseNotification $notification): array => [
-                'id' => $notification->id,
-                'title' => $notification->data['title'] ?? 'Notification',
-                'message' => $notification->data['message'] ?? '',
-                'actionUrl' => $notification->data['action_url'] ?? null,
-                'actionLabel' => $notification->data['action_label'] ?? null,
-                'level' => $notification->data['level'] ?? 'info',
-                'readAt' => $notification->read_at?->toISOString(),
-                'createdAt' => $notification->created_at?->toISOString(),
-            ]);
+            ->through(fn (DatabaseNotification $notification): array => $this->presentNotification($notification));
 
         return Inertia::render('notifications/Index', [
             'notifications' => $notifications,
@@ -51,7 +42,7 @@ class NotificationController extends Controller
     /**
      * Mark a notification as read.
      */
-    public function markRead(Request $request, string $notification): RedirectResponse
+    public function read(Request $request, string $notification): RedirectResponse
     {
         $entry = $request->user()->notifications()->findOrFail($notification);
 
@@ -76,7 +67,7 @@ class NotificationController extends Controller
     /**
      * Mark all notifications as read.
      */
-    public function markAllRead(Request $request): RedirectResponse
+    public function readAll(Request $request): RedirectResponse
     {
         $unread = $request->user()->unreadNotifications()->get();
 
@@ -93,5 +84,24 @@ class NotificationController extends Controller
         );
 
         return to_route('notifications.index')->with('success', 'All notifications marked as read.');
+    }
+
+    /**
+     * Transform a database notification into the shared frontend shape.
+     *
+     * @return array<string, mixed>
+     */
+    protected function presentNotification(DatabaseNotification $notification): array
+    {
+        return [
+            'id' => $notification->id,
+            'title' => $notification->data['title'] ?? 'Notification',
+            'message' => $notification->data['message'] ?? '',
+            'actionUrl' => $notification->data['action_url'] ?? null,
+            'actionLabel' => $notification->data['action_label'] ?? null,
+            'level' => $notification->data['level'] ?? 'info',
+            'readAt' => $notification->read_at?->toISOString(),
+            'createdAt' => $notification->created_at?->toISOString(),
+        ];
     }
 }

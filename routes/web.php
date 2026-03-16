@@ -76,17 +76,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:notifications.view')
         ->name('notifications.index');
 
-    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'read'])
         ->middleware('permission:notifications.view')
         ->name('notifications.read');
 
-    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
+    Route::post('notifications/read-all', [NotificationController::class, 'readAll'])
         ->middleware('permission:notifications.view')
         ->name('notifications.read-all');
 
     Route::get('activity-logs', [ActivityLogController::class, 'index'])
         ->middleware('permission:activity-logs.view')
         ->name('activity-logs.index');
+
+    Route::get('activity-logs/{activityLog}', [ActivityLogController::class, 'show'])
+        ->middleware('permission:activity-logs.view')
+        ->name('activity-logs.show');
 });
 
 require __DIR__.'/settings.php';

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\User;
 
 test('profile page is displayed', function () {
@@ -31,6 +32,7 @@ test('profile information can be updated', function () {
     expect($user->name)->toBe('Test User');
     expect($user->email)->toBe('test@example.com');
     expect($user->email_verified_at)->toBeNull();
+    expect(ActivityLog::query()->where('event', 'settings.profile-updated')->exists())->toBeTrue();
 });
 
 test('email verification status is unchanged when the email address is unchanged', function () {
@@ -65,6 +67,7 @@ test('user can delete their account', function () {
 
     $this->assertGuest();
     expect($user->fresh())->toBeNull();
+    expect(ActivityLog::query()->where('event', 'settings.profile-deleted')->exists())->toBeTrue();
 });
 
 test('correct password must be provided to delete account', function () {

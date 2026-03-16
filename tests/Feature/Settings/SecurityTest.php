@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -94,6 +95,7 @@ test('password can be updated', function () {
         ->assertRedirect(route('security.edit'));
 
     expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
+    expect(ActivityLog::query()->where('event', 'settings.password-updated')->exists())->toBeTrue();
 });
 
 test('correct password must be provided to update password', function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -52,6 +53,22 @@ class HandleInertiaRequests extends Middleware
                     'viewActivityLogs' => $user?->can('activity-logs.view') ?? false,
                 ],
                 'notificationCount' => $user?->unreadNotifications()->count() ?? 0,
+                'notificationPreview' => $user?->notifications()
+                    ->latest()
+                    ->limit(5)
+                    ->get()
+                    ->map(fn (DatabaseNotification $notification): array => [
+                        'id' => $notification->id,
+                        'title' => $notification->data['title'] ?? 'Notification',
+                        'message' => $notification->data['message'] ?? '',
+                        'actionUrl' => $notification->data['action_url'] ?? null,
+                        'actionLabel' => $notification->data['action_label'] ?? null,
+                        'level' => $notification->data['level'] ?? 'info',
+                        'readAt' => $notification->read_at?->toISOString(),
+                        'createdAt' => $notification->created_at?->toISOString(),
+                    ])
+                    ->values()
+                    ->all() ?? [],
             ],
             'flash' => [
                 'success' => fn (): ?string => $request->session()->get('success'),
