@@ -240,9 +240,9 @@ Acceptance criteria:
 
 ## Phase 12: Public Website Foundation
 
-- [ ] `[P1]` Create a public layout separate from the authenticated app shell.
-- [ ] `[P1]` Build a polished public landing page with hero, feature, CTA, and footer sections.
-- [ ] `[P1]` Add guest navigation and mobile navigation behavior.
+- [x] `[P1]` Create a public layout separate from the authenticated app shell.
+- [x] `[P1]` Build a polished public landing page with hero, feature, CTA, and footer sections.
+- [x] `[P1]` Add guest navigation and mobile navigation behavior.
 - [ ] `[P1]` Add a `pages` content model for admin-managed public pages.
 - [ ] `[P1]` Build admin CRUD for public pages.
 - [ ] `[P1]` Add slug-based public page routes.

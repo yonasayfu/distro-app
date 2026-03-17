@@ -28,6 +28,7 @@ Suggested branch pattern:
 - `phase-11-deployment-mail-guides`
 - `phase-11-search-ux`
 - `phase-12-public-website-planning`
+- `phase-12-public-website-foundation`
 
 ### 2. Commit at Logical Milestones
 
@@ -127,14 +128,15 @@ Branch history so far:
 - `phase-11-deployment-mail-guides`
 - `phase-11-search-ux`
 - `phase-12-public-website-planning`
+- `phase-12-public-website-foundation`
 
 Current active phase branch:
 
-- `phase-12-public-website-planning`
+- `phase-12-public-website-foundation`
 
 Current phase purpose:
 
-- define the roadmap and task structure for adding a public website layer to the boilerplate
+- implement the first public website slice: separate layout, polished landing page, and guest navigation
 
 ## Important Security Note
 

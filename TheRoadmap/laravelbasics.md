@@ -5252,3 +5252,140 @@ Why:
 - serious products often have both a public website and a private admin/app surface
 - those two surfaces should share backend foundations, not visual structure
 - planning the content model first avoids turning the public site into hardcoded marketing pages
+
+## Entry 020: Public Layout and Landing Page Foundation
+
+### Goal
+
+Implement the first real public website slice:
+
+- separate public layout
+- polished landing page
+- guest navigation for desktop and mobile
+
+### What triggered this batch
+
+After planning Phase 12, the next correct move was not content CRUD yet. The correct move was to establish the public-facing layout system first.
+
+That gives future public pages one clean structure before we add admin-managed entities like `pages` or `posts`.
+
+### 1. `resources/js/layouts/public/PublicLayout.vue`
+
+Before:
+
+- there was no dedicated public layout
+- the app only had:
+  - the admin/app shell
+  - auth layouts
+  - the default Laravel starter welcome page
+
+After:
+
+- added a dedicated public layout with:
+  - sticky public header
+  - guest navigation
+  - auth-aware action buttons
+  - mobile sheet navigation
+  - distinct footer
+
+Key behavior:
+
+- signed-in users see a dashboard-oriented primary action
+- guests see login/register entry points
+- registration visibility respects `canRegister`
+- the logo now links to the public home page, not the dashboard
+
+Why:
+
+- public pages need their own visual system
+- public navigation should not depend on the admin sidebar or app shell assumptions
+
+### 2. `resources/js/pages/Welcome.vue`
+
+Before:
+
+- the home page was still the default Laravel starter content
+- it linked to Laravel docs, Laracasts, and deployment marketing
+- it did not express your boilerplate’s actual purpose
+
+After:
+
+- replaced it with a real landing page built around this project’s value:
+  - hero section
+  - capability cards
+  - workflow section
+  - architecture split between public and admin surfaces
+  - stronger CTA structure
+
+Diff-style summary:
+
+```vue
+- default Laravel starter welcome content
+- docs/tutorial/deploy-now links
++ product-style public landing page
++ hero + capability cards + workflow + architecture sections
++ auth-aware CTA buttons
+```
+
+Why:
+
+- the first public page should explain the platform, not the Laravel starter kit
+- this is the first step toward a reusable guest-facing layer for future projects
+
+### 3. `tests/Feature/Feature/Public/HomePageTest.php`
+
+Before:
+
+- there was no dedicated home-page feature test for the public landing page
+
+After:
+
+- added tests proving:
+  - guests can view the public home page
+  - signed-in users can still view it
+  - the Inertia component remains `Welcome`
+
+Why:
+
+- once the landing page becomes a real product surface, it deserves its own regression coverage
+
+### 4. `TheRoadmap/BoilerplateTaskList.md`
+
+After:
+
+- marked these Phase 12 items complete:
+  - public layout
+  - polished public landing page
+  - guest navigation and mobile behavior
+
+Why:
+
+- this phase is now partly implemented, not just planned
+
+### Laravel concepts involved
+
+- separate layout systems in Inertia
+- route-aware guest and authenticated actions
+- feature tests for public entry points
+- using shared Inertia props like `auth` and `name` across a non-admin surface
+
+### Important files
+
+- `resources/js/layouts/public/PublicLayout.vue`
+- `resources/js/pages/Welcome.vue`
+- `tests/Feature/Feature/Public/HomePageTest.php`
+- `routes/web.php`
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan test --compact tests/Feature/Feature/Public/HomePageTest.php`
+- `npm run build`
+- `npm run types:check`
+
+### What to remember
+
+- build the public layout before building public content entities
+- public and private surfaces can share backend props without sharing the same visual frame
+- a landing page should communicate the product, not the framework starter
