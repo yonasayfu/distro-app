@@ -26,6 +26,8 @@ Suggested branch pattern:
 - `phase-10-integration-guides`
 - `phase-10-shell-cleanup-search-fix`
 - `phase-11-deployment-mail-guides`
+- `phase-11-search-ux`
+- `phase-12-public-website-planning`
 
 ### 2. Commit at Logical Milestones
 
@@ -120,14 +122,19 @@ Branch history so far:
 - `phase-8-api-baseline`
 - `phase-9-dx-operations`
 - `phase-10-export-search`
+- `phase-10-integration-guides`
+- `phase-10-shell-cleanup-search-fix`
+- `phase-11-deployment-mail-guides`
+- `phase-11-search-ux`
+- `phase-12-public-website-planning`
 
 Current active phase branch:
 
-- `phase-11-deployment-mail-guides`
+- `phase-12-public-website-planning`
 
 Current phase purpose:
 
-- document production readiness, deployment guidance, and local Mailpit email testing
+- define the roadmap and task structure for adding a public website layer to the boilerplate
 
 ## Important Security Note
 

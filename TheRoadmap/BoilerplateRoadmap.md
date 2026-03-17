@@ -379,6 +379,35 @@ Current optional extensions now implemented:
 - Print and export foundation
 - Global search
 
+### Phase 12: Public Website Foundation
+
+Goal:
+Add a separate public-facing website layer so the boilerplate can support both guest-facing marketing/content pages and the authenticated admin/application backend.
+
+Tasks:
+
+- Create a public layout separate from the app shell.
+- Build a polished landing page and guest navigation.
+- Add reusable public sections such as hero, features, CTA, and footer.
+- Add admin-managed public content entities such as `pages` and later `posts`.
+- Add publish/draft flow and slug-based public routing.
+- Add basic SEO fields for public content.
+- Keep the public website and admin application visually and structurally separate.
+
+Deliverables:
+
+- Public layout
+- Public landing page
+- Admin-managed public pages foundation
+- Slug-based public content routing
+- SEO-ready public content model
+
+Acceptance:
+
+- The boilerplate supports both guest-facing and admin-facing experiences.
+- Public content can be managed from the backend.
+- The public UI does not feel like the admin shell reused in the wrong place.
+
 ## Recommended Build Order
 
 Build in this order:
@@ -395,6 +424,8 @@ Build in this order:
 10. Phase 9
 
 Only then consider Phase 10.
+
+Phase 12 should be treated as the next major expansion after the private application baseline is stable.
 
 ## V1 Exit Criteria
 

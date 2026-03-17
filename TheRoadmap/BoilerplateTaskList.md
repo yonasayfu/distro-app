@@ -238,6 +238,27 @@ Acceptance criteria:
 
 - Optional features stay optional and do not distort the base starter.
 
+## Phase 12: Public Website Foundation
+
+- [ ] `[P1]` Create a public layout separate from the authenticated app shell.
+- [ ] `[P1]` Build a polished public landing page with hero, feature, CTA, and footer sections.
+- [ ] `[P1]` Add guest navigation and mobile navigation behavior.
+- [ ] `[P1]` Add a `pages` content model for admin-managed public pages.
+- [ ] `[P1]` Build admin CRUD for public pages.
+- [ ] `[P1]` Add slug-based public page routes.
+- [ ] `[P1]` Add publish/draft support so unpublished content stays private.
+- [ ] `[P1]` Add basic SEO fields for public content.
+- [ ] `[P2]` Add a `posts` or `updates` module for repeatable public publishing.
+- [ ] `[P2]` Add site settings management for shared public content like footer, CTA, and social links.
+- [ ] `[P1]` Add tests for public visibility, draft protection, and admin content management.
+
+Acceptance criteria:
+
+- The project supports a real guest-facing website as well as the private admin application.
+- Public pages are backend-managed instead of hardcoded.
+- Draft content is never shown publicly.
+- Public and private layouts are intentionally separate.
+
 Implementation notes:
 
 - Global search now exists as a permission-aware cross-module search page.

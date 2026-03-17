@@ -5135,3 +5135,120 @@ Programmatic checks run for this batch:
 
 - search pages are one of the clearest places where old form UX should usually give way to debounced live queries
 - the backend can stay server-driven while the frontend becomes much faster to use
+
+## Entry 019: Planning the Public Website Foundation
+
+### Goal
+
+Define how the boilerplate should grow from an internal admin/application starter into a dual-surface starter that also supports a public-facing website.
+
+### What triggered this batch
+
+The current boilerplate is strong on:
+
+- admin shell
+- auth
+- RBAC
+- CRUD
+- notifications
+- API
+
+But many real projects also need:
+
+- a guest-facing landing page
+- public content pages
+- backend-managed website content
+
+So this batch documented a new phase instead of jumping straight into implementation.
+
+### 1. `TheRoadmap/publicWebsitePhase.md`
+
+Before:
+
+- there was no dedicated planning document for the public website side of the boilerplate
+
+After:
+
+- added a standalone planning document covering:
+  - purpose
+  - scope
+  - separation from admin shell
+  - recommended entities
+  - routes
+  - permissions
+  - implementation order
+  - acceptance criteria
+
+Why:
+
+- a public website layer is big enough to deserve its own design and scope document
+- without this, public pages tend to get mixed into the admin architecture in an ad hoc way
+
+### 2. `TheRoadmap/BoilerplateRoadmap.md`
+
+Before:
+
+- the roadmap mainly covered internal application concerns
+
+After:
+
+- added `Phase 12: Public Website Foundation`
+
+Why:
+
+- this makes the public layer an intentional part of the boilerplate evolution instead of an afterthought
+
+### 3. `TheRoadmap/BoilerplateTaskList.md`
+
+Before:
+
+- there were no concrete checklist items for the guest-facing website layer
+
+After:
+
+- added task tracking for:
+  - public layout
+  - landing page
+  - guest navigation
+  - pages module
+  - slug routes
+  - publish/draft flow
+  - SEO fields
+  - posts/updates module
+  - site settings
+  - tests
+
+Why:
+
+- public website work needs the same clarity and discipline as admin module work
+
+### 4. Core architectural decision
+
+The most important rule documented here is:
+
+- public website UI and internal app UI must remain separate
+
+Why:
+
+- a strong boilerplate should support both surfaces without making either one feel compromised
+- public pages should not look like the admin app with the sidebar removed
+
+### Laravel concepts involved
+
+- route separation between guest and authenticated surfaces
+- admin-managed content entities
+- publish/draft visibility rules
+- slug-based public routing
+- SEO metadata fields
+
+### Important files
+
+- `TheRoadmap/publicWebsitePhase.md`
+- `TheRoadmap/BoilerplateRoadmap.md`
+- `TheRoadmap/BoilerplateTaskList.md`
+
+### What to remember
+
+- serious products often have both a public website and a private admin/app surface
+- those two surfaces should share backend foundations, not visual structure
+- planning the content model first avoids turning the public site into hardcoded marketing pages
