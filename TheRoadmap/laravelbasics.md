@@ -5906,3 +5906,319 @@ After the freeze document:
 - a boilerplate should be frozen intentionally, not by accident
 - document both what is included and what is deferred
 - release scope is part of engineering quality, not just project management
+
+## Entry 025: Public Pages Module for `starter-core`
+
+### Goal
+
+Complete the minimum public content system required before `starter-core-v1` can be considered a real public-plus-admin starter.
+
+### What triggered this batch
+
+The public landing page already existed, but it was still mostly hardcoded.
+
+That left one important gap:
+
+- the boilerplate could present a public surface
+- but it could not yet manage public content from the admin side
+
+This batch closes that gap with a first `pages` module.
+
+### 1. Database and model layer
+
+Files:
+
+- `database/migrations/2026_03_17_135413_create_pages_table.php`
+- `app/Models/Page.php`
+- `database/factories/PageFactory.php`
+
+Before:
+
+- there was no `pages` table
+- there was no public content model
+
+After:
+
+- added fields for:
+  - `title`
+  - `slug`
+  - `excerpt`
+  - `content`
+  - `seo_title`
+  - `seo_description`
+  - `is_published`
+  - `published_at`
+- added model fillable fields and casts
+- added a `published()` query scope
+- added factory states for `published()` and `draft()`
+
+Why:
+
+- a reusable public content module needs a stable content schema
+- publish state and SEO fields should exist from the first cut, not as an afterthought
+
+### Example of the schema change
+
+```diff
+- pages table only had id and timestamps
++ pages table now stores slug, content, SEO, and publish state
+```
+
+### 2. Validation and slug rules
+
+Files:
+
+- `app/Http/Requests/Admin/StorePageRequest.php`
+- `app/Http/Requests/Admin/UpdatePageRequest.php`
+
+Before:
+
+- the generated Form Requests returned `false` from `authorize()`
+- there were no validation rules
+
+After:
+
+- authorization now uses:
+  - `pages.create`
+  - `pages.update`
+- `prepareForValidation()` now:
+  - generates a slug from the title when slug is blank
+  - normalizes the publish checkbox into a boolean
+- reserved slugs such as `dashboard`, `search`, `login`, and `handbook` are blocked
+
+Why:
+
+- public slug routes would become fragile if they were allowed to clash with system routes
+- the request layer is the right place to normalize and protect this data
+
+### Example of the validation shift
+
+```diff
+- return false;
++ return $this->user()?->can('pages.create') ?? false;
+```
+
+```diff
+- 'slug' => []
++ 'slug' => ['required', 'alpha_dash', Rule::unique('pages', 'slug'), Rule::notIn($this->reservedSlugs())]
+```
+
+### 3. Admin CRUD controller
+
+Files:
+
+- `app/Http/Controllers/Admin/PageManagementController.php`
+- `routes/web.php`
+
+Before:
+
+- there was no admin controller for public pages
+- there were no routes for listing, creating, editing, or deleting pages
+
+After:
+
+- added:
+  - `pages.index`
+  - `pages.create`
+  - `pages.store`
+  - `pages.edit`
+  - `pages.update`
+  - `pages.destroy`
+- index uses the same search, pagination, and summary pattern as the other admin modules
+- create/update actions record activity log events
+- publish state now controls `published_at`
+
+Why:
+
+- `Users` and `Roles` should not be the only canonical modules in the boilerplate
+- a public content module is now also part of the example pattern
+
+### Example of the route addition
+
+```diff
++ Route::get('admin/pages', [PageManagementController::class, 'index'])->middleware('permission:pages.view')->name('pages.index');
++ Route::post('admin/pages', [PageManagementController::class, 'store'])->middleware('permission:pages.create')->name('pages.store');
++ Route::put('admin/pages/{page}', [PageManagementController::class, 'update'])->middleware('permission:pages.update')->name('pages.update');
+```
+
+### 4. Public slug route
+
+Files:
+
+- `app/Http/Controllers/PublicPageController.php`
+- `routes/web.php`
+
+Before:
+
+- there was no dynamic public page route
+
+After:
+
+- added a slug-based public route:
+  - `public-pages.show`
+- unpublished pages now return `404`
+- published pages render the `public/Pages/Show` Inertia page
+
+Why:
+
+- the public website is not reusable until content can live on predictable slugs
+- draft protection is a core rule, not optional polish
+
+### Example of the public guard
+
+```diff
+- // no public page controller logic
++ abort_unless($page->is_published && $page->published_at !== null, 404);
+```
+
+### 5. RBAC and navigation integration
+
+Files:
+
+- `database/seeders/RolePermissionSeeder.php`
+- `app/Http/Middleware/HandleInertiaRequests.php`
+- `resources/js/navigation/app.ts`
+- `app/Http/Controllers/Admin/RoleManagementController.php`
+
+Before:
+
+- `pages.*` permissions did not exist
+- the sidebar could not expose a public content module
+
+After:
+
+- added:
+  - `pages.view`
+  - `pages.create`
+  - `pages.update`
+  - `pages.delete`
+- `Admin` gets full page management
+- `Manager` gets page viewing, creation, and update without full user/role administration
+- the sidebar now shows `Pages` when the current role can access it
+- role management descriptions now explain what each page permission does
+
+Why:
+
+- public content should still obey the shared RBAC system
+- the boilerplate now demonstrates that not every admin module must belong only to `Admin`
+
+### 6. Frontend admin pages
+
+Files:
+
+- `resources/js/pages/admin/Pages/Index.vue`
+- `resources/js/pages/admin/Pages/Create.vue`
+- `resources/js/pages/admin/Pages/Edit.vue`
+
+Before:
+
+- no admin UI existed for public pages
+
+After:
+
+- added a searchable index
+- added create and edit forms
+- added publish toggle and SEO inputs
+- added live-page link when a page is published
+- gated create, edit, and delete actions by permission so the UI matches the backend rules
+
+Why:
+
+- permission middleware alone is not enough for a polished boilerplate
+- the visible actions should match the real permissions
+
+### Example of the UI gating shift
+
+```diff
+- create button was always visible on the new index screen
++ create button is visible only when `pages.create` exists in the shared auth permission set
+```
+
+### 7. Public page frontend
+
+File:
+
+- `resources/js/pages/public/Pages/Show.vue`
+
+Before:
+
+- public content had no dedicated page view
+
+After:
+
+- published pages render through `PublicLayout`
+- the page title and description feed `<Head>`
+- content is displayed in a public reading layout instead of the admin shell
+
+Why:
+
+- a public content entity should prove the split between guest-facing and operator-facing surfaces
+
+### 8. Global search integration
+
+File:
+
+- `app/Http/Controllers/GlobalSearchController.php`
+
+Before:
+
+- global search ignored page records
+
+After:
+
+- admins with `pages.view` now see page results in global search
+- results point to the admin editor and show `Published` or `Draft` in the metadata
+
+Why:
+
+- once a module becomes part of the boilerplate, shared search should know about it
+
+### 9. Tests
+
+Files:
+
+- `tests/Feature/Admin/PageCrudTest.php`
+- `tests/Feature/Public/PublicPageTest.php`
+- `tests/Feature/RoleAccessTest.php`
+
+What is covered now:
+
+- admin can view page management
+- manager can create and update pages
+- manager cannot delete pages without delete permission
+- member cannot access page management
+- reserved slugs are rejected
+- admin can delete a page
+- guest can view published public pages
+- draft pages return `404`
+- signed-in users still get the public page surface, not the admin shell
+- role access tests now include page-management access
+
+### Verification run
+
+- `php artisan route:list --path=pages`
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `php artisan migrate --no-interaction`
+- `php artisan test --compact tests/Feature/Admin/PageCrudTest.php tests/Feature/Public/PublicPageTest.php tests/Feature/RoleAccessTest.php tests/Feature/Feature/GlobalSearchTest.php`
+- `npm run types:check`
+- `npm run build`
+- `vendor/bin/pint --dirty --format agent`
+- `php artisan db:seed --no-interaction`
+
+### Important files
+
+- `app/Models/Page.php`
+- `app/Http/Controllers/Admin/PageManagementController.php`
+- `app/Http/Controllers/PublicPageController.php`
+- `routes/web.php`
+- `resources/js/pages/admin/Pages/Index.vue`
+- `resources/js/pages/admin/Pages/Create.vue`
+- `resources/js/pages/admin/Pages/Edit.vue`
+- `resources/js/pages/public/Pages/Show.vue`
+
+### What to remember
+
+- a public website feature is not complete until admin CRUD and public visibility rules both exist
+- slug routes need reserved-name protection early
+- publish/draft is a content safety rule, not just a UI label
+- the public side and admin side can share the same backend while keeping separate experiences

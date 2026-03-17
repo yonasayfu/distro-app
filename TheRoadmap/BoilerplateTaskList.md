@@ -244,14 +244,14 @@ Acceptance criteria:
 - [x] `[P1]` Create a public layout separate from the authenticated app shell.
 - [x] `[P1]` Build a polished public landing page with hero, feature, CTA, and footer sections.
 - [x] `[P1]` Add guest navigation and mobile navigation behavior.
-- [ ] `[P1]` Add a `pages` content model for admin-managed public pages.
-- [ ] `[P1]` Build admin CRUD for public pages.
-- [ ] `[P1]` Add slug-based public page routes.
-- [ ] `[P1]` Add publish/draft support so unpublished content stays private.
-- [ ] `[P1]` Add basic SEO fields for public content.
+- [x] `[P1]` Add a `pages` content model for admin-managed public pages.
+- [x] `[P1]` Build admin CRUD for public pages.
+- [x] `[P1]` Add slug-based public page routes.
+- [x] `[P1]` Add publish/draft support so unpublished content stays private.
+- [x] `[P1]` Add basic SEO fields for public content.
 - [ ] `[P2]` Add a `posts` or `updates` module for repeatable public publishing.
 - [ ] `[P2]` Add site settings management for shared public content like footer, CTA, and social links.
-- [ ] `[P1]` Add tests for public visibility, draft protection, and admin content management.
+- [x] `[P1]` Add tests for public visibility, draft protection, and admin content management.
 
 Acceptance criteria:
 
@@ -259,6 +259,12 @@ Acceptance criteria:
 - Public pages are backend-managed instead of hardcoded.
 - Draft content is never shown publicly.
 - Public and private layouts are intentionally separate.
+
+Implementation notes:
+
+- The new `pages` module now covers admin CRUD, slug routing, publish/draft state, and basic SEO metadata.
+- `Manager` can manage public pages without receiving unrelated user or role administration access.
+- Public pages now render through the separate public layout even for signed-in users.
 
 ## Levels Strategy
 
@@ -278,7 +284,7 @@ Implementation notes:
 - Export center now exists as a reusable surface for future CSV, PDF, and print actions.
 - The first working print/export examples are users CSV download and a print-friendly workspace summary page.
 - `starterCoreV1.md` now acts as the release-freeze checklist for the first stable `starter-core` tag.
-- The remaining freeze items are now explicit: auth review closure, policy conventions, final CRUD wrappers, public pages minimum cut, and release-readiness closeout.
+- The remaining freeze items are now explicit: auth review closure, policy conventions, final CRUD wrappers, and release-readiness closeout.
 
 ## First Implementation Slice
 

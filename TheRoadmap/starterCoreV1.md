@@ -95,25 +95,25 @@ Why:
 
 - `starter-core-v1` should show one repeatable CRUD pattern, not mostly-repeatable patterns
 
-### 4. Public pages module minimum cut
+### Public pages minimum cut status
 
-The public website phase exists, but content management is not yet complete.
+This closeout item is now complete.
 
-Required closeout:
+Completed:
 
-- create `pages` content model
-- add admin CRUD for public pages
-- add slug-based public page routes
-- add publish/draft protection
-- add basic SEO fields
-- add focused tests for public visibility and draft protection
+- `pages` content model
+- admin CRUD for public pages
+- slug-based public page routes
+- publish/draft protection
+- basic SEO fields
+- focused tests for public visibility and draft protection
 
-Why:
+Why it matters:
 
-- without this, the public side is still mostly hardcoded
-- a reusable starter should support at least one backend-managed public content flow
+- the public side is no longer limited to hardcoded marketing content
+- `starter-core` now demonstrates one backend-managed public content flow before branching into `starter-business`
 
-### 5. Release readiness checklist
+### 4. Release readiness checklist
 
 Before tagging `starter-core-v1`, do a final release closeout.
 
@@ -128,6 +128,15 @@ Required closeout:
 Why:
 
 - a boilerplate release should be installable from docs without tribal knowledge
+
+## Remaining freeze focus
+
+The biggest remaining `starter-core-v1` items are now:
+
+- auth and security review closure
+- policy conventions for admin modules
+- final shared CRUD wrappers
+- release-readiness closeout
 
 ## What is intentionally deferred to `starter-business`
 

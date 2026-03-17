@@ -19,6 +19,20 @@ export type ManagedUser = {
     createdAt: string | null;
 };
 
+export type ManagedPage = {
+    id: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    content?: string;
+    seoTitle?: string | null;
+    seoDescription?: string | null;
+    isPublished: boolean;
+    publishedAt: string | null;
+    updatedAt: string | null;
+    publicUrl: string | null;
+};
+
 export type RoleOption = {
     name: string;
     label: string;

@@ -33,6 +33,7 @@ Suggested branch pattern:
 - `phase-12-public-handbook-access`
 - `phase-13-boilerplate-levels-planning`
 - `phase-13-starter-core-freeze`
+- `phase-14-public-pages-module`
 
 ### 2. Commit at Logical Milestones
 
@@ -136,14 +137,15 @@ Branch history so far:
 - `phase-12-handbook-module`
 - `phase-12-public-handbook-access`
 - `phase-13-starter-core-freeze`
+- `phase-14-public-pages-module`
 
 Current active phase branch:
 
-- `phase-13-boilerplate-levels-planning`
+- `phase-14-public-pages-module`
 
 Current phase purpose:
 
-- define the exact `starter-core-v1` release boundary before branching into `starter-business`
+- close the public pages minimum cut required for `starter-core-v1`
 
 ## Important Security Note
 

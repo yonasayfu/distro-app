@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Admin\PageManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ExportCenterController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\HandbookController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -40,6 +42,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('admin/users', [UserManagementController::class, 'index'])
         ->middleware('permission:users.view')
         ->name('users.index');
+
+    Route::get('admin/pages', [PageManagementController::class, 'index'])
+        ->middleware('permission:pages.view')
+        ->name('pages.index');
+
+    Route::get('admin/pages/create', [PageManagementController::class, 'create'])
+        ->middleware('permission:pages.create')
+        ->name('pages.create');
+
+    Route::post('admin/pages', [PageManagementController::class, 'store'])
+        ->middleware('permission:pages.create')
+        ->name('pages.store');
+
+    Route::get('admin/pages/{page}/edit', [PageManagementController::class, 'edit'])
+        ->middleware('permission:pages.update')
+        ->name('pages.edit');
+
+    Route::put('admin/pages/{page}', [PageManagementController::class, 'update'])
+        ->middleware('permission:pages.update')
+        ->name('pages.update');
+
+    Route::delete('admin/pages/{page}', [PageManagementController::class, 'destroy'])
+        ->middleware('permission:pages.delete')
+        ->name('pages.destroy');
 
     Route::get('admin/users/create', [UserManagementController::class, 'create'])
         ->middleware('permission:users.create')
@@ -115,3 +141,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+Route::get('{page:slug}', PublicPageController::class)->name('public-pages.show');
