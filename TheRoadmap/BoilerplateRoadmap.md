@@ -6,6 +6,8 @@ Turn the current repo from a Laravel Vue starter kit into a clean, reusable, dom
 
 This roadmap currently describes the `starter-core` level of the boilerplate. Higher levels such as `starter-business` and `starter-enterprise` should extend this base rather than inflate it.
 
+The current freeze target for this repository is defined in `TheRoadmap/starterCoreV1.md`.
+
 This is not a plan to rebuild the asset-management app. It is a plan to extract and rebuild only the reusable platform layer that appeared repeatedly across the reference docs.
 
 ## Current Baseline

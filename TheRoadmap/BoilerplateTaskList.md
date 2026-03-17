@@ -264,8 +264,8 @@ Acceptance criteria:
 
 - [x] `[P1]` Define the boilerplate levels strategy: `starter-core`, `starter-business`, and `starter-enterprise`.
 - [x] `[P1]` Map the current repository to `starter-core`.
-- [ ] `[P1]` Freeze the remaining `starter-core` scope before branching into `starter-business`.
-- [ ] `[P1]` Create the branch/tag release plan for `starter-core-v1`.
+- [x] `[P1]` Freeze the remaining `starter-core` scope before branching into `starter-business`.
+- [x] `[P1]` Create the branch/tag release plan for `starter-core-v1`.
 
 Acceptance criteria:
 
@@ -277,6 +277,8 @@ Implementation notes:
 - Global search now exists as a permission-aware cross-module search page.
 - Export center now exists as a reusable surface for future CSV, PDF, and print actions.
 - The first working print/export examples are users CSV download and a print-friendly workspace summary page.
+- `starterCoreV1.md` now acts as the release-freeze checklist for the first stable `starter-core` tag.
+- The remaining freeze items are now explicit: auth review closure, policy conventions, final CRUD wrappers, public pages minimum cut, and release-readiness closeout.
 
 ## First Implementation Slice
 

@@ -32,6 +32,7 @@ Suggested branch pattern:
 - `phase-12-handbook-module`
 - `phase-12-public-handbook-access`
 - `phase-13-boilerplate-levels-planning`
+- `phase-13-starter-core-freeze`
 
 ### 2. Commit at Logical Milestones
 
@@ -134,7 +135,7 @@ Branch history so far:
 - `phase-12-public-website-foundation`
 - `phase-12-handbook-module`
 - `phase-12-public-handbook-access`
-- `phase-13-boilerplate-levels-planning`
+- `phase-13-starter-core-freeze`
 
 Current active phase branch:
 
@@ -142,7 +143,7 @@ Current active phase branch:
 
 Current phase purpose:
 
-- define the tiered boilerplate strategy and map this repository to the correct starter level
+- define the exact `starter-core-v1` release boundary before branching into `starter-business`
 
 ## Important Security Note
 

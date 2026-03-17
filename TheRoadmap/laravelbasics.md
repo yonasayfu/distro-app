@@ -5784,3 +5784,125 @@ Why:
 - not every reusable feature belongs in the lowest boilerplate level
 - define level boundaries before adding more modules
 - freeze `starter-core` before building `starter-business`
+
+## Entry 024: Freezing `starter-core-v1`
+
+### Goal
+
+Turn `starter-core` from a general idea into an explicit release target with a clear finish line.
+
+### What triggered this batch
+
+After defining the level strategy, the next engineering problem was obvious:
+
+- we knew the repo was `starter-core`
+- but we still did not have one document that said exactly what must be finished before the first stable tag
+
+Without that, it would be too easy to keep adding features and never actually freeze the starter.
+
+### 1. `TheRoadmap/starterCoreV1.md`
+
+Before:
+
+- the release boundary for `starter-core-v1` was implied across multiple roadmap files
+- there was no single freeze checklist
+
+After:
+
+- added a dedicated freeze document for the first stable `starter-core` release
+- documented:
+  - what `starter-core` means
+  - what is already complete
+  - what must still be finished before tagging
+  - what is deferred to `starter-business`
+  - what is deferred to `starter-enterprise`
+  - the release sequence for the first tag
+
+Why:
+
+- release planning should be explicit
+- a stable starter needs a named finish line
+
+### 2. `TheRoadmap/BoilerplateRoadmap.md`
+
+Before:
+
+- the roadmap described the current level
+- but it did not point to one formal freeze target
+
+After:
+
+- linked the roadmap to `starterCoreV1.md`
+
+Why:
+
+- roadmap and release planning should agree
+
+### 3. `TheRoadmap/BoilerplateTaskList.md`
+
+Before:
+
+- the task list still treated `starter-core` freeze work as open but vague
+
+After:
+
+- marked the freeze-planning tasks complete
+- added notes that define the exact remaining closeout items:
+  - auth review closure
+  - policy conventions
+  - final shared CRUD wrappers
+  - public pages minimum cut
+  - release-readiness closeout
+
+Why:
+
+- a task tracker should distinguish planning completion from implementation completion
+
+### 4. `TheRoadmap/gitguidance.md`
+
+Before:
+
+- the branch history ended at the earlier level-planning phase
+
+After:
+
+- recorded the new active branch:
+  - `phase-13-starter-core-freeze`
+- updated the current phase purpose
+
+Why:
+
+- workflow docs should reflect the real branch state
+
+### Example of the planning shift
+
+Before the freeze document, the status was effectively:
+
+```diff
+- starter-core exists, but its release boundary is still spread across multiple docs
+```
+
+After the freeze document:
+
+```diff
++ starter-core-v1 has an explicit release checklist and deferral boundary
++ starter-business and starter-enterprise now have cleaner separation
+```
+
+### Laravel concepts involved
+
+- this is release architecture, not a framework feature batch
+- in Laravel projects, release clarity matters because the base application becomes the template for future code
+
+### Important files
+
+- `TheRoadmap/starterCoreV1.md`
+- `TheRoadmap/BoilerplateRoadmap.md`
+- `TheRoadmap/BoilerplateTaskList.md`
+- `TheRoadmap/gitguidance.md`
+
+### What to remember
+
+- a boilerplate should be frozen intentionally, not by accident
+- document both what is included and what is deferred
+- release scope is part of engineering quality, not just project management
