@@ -5389,3 +5389,165 @@ Programmatic checks run for this batch:
 - build the public layout before building public content entities
 - public and private surfaces can share backend props without sharing the same visual frame
 - a landing page should communicate the product, not the framework starter
+
+## Entry 021: In-App Handbook Module
+
+### Goal
+
+Bring the roadmap, workflow docs, and Laravel learning archive into the application UI so they can be read inside the boilerplate itself instead of only from the filesystem.
+
+### What triggered this batch
+
+The documentation already existed, but it lived only as Markdown files under `TheRoadmap/`.
+
+That created two limits:
+
+- you had to leave the app and open files manually
+- the learning archive was not presented as a structured lesson flow
+
+So this batch turned the docs into an actual app module.
+
+### 1. `app/Support/HandbookLibrary.php`
+
+Before:
+
+- there was no backend document catalog for the roadmap and learning files
+
+After:
+
+- added a dedicated support class that:
+  - defines grouped handbook documents
+  - reads markdown files from `TheRoadmap/`
+  - renders markdown into safe HTML
+  - parses `laravelbasics.md` into lesson-style entries
+
+Why:
+
+- the app needs one backend source of truth for handbook structure
+- lesson parsing belongs on the server, not in the frontend
+
+### 2. `app/Http/Controllers/HandbookController.php`
+
+Before:
+
+- there was no route/controller serving the documentation inside the app
+
+After:
+
+- added an invokable controller that returns the handbook Inertia page with:
+  - grouped document navigation
+  - current document content
+  - current lesson selection
+  - lesson list for `laravelbasics.md`
+
+Why:
+
+- this keeps the reader server-driven and consistent with the rest of the app
+
+### 3. `app/Http/Requests/HandbookIndexRequest.php`
+
+Before:
+
+- there was no validated request for the handbook page
+
+After:
+
+- added validation for:
+  - `document`
+  - `lesson`
+- added authorization through `handbook.view`
+
+Why:
+
+- even documentation routes should follow the same Form Request pattern as the rest of the application
+
+### 4. `routes/web.php` and `database/seeders/RolePermissionSeeder.php`
+
+Before:
+
+- there was no handbook module route or permission
+
+After:
+
+- added:
+  - `handbook.index`
+  - `handbook.view`
+- seeded `handbook.view` for all default signed-in roles
+
+Why:
+
+- this keeps the module inside the same RBAC model as the rest of the boilerplate
+- all signed-in users can read the handbook without bypassing permissions entirely
+
+### 5. `resources/js/pages/handbook/Index.vue`
+
+Before:
+
+- there was no frontend reader UI for the docs
+
+After:
+
+- added a handbook page with:
+  - grouped document navigation
+  - lesson archive sidebar for `laravelbasics.md`
+  - rendered markdown content
+  - code snippets shown in styled blocks
+
+Why:
+
+- this turns the documentation into a usable product surface
+- the learning archive now behaves more like lessons than raw notes
+
+### 6. `resources/js/navigation/app.ts`
+
+Before:
+
+- the handbook was not visible in the app navigation
+
+After:
+
+- added a `Handbook` entry to the main navigation
+
+Why:
+
+- if it is meant to be used continuously while building, it must be reachable as a first-class module
+
+### 7. `tests/Feature/Feature/HandbookPageTest.php`
+
+Before:
+
+- no coverage existed for a handbook module
+
+After:
+
+- added tests proving:
+  - guests are redirected away
+  - signed-in members can open the handbook
+  - a specific Laravel lesson entry can be selected by query
+
+Why:
+
+- the handbook is now part of the product, not just static content
+
+### Laravel concepts involved
+
+- Form Requests for route validation and authorization
+- Inertia server-driven document selection
+- support classes for filesystem-backed app features
+- safe markdown rendering on the backend
+- permission-aware navigation and routes
+
+### Important files
+
+- `app/Support/HandbookLibrary.php`
+- `app/Http/Controllers/HandbookController.php`
+- `app/Http/Requests/HandbookIndexRequest.php`
+- `resources/js/pages/handbook/Index.vue`
+- `routes/web.php`
+- `tests/Feature/Feature/HandbookPageTest.php`
+
+### What to remember
+
+- internal documentation can be treated as a real module when it actively supports how the product is built
+- if the archive is meant to teach, it should be structured like lessons, not just stored like files
+- server-rendered markdown keeps the UI simple while preserving Laravel control over the content

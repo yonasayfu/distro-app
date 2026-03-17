@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ExportCenterController;
 use App\Http\Controllers\GlobalSearchController;
+use App\Http\Controllers\HandbookController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -21,6 +22,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('search', GlobalSearchController::class)
         ->middleware('permission:search.view')
         ->name('search.index');
+
+    Route::get('handbook', HandbookController::class)
+        ->middleware('permission:handbook.view')
+        ->name('handbook.index');
 
     Route::get('exports', [ExportCenterController::class, 'index'])
         ->middleware('permission:exports.view')

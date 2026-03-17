@@ -1,5 +1,6 @@
 import {
     Bell,
+    BookOpenText,
     FileOutput,
     LayoutGrid,
     Shield,
@@ -9,6 +10,7 @@ import {
 import { index as activityLogsIndex } from '@/routes/activity-logs';
 import { dashboard } from '@/routes';
 import { index as exportsIndex } from '@/routes/exports';
+import { index as handbookIndex } from '@/routes/handbook';
 import { index as notificationsIndex } from '@/routes/notifications';
 import { index as rolesIndex } from '@/routes/roles';
 import { index as usersIndex } from '@/routes/users';
@@ -23,6 +25,12 @@ export const appNavigation: NavGroup[] = [
                 href: dashboard(),
                 icon: LayoutGrid,
                 permission: 'dashboard.view',
+            },
+            {
+                title: 'Handbook',
+                href: handbookIndex(),
+                icon: BookOpenText,
+                permission: 'handbook.view',
             },
         ],
     },

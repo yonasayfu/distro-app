@@ -29,6 +29,7 @@ Suggested branch pattern:
 - `phase-11-search-ux`
 - `phase-12-public-website-planning`
 - `phase-12-public-website-foundation`
+- `phase-12-handbook-module`
 
 ### 2. Commit at Logical Milestones
 
@@ -129,14 +130,15 @@ Branch history so far:
 - `phase-11-search-ux`
 - `phase-12-public-website-planning`
 - `phase-12-public-website-foundation`
+- `phase-12-handbook-module`
 
 Current active phase branch:
 
-- `phase-12-public-website-foundation`
+- `phase-12-handbook-module`
 
 Current phase purpose:
 
-- implement the first public website slice: separate layout, polished landing page, and guest navigation
+- add an in-app handbook module for roadmap, workflow docs, and Laravel lesson archives
 
 ## Important Security Note
 

@@ -20,6 +20,7 @@ class RolePermissionSeeder extends Seeder
             'permissions' => [
                 'dashboard.view',
                 'search.view',
+                'handbook.view',
                 'exports.view',
                 'users.view',
                 'users.create',
@@ -38,6 +39,7 @@ class RolePermissionSeeder extends Seeder
             'permissions' => [
                 'dashboard.view',
                 'search.view',
+                'handbook.view',
                 'exports.view',
                 'notifications.view',
                 'activity-logs.view',
@@ -48,6 +50,7 @@ class RolePermissionSeeder extends Seeder
             'permissions' => [
                 'dashboard.view',
                 'search.view',
+                'handbook.view',
                 'notifications.view',
             ],
         ],
@@ -56,6 +59,7 @@ class RolePermissionSeeder extends Seeder
             'permissions' => [
                 'dashboard.view',
                 'search.view',
+                'handbook.view',
             ],
         ],
         'External' => [
@@ -63,6 +67,7 @@ class RolePermissionSeeder extends Seeder
             'permissions' => [
                 'dashboard.view',
                 'search.view',
+                'handbook.view',
             ],
         ],
     ];
@@ -77,6 +82,7 @@ class RolePermissionSeeder extends Seeder
         $permissions = [
             'dashboard.view',
             'search.view',
+            'handbook.view',
             'exports.view',
             'users.view',
             'users.create',

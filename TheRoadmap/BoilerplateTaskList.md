@@ -228,6 +228,7 @@ Implementation notes:
 - [ ] `[P2]` Impersonation
 - [x] `[P2]` Export and print foundation
 - [x] `[P2]` Global search
+- [x] `[P2]` Internal handbook and learning center
 - [ ] `[P2]` Localization scaffold
 - [ ] `[P2]` Observability baseline
 - [ ] `[P2]` Feature toggles
