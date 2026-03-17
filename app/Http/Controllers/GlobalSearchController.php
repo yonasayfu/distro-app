@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SearchIndexRequest;
 use App\Models\ActivityLog;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -117,12 +119,11 @@ class GlobalSearchController extends Controller
      */
     private function searchNotifications(string $query, User $user): array
     {
-        $items = $user->notifications()
-            ->where(function ($notificationQuery) use ($query): void {
-                $notificationQuery
-                    ->where('data->title', 'like', "%{$query}%")
-                    ->orWhere('data->message', 'like', "%{$query}%");
-            })
+        $notificationsQuery = $user->notifications();
+
+        $this->applyNotificationSearch($notificationsQuery, $query);
+
+        $items = $notificationsQuery
             ->latest()
             ->limit(5)
             ->get()
@@ -174,5 +175,29 @@ class GlobalSearchController extends Controller
             'count' => count($items),
             'items' => $items,
         ];
+    }
+
+    /**
+     * Apply a database-safe notification payload search.
+     */
+    private function applyNotificationSearch(Builder|MorphMany $query, string $term): void
+    {
+        $pattern = '%'.mb_strtolower($term).'%';
+
+        if ($query->getConnection()->getDriverName() === 'pgsql') {
+            $query->where(function (Builder $notificationQuery) use ($pattern): void {
+                $notificationQuery
+                    ->whereRaw("LOWER(data->>'title') LIKE ?", [$pattern])
+                    ->orWhereRaw("LOWER(data->>'message') LIKE ?", [$pattern]);
+            });
+
+            return;
+        }
+
+        $query->where(function (Builder $notificationQuery) use ($term): void {
+            $notificationQuery
+                ->where('data->title', 'like', "%{$term}%")
+                ->orWhere('data->message', 'like', "%{$term}%");
+        });
     }
 }

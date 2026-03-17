@@ -23,6 +23,8 @@ Suggested branch pattern:
 - `phase-8-api-baseline`
 - `phase-9-dx-operations`
 - `phase-10-export-search`
+- `phase-10-integration-guides`
+- `phase-10-shell-cleanup-search-fix`
 
 ### 2. Commit at Logical Milestones
 
@@ -120,11 +122,11 @@ Branch history so far:
 
 Current active phase branch:
 
-- `phase-10-export-search`
+- `phase-10-shell-cleanup-search-fix`
 
 Current phase purpose:
 
-- add optional but reusable platform extras: permission-aware global search plus the first export and print foundation
+- clean duplicate shell navigation and harden global search for PostgreSQL notification payloads
 
 ## Important Security Note
 

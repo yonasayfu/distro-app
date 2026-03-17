@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { MoonStar, Search, Settings2, SunMedium } from 'lucide-vue-next';
+import { MoonStar, Search, SunMedium } from 'lucide-vue-next';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppearance } from '@/composables/useAppearance';
 import { index as searchIndex } from '@/routes/search';
-import { edit as editProfile } from '@/routes/profile';
 import type { Auth, BreadcrumbItem } from '@/types';
 
 withDefaults(
@@ -58,12 +57,6 @@ const toggleAppearance = (): void => {
                 />
                 <MoonStar v-else class="size-4" />
                 <span class="sr-only">Toggle appearance</span>
-            </Button>
-            <Button variant="ghost" size="sm" class="rounded-full" as-child>
-                <Link :href="editProfile()">
-                    <Settings2 class="size-4" />
-                    Settings
-                </Link>
             </Button>
         </div>
     </header>

@@ -2,7 +2,6 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
-import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import {
@@ -14,7 +13,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { appNavigation, appResourceLinks } from '@/navigation/app';
+import { appNavigation } from '@/navigation/app';
 import { dashboard } from '@/routes';
 import type { Auth, NavGroup } from '@/types';
 
@@ -74,7 +73,6 @@ const mainNavigation = computed<NavGroup[]>(() =>
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="appResourceLinks" />
             <NavUser />
         </SidebarFooter>
     </Sidebar>

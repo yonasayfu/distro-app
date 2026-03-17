@@ -4322,3 +4322,209 @@ Programmatic checks run for this batch:
 - optional features should still follow the same permission, routing, and test patterns as core features
 - global search is only safe if it respects module-level access
 - print/export foundation is stronger when it starts with one real download and one real print surface
+
+## Entry 014: Shell Cleanup and PostgreSQL Search Fix
+
+### Goal
+
+Clean starter leftovers from the signed-in shell and fix the notification search query so it works correctly on PostgreSQL.
+
+### What triggered this batch
+
+While reviewing the app as an admin user, three issues were visible:
+
+- settings/account entry points were duplicated across the header, sidebar, and user menu
+- starter footer links for Laravel and Inertia were still present
+- global search failed on PostgreSQL when searching notification payload JSON
+
+### 1. `resources/js/components/AppSidebar.vue`
+
+Before:
+
+- the sidebar rendered both the main navigation and a footer docs-links section
+
+After:
+
+- removed the footer docs-links rendering completely
+- stopped importing `NavFooter`
+- stopped importing `appResourceLinks`
+
+Diff-style summary:
+
+```vue
+- import NavFooter from '@/components/NavFooter.vue';
+- import { appMainNavigation, appResourceLinks } from '@/navigation/app';
++ import { appMainNavigation } from '@/navigation/app';
+...
+- <SidebarFooter>
+-   <NavFooter :items="appResourceLinks" />
+- </SidebarFooter>
+```
+
+Why:
+
+- Laravel and Inertia docs links are starter/demo leftovers, not part of the product shell
+- the app sidebar should only contain navigation that belongs to this application
+
+### 2. `resources/js/navigation/app.ts`
+
+Before:
+
+- sidebar navigation included an `Account` group:
+  - `Profile`
+  - `Security`
+  - `Appearance`
+- footer resource links were exported:
+  - Laravel docs
+  - Inertia docs
+
+After:
+
+- removed the `Account` sidebar group
+- removed the footer resource links export
+- kept account management inside the user menu/settings area instead of duplicating it in the sidebar
+
+Diff-style summary:
+
+```ts
+- import { editAppearance } from '@/actions/App/Http/Controllers/Settings/AppearanceController';
+- import { editProfile } from '@/actions/App/Http/Controllers/Settings/ProfileController';
+- import { editSecurity } from '@/actions/App/Http/Controllers/Settings/SecurityController';
+...
+- {
+-   title: 'Account',
+-   description: 'Manage your personal workspace settings.',
+-   items: [...]
+- },
+...
+- export const appResourceLinks: NavItem[] = [
+-   { title: 'Laravel', ... },
+-   { title: 'Inertia', ... },
+- ];
+```
+
+Why:
+
+- settings should have one clear home, not three partial entry points
+- duplicate account links create confusion about where the real settings area lives
+- keeping account pages in the user menu is cleaner for a reusable admin boilerplate
+
+### 3. `resources/js/components/AppSidebarHeader.vue`
+
+Before:
+
+- the top header had a standalone settings button
+- the user menu already exposed settings/account links
+
+After:
+
+- removed the duplicate settings button
+- kept only:
+  - search
+  - notifications
+  - theme toggle
+
+Diff-style summary:
+
+```vue
+- import { Settings2 } from 'lucide-vue-next';
+- import { editProfile } from '@/actions/App/Http/Controllers/Settings/ProfileController';
+...
+- <Link :href="editProfile().url" ...>
+-   <Settings2 class="size-4" />
+- </Link>
+```
+
+Why:
+
+- header actions should be operational actions, not a second settings menu
+- the user dropdown already owns personal account navigation
+
+### 4. `app/Http/Controllers/GlobalSearchController.php`
+
+Before:
+
+- notification search used Laravel JSON path syntax:
+
+```php
+- ->where('data->title', 'like', "%{$query}%")
+- ->orWhere('data->message', 'like', "%{$query}%");
+```
+
+- on PostgreSQL this translated into a broken query using `->>` with an invalid cast position, causing:
+  - `SQLSTATE[42883]: Undefined function`
+
+After:
+
+- added a database-aware notification search helper
+- PostgreSQL now searches notification JSON with raw SQL against `data->>'title'` and `data->>'message'`
+- search is normalized with `LOWER(...) LIKE ?`
+- the helper now accepts either an Eloquent builder or a `MorphMany` relation
+
+Diff-style summary:
+
+```php
++ use Illuminate\Database\Eloquent\Relations\MorphMany;
+...
+- $notificationsQuery
+-     ->where('data->title', 'like', "%{$query}%")
+-     ->orWhere('data->message', 'like', "%{$query}%");
++ $this->applyNotificationSearch($notificationsQuery, $query);
+...
++ private function applyNotificationSearch(Builder|MorphMany $query, string $term): void
++ {
++     $pattern = '%'.mb_strtolower($term).'%';
++
++     if ($query->getConnection()->getDriverName() === 'pgsql') {
++         $query->where(function (Builder $notificationQuery) use ($pattern): void {
++             $notificationQuery
++                 ->whereRaw("LOWER(data->>'title') LIKE ?", [$pattern])
++                 ->orWhereRaw("LOWER(data->>'message') LIKE ?", [$pattern]);
++         });
++
++         return;
++     }
++
++     $query->where(function (Builder $notificationQuery) use ($term): void {
++         $notificationQuery
++             ->where('data->title', 'like', "%{$term}%")
++             ->orWhere('data->message', 'like', "%{$term}%");
++     });
++ }
+```
+
+Why:
+
+- JSON search is one of the places where MySQL and PostgreSQL behavior diverge
+- the original search approach was acceptable on some drivers but unsafe for this PostgreSQL setup
+- a boilerplate should not contain database-specific breakage in shared features like search
+
+### Laravel concepts involved
+
+- Inertia shell composition
+- centralized navigation configuration
+- Eloquent relation vs builder typing
+- PostgreSQL JSON operators
+- database-aware query logic for cross-project boilerplate stability
+
+### Important files
+
+- `resources/js/components/AppSidebar.vue`
+- `resources/js/components/AppSidebarHeader.vue`
+- `resources/js/navigation/app.ts`
+- `app/Http/Controllers/GlobalSearchController.php`
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `vendor/bin/pint --dirty --format agent`
+- `php artisan test --compact tests/Feature/Feature/GlobalSearchTest.php`
+- `npm run types:check`
+- `npm run build`
+
+### What to remember
+
+- remove starter/demo leftovers as soon as they stop serving the product
+- personal settings should have one clear navigation home
+- PostgreSQL JSON searching often needs explicit handling instead of assuming generic JSON path syntax will behave the same across drivers
