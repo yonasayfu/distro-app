@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { MoonStar, Settings2, SunMedium } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import { MoonStar, Search, Settings2, SunMedium } from 'lucide-vue-next';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppearance } from '@/composables/useAppearance';
+import { index as searchIndex } from '@/routes/search';
 import { edit as editProfile } from '@/routes/profile';
-import type { BreadcrumbItem } from '@/types';
+import type { Auth, BreadcrumbItem } from '@/types';
 
 withDefaults(
     defineProps<{
@@ -19,6 +20,8 @@ withDefaults(
 );
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
+const page = usePage();
+const auth = page.props.auth as Auth;
 
 const toggleAppearance = (): void => {
     updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
@@ -36,6 +39,12 @@ const toggleAppearance = (): void => {
             </template>
         </div>
         <div class="ml-auto flex items-center gap-2">
+            <Button v-if="auth.can.viewSearch" variant="ghost" size="sm" class="rounded-full" as-child>
+                <Link :href="searchIndex()">
+                    <Search class="size-4" />
+                    Search
+                </Link>
+            </Button>
             <NotificationBell />
             <Button
                 variant="ghost"

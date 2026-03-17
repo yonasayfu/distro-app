@@ -194,6 +194,8 @@ class RoleManagementController extends Controller
     {
         return match ($permission) {
             'dashboard.view' => 'Allows the role to enter the dashboard workspace.',
+            'search.view' => 'Allows use of the shared global search page across enabled modules.',
+            'exports.view' => 'Allows access to the shared export and print center.',
             'users.view' => 'Shows the users module and allows access to the users index page.',
             'users.create' => 'Allows creating new users when user creation is added later.',
             'users.update' => 'Allows editing user details, roles, and future user actions.',

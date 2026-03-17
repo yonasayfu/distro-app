@@ -4032,3 +4032,293 @@ Programmatic checks run for this batch:
 - a boilerplate is not complete when the features work; it is complete when another developer can start it correctly
 - CI should check code, not mutate it
 - env defaults and setup scripts are part of the developer experience, not just maintenance details
+
+## Entry 013: Phase 10 Export-Print Foundation and Global Search
+
+This batch added two optional platform features that are useful across many future projects.
+
+### What problem we were solving
+
+Before this batch:
+
+- there was no shared place for export or print actions
+- there was no global search surface across the reusable admin modules
+- optional features existed only as roadmap ideas, not working patterns
+
+After this batch:
+
+- the app now has a permission-aware global search page
+- the app now has an export center
+- the first working foundation examples are:
+  - users CSV export
+  - print-friendly workspace summary
+
+### File-by-file change record
+
+#### 1. `database/seeders/RolePermissionSeeder.php`
+
+Before:
+
+- there were no permissions for search or export actions
+
+After:
+
+```php
++ 'search.view',
++ 'exports.view',
+```
+
+And these permissions were assigned by default to the relevant roles:
+
+- `Admin`: search + exports
+- `Manager`: search + exports
+- `Member`: search
+- `ReadOnly`: search
+- `External`: search
+
+Why:
+
+- optional modules still need to fit the RBAC system instead of bypassing it
+
+#### 2. `app/Http/Middleware/HandleInertiaRequests.php` and `resources/js/types/auth.ts`
+
+Before:
+
+- shared auth props had no search/export access flags
+
+After:
+
+- added:
+  - `auth.can.viewSearch`
+  - `auth.can.viewExports`
+
+Why:
+
+- shell controls should not guess permissions on the frontend
+- shared Inertia props keep sidebar and header decisions consistent
+
+#### 3. `resources/js/navigation/app.ts` and `resources/js/components/AppSidebarHeader.vue`
+
+Before:
+
+- there were no shell entry points for search or export
+
+After:
+
+- added `Search` navigation
+- added `Export center` navigation
+- added a header search button
+
+Representative diff:
+
+```ts
++ {
++     title: 'Search',
++     href: searchIndex(),
++     icon: Search,
++     permission: 'search.view',
++ }
++ {
++     title: 'Export center',
++     href: exportsIndex(),
++     icon: FileOutput,
++     permission: 'exports.view',
++ }
+```
+
+Why:
+
+- optional platform features should feel like first-class modules once enabled
+
+#### 4. `app/Http/Requests/SearchIndexRequest.php`
+
+Before:
+
+- there was no validated request object for global search
+
+After:
+
+- added a proper GET request validator:
+  - authorization through `search.view`
+  - `q` as nullable string with max length
+
+Why:
+
+- even simple search pages should validate query input and keep authorization in one place
+
+#### 5. `app/Http/Controllers/GlobalSearchController.php`
+
+Before:
+
+- there was no global search backend
+
+After:
+
+- added permission-aware grouped search results for:
+  - users
+  - roles
+  - notifications
+  - activity logs
+
+Why:
+
+- grouped search results are easier to scan than one flat list
+- permission-aware search prevents the feature from leaking records from restricted modules
+
+#### 6. `resources/js/pages/search/Index.vue`
+
+Before:
+
+- there was no search page
+
+After:
+
+- added a real search page with:
+  - query input
+  - empty state before searching
+  - empty state for no matches
+  - grouped results with direct links
+
+Why:
+
+- a global search foundation should be useful immediately, not just a backend endpoint without a UI
+
+#### 7. `app/Http/Controllers/ExportCenterController.php`
+
+Before:
+
+- there was no shared export/print foundation
+
+After:
+
+- added `index()` for the export center
+- added `usersCsv()` for CSV download
+- added `printSummary()` for a print-friendly summary page
+- export actions now also write activity events:
+  - `exports.users-csv`
+  - `exports.summary-print`
+
+Why:
+
+- export and print actions should start from a shared center so future modules plug into one consistent pattern
+
+#### 8. `resources/js/pages/exports/Index.vue`
+
+Before:
+
+- there was no export center UI
+
+After:
+
+- added a page that lists reusable export/print actions as cards
+
+Why:
+
+- this creates a stable place for downstream modules to add CSV/PDF/print actions later
+
+#### 9. `resources/js/pages/exports/PrintSummary.vue`
+
+Before:
+
+- there was no print-friendly foundation page
+
+After:
+
+- added a print-optimized summary page with:
+  - workspace counts
+  - recent users
+  - recent activity
+  - auto-print on mount
+  - manual print button
+
+Why:
+
+- a print foundation should prove layout, not just provide a download endpoint
+
+#### 10. `routes/web.php`
+
+Before:
+
+- there were no web routes for search or export actions
+
+After:
+
+- added:
+  - `search.index`
+  - `exports.index`
+  - `exports.users.csv`
+  - `exports.summary.print`
+
+Why:
+
+- optional features still need named routes and permission middleware so they stay consistent with the rest of the app
+
+#### 11. Tests
+
+Files:
+
+- `tests/Feature/Feature/GlobalSearchTest.php`
+- `tests/Feature/Feature/ExportFoundationTest.php`
+
+After:
+
+- search tests now prove:
+  - admins see grouped results across accessible modules
+  - members only see groups they are actually allowed to access
+- export tests now prove:
+  - manager can access export center and print summary
+  - admin can download users CSV
+  - member cannot access export routes
+
+Why:
+
+- optional features are often where permission leaks happen first
+- tests are the only reliable way to confirm these extras stayed inside the RBAC model
+
+### Laravel concepts involved
+
+- Form Requests for search validation
+- streamed file downloads for CSV export
+- Inertia pages for grouped search and export-center UI
+- route middleware for optional-module authorization
+- activity logging for operational actions
+
+### Important files
+
+- `app/Http/Controllers/GlobalSearchController.php`
+- `app/Http/Controllers/ExportCenterController.php`
+- `app/Http/Requests/SearchIndexRequest.php`
+- `resources/js/pages/search/Index.vue`
+- `resources/js/pages/exports/Index.vue`
+- `resources/js/pages/exports/PrintSummary.vue`
+- `routes/web.php`
+- `tests/Feature/Feature/GlobalSearchTest.php`
+- `tests/Feature/Feature/ExportFoundationTest.php`
+
+### Why this approach fits Laravel
+
+Laravel already provides the right primitives for both optional features:
+
+- Form Requests for validated search input
+- named routes for module integration
+- streamed responses for CSV downloads
+- Inertia pages for a cohesive UI
+- middleware for permission-aware access
+
+That means the optional modules still feel like part of the same application architecture instead of special-case add-ons.
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `vendor/bin/pint --dirty --format agent`
+- `php artisan test --compact tests/Feature/Feature/GlobalSearchTest.php tests/Feature/Feature/ExportFoundationTest.php`
+- `npm run types:check`
+- `npm run build`
+
+### What to remember
+
+- optional features should still follow the same permission, routing, and test patterns as core features
+- global search is only safe if it respects module-level access
+- print/export foundation is stronger when it starts with one real download and one real print surface

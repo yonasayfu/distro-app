@@ -17,6 +17,8 @@ export type Auth = {
     permissions: string[];
     can: {
         viewDashboard: boolean;
+        viewSearch: boolean;
+        viewExports: boolean;
         manageUsers: boolean;
         manageRoles: boolean;
         viewNotifications: boolean;

@@ -250,7 +250,44 @@ The base API should start small:
 - Notifications
 - Small admin summary endpoints if needed
 
-## 13. Developer Experience Pattern
+## 13. Global Search Pattern
+
+Global search should be:
+
+- permission-aware
+- grouped by resource type
+- useful even before downstream domain modules exist
+
+Rules:
+
+- Do not leak results from modules the current role cannot access.
+- Prefer grouped results instead of one flat mixed list.
+- Link results to the actual destination page, not a dead-end preview.
+
+Current baseline now implemented:
+
+- grouped search results for users
+- grouped search results for roles
+- grouped search results for notifications
+- grouped search results for activity logs
+
+## 14. Export and Print Pattern
+
+Export and print should start with a shared foundation rather than ad hoc buttons on random pages.
+
+Rules:
+
+- put reusable actions behind one export center
+- start with one real download example and one real print example
+- keep file actions permission-aware
+
+Current baseline now implemented:
+
+- export center page
+- users CSV export
+- print-friendly workspace summary
+
+## 15. Developer Experience Pattern
 
 The boilerplate should feel easy to adopt:
 
@@ -262,7 +299,7 @@ The boilerplate should feel easy to adopt:
 
 Do not treat docs as an afterthought. For a boilerplate, docs are part of the product.
 
-## 14. Naming and Scope Pattern
+## 16. Naming and Scope Pattern
 
 Rules:
 
@@ -272,7 +309,7 @@ Rules:
 - Prefer `users`, `roles`, `permissions`, `notifications`, `activity logs`, `settings`
 - Add domain-specific tables and modules only in downstream projects
 
-## 15. What to Reuse Later
+## 17. What to Reuse Later
 
 These are the reusable ideas repeatedly seen in the reference docs:
 
@@ -287,7 +324,7 @@ These are the reusable ideas repeatedly seen in the reference docs:
 - API readiness as a first-class concern
 - Operations docs, not just code
 
-## 16. What Not to Copy into the Boilerplate
+## 18. What Not to Copy into the Boilerplate
 
 Do not pull these into V1:
 
@@ -300,7 +337,7 @@ Do not pull these into V1:
 - Mailbox ingestion
 - Collaboration modules
 
-## 17. Source Intent
+## 19. Source Intent
 
 This file was distilled mainly from these reference ideas:
 

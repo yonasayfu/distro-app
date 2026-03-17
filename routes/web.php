@@ -3,6 +3,8 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\ExportCenterController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -16,6 +18,22 @@ Route::middleware(['auth', 'verified', 'permission:dashboard.view'])->group(func
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('search', GlobalSearchController::class)
+        ->middleware('permission:search.view')
+        ->name('search.index');
+
+    Route::get('exports', [ExportCenterController::class, 'index'])
+        ->middleware('permission:exports.view')
+        ->name('exports.index');
+
+    Route::get('exports/users.csv', [ExportCenterController::class, 'usersCsv'])
+        ->middleware(['permission:exports.view', 'permission:users.view'])
+        ->name('exports.users.csv');
+
+    Route::get('exports/summary/print', [ExportCenterController::class, 'printSummary'])
+        ->middleware('permission:exports.view')
+        ->name('exports.summary.print');
+
     Route::get('admin/users', [UserManagementController::class, 'index'])
         ->middleware('permission:users.view')
         ->name('users.index');

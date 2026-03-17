@@ -101,3 +101,53 @@ export type ActivityLogFilters = {
     search: string;
     event: string;
 };
+
+export type SearchResultItem = {
+    id: string;
+    title: string;
+    description: string;
+    href: string;
+    meta: string | null;
+};
+
+export type SearchResultGroup = {
+    key: string;
+    title: string;
+    count: number;
+    items: SearchResultItem[];
+};
+
+export type SearchFilters = {
+    q: string;
+};
+
+export type ExportResource = {
+    key: string;
+    title: string;
+    description: string;
+    href: string;
+    actionLabel: string;
+    format: string;
+};
+
+export type PrintSummary = {
+    counts: {
+        users: number;
+        roles: number;
+        unreadNotifications: number;
+        activityLogs: number;
+    };
+    recentUsers: Array<{
+        id: number;
+        name: string;
+        email: string;
+        roles: string[];
+        createdAt: string | null;
+    }>;
+    recentEvents: Array<{
+        id: number;
+        event: string;
+        description: string;
+        createdAt: string | null;
+    }>;
+};

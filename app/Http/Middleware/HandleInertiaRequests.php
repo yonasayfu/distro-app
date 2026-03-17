@@ -47,6 +47,8 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $user?->getAllPermissions()->pluck('name')->values()->all() ?? [],
                 'can' => [
                     'viewDashboard' => $user?->can('dashboard.view') ?? false,
+                    'viewSearch' => $user?->can('search.view') ?? false,
+                    'viewExports' => $user?->can('exports.view') ?? false,
                     'manageUsers' => $user?->can('users.view') ?? false,
                     'manageRoles' => $user?->can('roles.view') ?? false,
                     'viewNotifications' => $user?->can('notifications.view') ?? false,

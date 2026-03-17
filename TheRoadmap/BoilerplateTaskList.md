@@ -226,8 +226,8 @@ Implementation notes:
 ## Phase 10: Optional Extensions
 
 - [ ] `[P2]` Impersonation
-- [ ] `[P2]` Export and print foundation
-- [ ] `[P2]` Global search
+- [x] `[P2]` Export and print foundation
+- [x] `[P2]` Global search
 - [ ] `[P2]` Localization scaffold
 - [ ] `[P2]` Observability baseline
 - [ ] `[P2]` Feature toggles
@@ -237,6 +237,12 @@ Implementation notes:
 Acceptance criteria:
 
 - Optional features stay optional and do not distort the base starter.
+
+Implementation notes:
+
+- Global search now exists as a permission-aware cross-module search page.
+- Export center now exists as a reusable surface for future CSV, PDF, and print actions.
+- The first working print/export examples are users CSV download and a print-friendly workspace summary page.
 
 ## First Implementation Slice
 

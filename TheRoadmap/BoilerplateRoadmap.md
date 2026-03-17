@@ -374,6 +374,11 @@ Acceptance:
 
 - Optional features remain modular and do not distort the V1 starter scope.
 
+Current optional extensions now implemented:
+
+- Print and export foundation
+- Global search
+
 ## Recommended Build Order
 
 Build in this order:

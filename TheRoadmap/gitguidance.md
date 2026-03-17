@@ -22,6 +22,7 @@ Suggested branch pattern:
 - `phase-7-notifications-activity`
 - `phase-8-api-baseline`
 - `phase-9-dx-operations`
+- `phase-10-export-search`
 
 ### 2. Commit at Logical Milestones
 
@@ -115,14 +116,15 @@ Branch history so far:
 - `phase-7-notifications-activity`
 - `phase-8-api-baseline`
 - `phase-9-dx-operations`
+- `phase-10-export-search`
 
 Current active phase branch:
 
-- `phase-9-dx-operations`
+- `phase-10-export-search`
 
 Current phase purpose:
 
-- harden project onboarding and operations with a real README, reviewed env defaults, and CI that checks formatting, types, build, and tests
+- add optional but reusable platform extras: permission-aware global search plus the first export and print foundation
 
 ## Important Security Note
 

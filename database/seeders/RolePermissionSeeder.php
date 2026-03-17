@@ -19,6 +19,8 @@ class RolePermissionSeeder extends Seeder
             'description' => 'Full-access recovery role for managing the entire boilerplate.',
             'permissions' => [
                 'dashboard.view',
+                'search.view',
+                'exports.view',
                 'users.view',
                 'users.create',
                 'users.update',
@@ -35,6 +37,8 @@ class RolePermissionSeeder extends Seeder
             'description' => 'Operational role with visibility into shared activity and inbox-style features.',
             'permissions' => [
                 'dashboard.view',
+                'search.view',
+                'exports.view',
                 'notifications.view',
                 'activity-logs.view',
             ],
@@ -43,6 +47,7 @@ class RolePermissionSeeder extends Seeder
             'description' => 'Standard internal user with dashboard and notification access.',
             'permissions' => [
                 'dashboard.view',
+                'search.view',
                 'notifications.view',
             ],
         ],
@@ -50,12 +55,14 @@ class RolePermissionSeeder extends Seeder
             'description' => 'Signed-in user with read-only access to the shared workspace.',
             'permissions' => [
                 'dashboard.view',
+                'search.view',
             ],
         ],
         'External' => [
             'description' => 'Restricted external account with only the base workspace available.',
             'permissions' => [
                 'dashboard.view',
+                'search.view',
             ],
         ],
     ];
@@ -69,6 +76,8 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = [
             'dashboard.view',
+            'search.view',
+            'exports.view',
             'users.view',
             'users.create',
             'users.update',
