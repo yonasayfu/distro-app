@@ -204,17 +204,24 @@ Implementation notes:
 
 ## Phase 9: Developer Experience and Operations
 
-- [ ] `[P0]` Write a real project README.
-- [ ] `[P0]` Write local setup instructions.
-- [ ] `[P1]` Write mail, queue, scheduler, and deployment notes.
-- [ ] `[P1]` Review `.env.example` for missing defaults.
-- [ ] `[P0]` Add CI workflow for lint, types, tests, and build.
+- [x] `[P0]` Write a real project README.
+- [x] `[P0]` Write local setup instructions.
+- [x] `[P1]` Write mail, queue, scheduler, and deployment notes.
+- [x] `[P1]` Review `.env.example` for missing defaults.
+- [x] `[P0]` Add CI workflow for lint, types, tests, and build.
 - [ ] `[P1]` Add devcontainer or docker support if desired.
 - [ ] `[P1]` Add release or boilerplate snapshot guidance.
 
 Acceptance criteria:
 
 - A new clone is easy to install and validate.
+
+Implementation notes:
+
+- A real root `README.md` now documents stack, setup, seeded accounts, API usage, CI, and operations notes.
+- `.env.example` now includes clearer boilerplate naming, PostgreSQL guidance, and Sanctum stateful domain defaults.
+- GitHub Actions now run non-destructive formatting checks, ESLint, type checks, build verification, and the test suite.
+- `composer setup` now matches the documented local bootstrap path more closely.
 
 ## Phase 10: Optional Extensions
 

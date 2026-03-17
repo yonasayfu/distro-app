@@ -3848,3 +3848,187 @@ Programmatic checks run for this batch:
 - pagination format becomes technical debt quickly if it is not standardized early
 - a summary endpoint is often more valuable to external clients than another raw CRUD list
 - Postman artifacts are useful when the API is becoming part of the product, not just a side effect of the web app
+
+## Entry 012: Phase 9 Developer Experience and Operations Baseline
+
+This batch focused on developer onboarding and repository hygiene rather than new application features.
+
+### What problem we were solving
+
+Before this batch:
+
+- there was no real root README for a new developer or a future you to follow
+- CI existed, but it was incomplete and partly destructive because the linter workflow formatted files instead of checking them
+- `.env.example` still looked like a generic starter and did not clearly reflect the boilerplate direction
+- the documented setup path and the Composer helper script were drifting apart
+
+After this batch:
+
+- the repository now has a real `README.md`
+- CI checks formatting, linting, types, build, and tests without mutating files
+- `.env.example` better reflects this boilerplate and common local cases
+- `composer setup` is closer to the documented onboarding path
+
+### File-by-file change record
+
+#### 1. `README.md`
+
+Before:
+
+- there was no root project README
+
+After:
+
+- added a real README with:
+  - stack summary
+  - current baseline features
+  - local install steps
+  - database setup guidance
+  - Herd note
+  - seeded demo accounts
+  - API usage summary
+  - queue, scheduler, mail, and deployment notes
+  - CI summary
+  - useful commands
+
+Why:
+
+- a reusable boilerplate needs a reliable entry point for setup and review
+- if the repo cannot explain itself, it is not yet a strong starter kit
+
+#### 2. `.env.example`
+
+Before:
+
+- it still looked like a generic Laravel starter
+- PostgreSQL guidance was not clear
+- Sanctum stateful domains were not explicit
+
+After:
+
+```dotenv
+- APP_NAME=Laravel
++ APP_NAME="Laravel Boilerplate"
+
++ # For SQLite:
++ # DB_DATABASE=/absolute/path/to/database/database.sqlite
++ #
++ # For PostgreSQL:
++ # DB_CONNECTION=pgsql
++ # DB_PORT=5432
+
++ SANCTUM_STATEFUL_DOMAINS=localhost,127.0.0.1,distro-app.test
+```
+
+Why:
+
+- `.env.example` is part of the product experience for a starter kit
+- it should guide the developer toward common working configurations instead of forcing them to reverse-engineer the app
+
+#### 3. `composer.json`
+
+Before:
+
+- `composer setup` used `npm install`
+- the setup script migrated with `--force`
+- `ci:check` did not include a production build
+- `test` also pulled linting into the test script itself
+
+After:
+
+```json
+- "@php artisan migrate --force",
+- "npm install",
++ "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
++ "@php artisan migrate --seed --graceful --ansi",
++ "npm ci",
+```
+
+And:
+
+- `ci:check` now includes `npm run build`
+- `test` is focused on the test suite itself
+
+Why:
+
+- bootstrap helpers should be predictable and closer to what the README says
+- CI helpers should separate concerns cleanly instead of hiding multiple responsibilities inside `composer test`
+
+#### 4. `.github/workflows/lint.yml`
+
+Before:
+
+- the linter workflow ran formatting commands that modified files
+- it requested `contents: write`
+- it did not run TypeScript checks
+
+After:
+
+- switched to read-only permissions
+- runs:
+  - `composer lint:check`
+  - `npm run format:check`
+  - `npm run lint:check`
+  - `npm run types:check`
+
+Why:
+
+- CI should verify code quality, not rewrite the branch during validation
+
+#### 5. `.github/workflows/tests.yml`
+
+Before:
+
+- it had extra branch noise
+- it ran Pest directly without the same command style used elsewhere
+- it did not regenerate Wayfinder before building
+
+After:
+
+- uses PHP 8.5
+- uses `npm ci`
+- generates Wayfinder route files
+- runs `npm run build`
+- runs `php artisan test --compact`
+
+Why:
+
+- the workflow now reflects the current project’s actual frontend/backend integration steps
+- if route generation is part of the app, CI should verify it too
+
+### Laravel concepts involved
+
+- environment template as part of application configuration
+- Composer scripts as developer workflow helpers
+- CI as an extension of the local validation path
+- Wayfinder generation as a build-time dependency for typed route usage
+
+### Important files
+
+- `README.md`
+- `.env.example`
+- `composer.json`
+- `.github/workflows/lint.yml`
+- `.github/workflows/tests.yml`
+
+### Why this approach fits Laravel
+
+Laravel starter projects are expected to be easy to clone, configure, validate, and deploy. That does not happen automatically after adding features. It requires explicit operational cleanup:
+
+- sane env defaults
+- a readable setup guide
+- clear helper scripts
+- CI that matches the real development workflow
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `composer validate --strict`
+- `php artisan test --compact tests/Feature/Auth/AuthenticationTest.php`
+
+### What to remember
+
+- a boilerplate is not complete when the features work; it is complete when another developer can start it correctly
+- CI should check code, not mutate it
+- env defaults and setup scripts are part of the developer experience, not just maintenance details

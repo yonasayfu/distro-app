@@ -340,12 +340,14 @@ Tasks:
 - Add CI workflow for lint, tests, types, and build.
 - Add devcontainer or docker setup if desired.
 - Review `.env.example` for completeness.
+- Align helper scripts with the documented setup path.
 
 Deliverables:
 
 - Updated docs
 - CI configuration
 - Local setup guidance
+- Reviewed env defaults
 
 Acceptance:
 

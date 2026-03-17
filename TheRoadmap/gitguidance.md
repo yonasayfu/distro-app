@@ -21,7 +21,7 @@ Suggested branch pattern:
 - `phase-5-5-api-foundation`
 - `phase-7-notifications-activity`
 - `phase-8-api-baseline`
-- `phase-8-dx-operations`
+- `phase-9-dx-operations`
 
 ### 2. Commit at Logical Milestones
 
@@ -114,14 +114,15 @@ Branch history so far:
 - `phase-5-5-api-foundation`
 - `phase-7-notifications-activity`
 - `phase-8-api-baseline`
+- `phase-9-dx-operations`
 
 Current active phase branch:
 
-- `phase-8-api-baseline`
+- `phase-9-dx-operations`
 
 Current phase purpose:
 
-- finish the reusable API baseline with a consistent pagination envelope, admin summary endpoint, and importable API artifact
+- harden project onboarding and operations with a real README, reviewed env defaults, and CI that checks formatting, types, build, and tests
 
 ## Important Security Note
 
