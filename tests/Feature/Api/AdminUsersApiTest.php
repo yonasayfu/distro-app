@@ -29,11 +29,23 @@ test('admin api user listing returns paginated users', function () {
                     'created_at',
                 ],
             ],
-            'links',
+            'links' => [
+                'first',
+                'last',
+                'prev',
+                'next',
+            ],
             'meta' => [
-                'current_page',
                 'filters' => [
                     'search',
+                ],
+                'pagination' => [
+                    'current_page',
+                    'last_page',
+                    'per_page',
+                    'total',
+                    'from',
+                    'to',
                 ],
             ],
         ]);

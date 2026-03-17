@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\NotificationResource;
 use App\Support\ActivityLogger;
+use App\Support\ApiPagination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationApiController extends Controller
@@ -15,7 +15,7 @@ class NotificationApiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $readFilter = $request->string('read')->trim()->toString();
 
@@ -27,14 +27,17 @@ class NotificationApiController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return NotificationResource::collection($notifications)->additional([
-            'meta' => [
+        return ApiPagination::response(
+            request: $request,
+            paginator: $notifications,
+            resourceCollection: NotificationResource::collection($notifications->getCollection()),
+            meta: [
                 'filters' => [
                     'read' => $readFilter,
                 ],
                 'unread_count' => $request->user()->unreadNotifications()->count(),
             ],
-        ]);
+        );
     }
 
     /**

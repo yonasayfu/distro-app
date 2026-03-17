@@ -183,10 +183,10 @@ Implementation notes:
 - [x] `[P0]` Create `/api/v1` route structure.
 - [x] `[P0]` Add auth endpoints for login, logout, and current user.
 - [x] `[P1]` Add notification feed endpoint.
-- [ ] `[P1]` Add admin summary or user-management summary endpoint.
+- [x] `[P1]` Add admin summary or user-management summary endpoint.
 - [x] `[P0]` Standardize API error format for unauthenticated and forbidden responses.
-- [ ] `[P0]` Standardize API pagination format more formally across future endpoints.
-- [ ] `[P1]` Add OpenAPI or Postman artifacts.
+- [x] `[P0]` Standardize API pagination format more formally across future endpoints.
+- [x] `[P1]` Add OpenAPI or Postman artifacts.
 - [x] `[P0]` Add Pest API smoke tests.
 
 Acceptance criteria:
@@ -198,6 +198,9 @@ Implementation notes:
 - Notifications now expose list, detail, mark-read, and mark-all-read API endpoints.
 - Activity logs now expose list and detail API endpoints with the same permission model as the web UI.
 - Auth, notifications, and audit flows now share the same event and permission backbone across web and API clients.
+- Paginated API endpoints now use one explicit `data`, `links`, and `meta.pagination` response shape.
+- The admin summary endpoint now exposes counts, recent users, and role breakdown data for external admin dashboards.
+- A Postman collection now exists at the repository root for quick API import and manual testing.
 
 ## Phase 9: Developer Experience and Operations
 

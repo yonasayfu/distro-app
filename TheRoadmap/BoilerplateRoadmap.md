@@ -314,12 +314,14 @@ Tasks:
 - Standardize pagination and error envelope.
 - Add OpenAPI or Postman artifacts.
 - Add API tests with Pest.
+- Add an admin summary endpoint for external dashboards or mobile admin clients.
 
 Deliverables:
 
 - Base API
 - API docs
 - API smoke tests
+- Admin summary endpoint
 
 Acceptance:
 

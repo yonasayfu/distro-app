@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityLogApiController;
+use App\Http\Controllers\Api\V1\AdminSummaryController;
 use App\Http\Controllers\Api\V1\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
@@ -30,6 +31,8 @@ Route::prefix('v1')->group(function (): void {
             ->middleware('permission:activity-logs.view');
         Route::get('activity-logs/{activityLog}', [ActivityLogApiController::class, 'show'])
             ->middleware('permission:activity-logs.view');
+        Route::get('admin/summary', AdminSummaryController::class)
+            ->middleware('permission:users.view');
         Route::get('admin/users', AdminUserController::class)
             ->middleware('permission:users.view');
     });

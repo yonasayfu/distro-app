@@ -22,6 +22,7 @@ test('activity log api lists and shows audit entries', function () {
         ->getJson('/api/v1/activity-logs?event=users.created')
         ->assertOk()
         ->assertJsonPath('meta.filters.event', 'users.created')
+        ->assertJsonPath('meta.pagination.current_page', 1)
         ->assertJsonPath('data.0.id', $log->id);
 
     $this->withHeader('Authorization', "Bearer {$token}")

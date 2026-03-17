@@ -5,15 +5,16 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\AdminUserResource;
 use App\Models\User;
+use App\Support\ApiPagination;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AdminUserController extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(Request $request): AnonymousResourceCollection
+    public function __invoke(Request $request): JsonResponse
     {
         $search = $request->string('search')->trim()->toString();
 
@@ -30,12 +31,15 @@ class AdminUserController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return AdminUserResource::collection($users)->additional([
-            'meta' => [
+        return ApiPagination::response(
+            request: $request,
+            paginator: $users,
+            resourceCollection: AdminUserResource::collection($users->getCollection()),
+            meta: [
                 'filters' => [
                     'search' => $search,
                 ],
             ],
-        ]);
+        );
     }
 }

@@ -25,6 +25,7 @@ test('notification api lists and reads notifications', function () {
         ->assertOk()
         ->assertJsonPath('meta.filters.read', 'unread')
         ->assertJsonPath('meta.unread_count', 1)
+        ->assertJsonPath('meta.pagination.current_page', 1)
         ->assertJsonPath('data.0.title', 'API notice');
 
     $this->withHeader('Authorization', "Bearer {$token}")

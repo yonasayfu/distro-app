@@ -20,6 +20,7 @@ Suggested branch pattern:
 - `phase-5-admin-crud`
 - `phase-5-5-api-foundation`
 - `phase-7-notifications-activity`
+- `phase-8-api-baseline`
 - `phase-8-dx-operations`
 
 ### 2. Commit at Logical Milestones
@@ -112,14 +113,15 @@ Branch history so far:
 - `phase-5-admin-crud`
 - `phase-5-5-api-foundation`
 - `phase-7-notifications-activity`
+- `phase-8-api-baseline`
 
 Current active phase branch:
 
-- `phase-7-notifications-activity`
+- `phase-8-api-baseline`
 
 Current phase purpose:
 
-- turn notifications and activity logs into real database-backed cross-cutting modules and expose their status in the app shell
+- finish the reusable API baseline with a consistent pagination envelope, admin summary endpoint, and importable API artifact
 
 ## Important Security Note
 

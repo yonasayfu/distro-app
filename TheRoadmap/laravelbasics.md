@@ -3555,3 +3555,296 @@ Programmatic checks run for this batch:
 - if web and API clients will share RBAC later, start sharing the same notification and audit endpoints early
 - audit detail pages matter once logs start storing JSON properties
 - auth and settings events are part of the platform layer, not just app-specific behavior
+
+## Entry 011: Phase 8 API Baseline Completion
+
+This batch finished the remaining reusable API foundation work.
+
+### What problem we were solving
+
+Before this batch:
+
+- API pagination still relied on Laravel's default resource pagination structure
+- paginated endpoints were not formally aligned under one response envelope
+- there was no reusable summary endpoint for an external admin dashboard or mobile admin home screen
+- there was no importable API artifact for manual testing outside the browser
+
+After this batch:
+
+- paginated endpoints now return one explicit envelope:
+  - `data`
+  - `links`
+  - `meta`
+  - `meta.pagination`
+- the API now has `/api/v1/admin/summary`
+- a Postman collection exists at the repo root
+
+### File-by-file change record
+
+#### 1. `app/Support/ApiPagination.php`
+
+Before:
+
+- every paginated controller relied on Laravel's default resource response shape
+- there was no single place to enforce a common pagination contract
+
+After:
+
+```php
++ public static function response(
++     Request $request,
++     LengthAwarePaginator $paginator,
++     JsonResource|Responsable $resourceCollection,
++     array $meta = [],
++ ): JsonResponse {
++     return response()->json([
++         'data' => $resourceCollection->resolve($request),
++         'links' => [
++             'first' => $paginator->url(1),
++             'last' => $paginator->url($paginator->lastPage()),
++             'prev' => $paginator->previousPageUrl(),
++             'next' => $paginator->nextPageUrl(),
++         ],
++         'meta' => array_merge($meta, [
++             'pagination' => [
++                 'current_page' => $paginator->currentPage(),
++                 'last_page' => $paginator->lastPage(),
++                 'per_page' => $paginator->perPage(),
++                 'total' => $paginator->total(),
++                 'from' => $paginator->firstItem(),
++                 'to' => $paginator->lastItem(),
++             ],
++         ]),
++     ]);
++ }
+```
+
+Why:
+
+- if the boilerplate will serve mobile and third-party clients, paginated responses need to be consistent from the start
+- a small shared support class is cleaner than hand-building the same envelope in every controller
+
+#### 2. `app/Http/Controllers/Api/V1/AdminUserController.php`
+
+Before:
+
+- it returned Laravel's default paginated resource format
+
+After:
+
+```php
+- return AdminUserResource::collection($users)->additional([...]);
++ return ApiPagination::response(
++     request: $request,
++     paginator: $users,
++     resourceCollection: AdminUserResource::collection($users->getCollection()),
++     meta: [
++         'filters' => [
++             'search' => $search,
++         ],
++     ],
++ );
+```
+
+Why:
+
+- admin users is one of the baseline list endpoints, so it should follow the shared API envelope first
+
+#### 3. `app/Http/Controllers/Api/V1/NotificationApiController.php`
+
+Before:
+
+- notifications already existed in the API, but their paginated shape still depended on Laravel's default collection output
+
+After:
+
+- the endpoint now uses `ApiPagination::response(...)`
+- custom metadata stays explicit:
+  - `filters.read`
+  - `unread_count`
+
+Why:
+
+- notifications are likely to be consumed by mobile clients early, so their list shape should be stable
+
+#### 4. `app/Http/Controllers/Api/V1/ActivityLogApiController.php`
+
+Before:
+
+- the audit list endpoint worked, but its pagination shape was not formally standardized
+
+After:
+
+- the endpoint now uses the same shared pagination envelope
+- custom metadata stays explicit:
+  - `filters.search`
+  - `filters.event`
+  - `event_options`
+
+Why:
+
+- activity logs are a high-value cross-cutting API surface and should not drift into a one-off response format
+
+#### 5. `app/Http/Controllers/Api/V1/AdminSummaryController.php`
+
+Before:
+
+- there was no summary endpoint for an external admin dashboard
+
+After:
+
+- added `/api/v1/admin/summary`
+- it returns:
+  - `counts.users`
+  - `counts.verified_users`
+  - `counts.roles`
+  - `counts.unread_notifications`
+  - `counts.activity_logs`
+  - `recent_users`
+  - `role_breakdown`
+
+Representative diff:
+
+```php
++ return new AdminSummaryResource((object) [
++     'counts' => [
++         'users' => User::query()->count(),
++         'verified_users' => User::query()->whereNotNull('email_verified_at')->count(),
++         'roles' => Role::query()->count(),
++         'unread_notifications' => $request->user()->unreadNotifications()->count(),
++         'activity_logs' => ActivityLog::query()->count(),
++     ],
++     'recent_users' => User::query()->with('roles')->latest()->limit(5)->get(),
++     'role_breakdown' => Role::query()
++         ->orderBy('name')
++         ->get()
++         ->map(fn (Role $role): array => [
++             'name' => $role->name,
++             'description' => $role->description,
++             'users_count' => User::role($role->name)->count(),
++         ])
++         ->values()
++         ->all(),
++ ]);
+```
+
+Why:
+
+- a boilerplate API needs at least one high-level admin dashboard endpoint, not just raw resource lists
+- this gives future mobile or support dashboards an immediate starting point
+
+#### 6. `app/Http/Resources/Api/V1/AdminSummaryResource.php`
+
+Before:
+
+- the generated resource was empty
+
+After:
+
+- it now returns a stable explicit summary shape
+- recent users are normalized into simple API-ready arrays
+- role breakdown is returned as a clean summary list
+
+Why:
+
+- summary endpoints are especially easy to let drift into ad hoc arrays
+- a dedicated resource keeps the contract explicit
+
+#### 7. `routes/api.php`
+
+Before:
+
+- there was no summary route
+
+After:
+
+```php
++ Route::get('admin/summary', AdminSummaryController::class)
++     ->middleware('permission:users.view');
+```
+
+Why:
+
+- this keeps the summary endpoint inside the same RBAC model as the rest of the admin API
+
+#### 8. `distro-app-api.postman_collection.json`
+
+Before:
+
+- there was no importable API artifact
+
+After:
+
+- added a Postman collection containing:
+  - auth login/me/logout
+  - notifications list/show/read/read-all
+  - activity logs list/show
+  - admin summary
+  - admin users
+
+Why:
+
+- the API should be testable outside Inertia and outside handwritten curl commands
+- this makes onboarding and manual verification faster
+
+#### 9. Tests
+
+Files:
+
+- `tests/Feature/Api/AdminUsersApiTest.php`
+- `tests/Feature/Feature/Api/NotificationApiTest.php`
+- `tests/Feature/Feature/Api/ActivityLogApiTest.php`
+- `tests/Feature/Feature/Api/AdminSummaryApiTest.php`
+
+After:
+
+- admin users test now checks the formal `meta.pagination` envelope
+- notifications and activity logs now also assert the standardized pagination metadata
+- admin summary has dedicated coverage for counts, breakdowns, and permissions
+
+Why:
+
+- once an API contract is formalized, tests need to prove the structure, not just the status code
+
+### Laravel concepts involved
+
+- API Resources for explicit response contracts
+- LengthAwarePaginator as a reusable API input
+- controller-level response shaping
+- permission middleware reused across admin API endpoints
+- Pest feature tests for contract verification
+
+### Important files
+
+- `app/Support/ApiPagination.php`
+- `app/Http/Controllers/Api/V1/AdminUserController.php`
+- `app/Http/Controllers/Api/V1/NotificationApiController.php`
+- `app/Http/Controllers/Api/V1/ActivityLogApiController.php`
+- `app/Http/Controllers/Api/V1/AdminSummaryController.php`
+- `app/Http/Resources/Api/V1/AdminSummaryResource.php`
+- `routes/api.php`
+- `distro-app-api.postman_collection.json`
+
+### Why this approach fits Laravel
+
+Laravel already gives the main primitives:
+
+- Resources for transformation
+- paginator objects for list state
+- route middleware for authorization
+
+So the right move is not adding an external API package yet. The right move is formalizing the baseline contract with Laravel's own tools first.
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `vendor/bin/pint --dirty --format agent`
+- `php artisan route:list --path=api/v1`
+- `php artisan test --compact tests/Feature/Api/AdminUsersApiTest.php tests/Feature/Api/AuthApiTest.php tests/Feature/Feature/Api/NotificationApiTest.php tests/Feature/Feature/Api/ActivityLogApiTest.php tests/Feature/Feature/Api/AdminSummaryApiTest.php`
+
+### What to remember
+
+- pagination format becomes technical debt quickly if it is not standardized early
+- a summary endpoint is often more valuable to external clients than another raw CRUD list
+- Postman artifacts are useful when the API is becoming part of the product, not just a side effect of the web app

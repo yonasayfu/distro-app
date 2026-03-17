@@ -5,15 +5,16 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\ActivityLogResource;
 use App\Models\ActivityLog;
+use App\Support\ApiPagination;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ActivityLogApiController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $search = $request->string('search')->trim()->toString();
         $event = $request->string('event')->trim()->toString();
@@ -32,8 +33,11 @@ class ActivityLogApiController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return ActivityLogResource::collection($logs)->additional([
-            'meta' => [
+        return ApiPagination::response(
+            request: $request,
+            paginator: $logs,
+            resourceCollection: ActivityLogResource::collection($logs->getCollection()),
+            meta: [
                 'filters' => [
                     'search' => $search,
                     'event' => $event,
@@ -46,7 +50,7 @@ class ActivityLogApiController extends Controller
                     ->values()
                     ->all(),
             ],
-        ]);
+        );
     }
 
     /**
