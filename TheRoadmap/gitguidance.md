@@ -25,6 +25,7 @@ Suggested branch pattern:
 - `phase-10-export-search`
 - `phase-10-integration-guides`
 - `phase-10-shell-cleanup-search-fix`
+- `phase-11-deployment-mail-guides`
 
 ### 2. Commit at Logical Milestones
 
@@ -122,11 +123,11 @@ Branch history so far:
 
 Current active phase branch:
 
-- `phase-10-shell-cleanup-search-fix`
+- `phase-11-deployment-mail-guides`
 
 Current phase purpose:
 
-- clean duplicate shell navigation and harden global search for PostgreSQL notification payloads
+- document production readiness, deployment guidance, and local Mailpit email testing
 
 ## Important Security Note
 

@@ -4915,3 +4915,106 @@ Programmatic checks run for this batch:
 - authorization data can come from Laravel, while open/closed UI state stays local in Vue
 - grouped sidebars feel cleaner when the groups are interactive, not just labeled
 - a global collapse/expand control is useful, but it should not replace individual group control
+
+## Entry 017: Production Readiness Assessment and Mailpit Testing Guide
+
+### Goal
+
+Document whether the boilerplate is actually ready to deploy, what hosting targets fit it best, and how to test email locally with Mailpit.
+
+### What we verified before writing the guide
+
+We checked the current project configuration:
+
+- [README.md](/Users/yonassayfu/Herd/distro-app/README.md)
+- [.env.example](/Users/yonassayfu/Herd/distro-app/.env.example)
+- [config/mail.php](/Users/yonassayfu/Herd/distro-app/config/mail.php)
+- [composer.json](/Users/yonassayfu/Herd/distro-app/composer.json)
+
+We also ran the existing auth/email tests:
+
+```bash
+php artisan test --compact tests/Feature/Auth/VerificationNotificationTest.php tests/Feature/Auth/EmailVerificationTest.php tests/Feature/Auth/PasswordResetTest.php
+```
+
+Result:
+
+- 13 tests passed
+
+### What we concluded
+
+Before:
+
+- we had general setup notes
+- we had some queue/mail/deploy notes in `README.md`
+- but we did not have a direct production-readiness verdict by hosting platform
+- and we did not have a repeatable Mailpit testing guide for future projects
+
+After:
+
+- added a dedicated deployment assessment in:
+  - `TheRoadmap/production-readiness.md`
+- added a dedicated Mailpit/local email testing guide in:
+  - `TheRoadmap/mailtesting.md`
+
+### 1. `TheRoadmap/production-readiness.md`
+
+What it explains:
+
+- whether this boilerplate is deployable right now
+- what is already production-capable
+- what still depends on ops choices
+- which hosting targets fit best:
+  - Laravel Cloud
+  - Laravel Forge
+  - GoDaddy VPS
+  - why shared hosting is a poor fit
+
+Key conclusion archived there:
+
+- Laravel Cloud: good fit
+- Laravel Forge: good fit
+- GoDaddy shared hosting: not recommended for this boilerplate shape
+
+Why:
+
+- this project expects queue workers, scheduler, predictable deployment commands, and real environment control
+
+### 2. `TheRoadmap/mailtesting.md`
+
+What it explains:
+
+- how to switch local mail from `log` to Mailpit SMTP
+- how to test password reset email
+- how to test verification email
+- what to do if config cache blocks the change
+- how this should be repeated for future module-specific mail features
+
+Important archived point:
+
+- local Mailpit testing proves the application is sending email correctly
+- it does not replace production SMTP validation
+
+### Laravel concepts involved
+
+- environment-specific configuration
+- SMTP mailer configuration
+- auth notification flows
+- queue worker expectations
+- scheduler requirements
+- deployment caching commands
+
+### Important files
+
+- `TheRoadmap/production-readiness.md`
+- `TheRoadmap/mailtesting.md`
+- `README.md`
+- `.env.example`
+- `config/mail.php`
+- `composer.json`
+
+### What to remember
+
+- “deployable” and “production-finished” are not the same thing
+- Laravel Cloud and Forge fit this boilerplate much better than low-end shared hosting
+- Mailpit is the correct local tool for confirming auth emails before using a real provider
