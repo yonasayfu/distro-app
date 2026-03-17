@@ -5684,3 +5684,103 @@ Why:
 - if a page is meant to teach the product, it often belongs on the public side too
 - one feature can still use two layouts when the audience changes
 - educational entry points should be clickable, not just described
+
+## Entry 023: Defining Boilerplate Levels
+
+### Goal
+
+Stop treating the starter as one endless boilerplate and instead define clear levels that can evolve in a controlled way.
+
+### What triggered this batch
+
+The project now covers enough platform features that continuing without a level strategy would create a common failure mode:
+
+- the base starter grows too broad
+- future projects have to remove features instead of adding only what they need
+
+So this batch defined a tiered strategy.
+
+### 1. `TheRoadmap/boilerplateLevels.md`
+
+Before:
+
+- there was no formal level structure for the starter
+- names like `basics_aaa` were still placeholders
+
+After:
+
+- added a dedicated level strategy document
+- replaced placeholder naming with:
+  - `starter-core`
+  - `starter-business`
+  - `starter-enterprise`
+
+Why:
+
+- names should reflect purpose clearly
+- this makes future GitHub branches, tags, and repos easier to manage
+
+### 2. Current repo decision
+
+The current repository is now mapped to:
+
+- `starter-core`
+
+Why:
+
+- the implemented features are still mostly platform foundation
+- business-heavy shared modules such as settings, files, workflows, and import foundation are not fully added yet
+
+### 3. `TheRoadmap/BoilerplateRoadmap.md`
+
+After:
+
+- clarified that the current roadmap represents the `starter-core` level
+- linked higher-level planning to the separate levels strategy document
+
+Why:
+
+- the roadmap should not pretend to cover all future levels at once
+
+### 4. `TheRoadmap/BoilerplateTaskList.md`
+
+After:
+
+- added a small levels strategy section to track:
+  - level definition
+  - current repo mapping
+  - freezing `starter-core`
+  - planning the first `starter-core-v1` release/tag
+
+Why:
+
+- level strategy must become executable work, not just naming
+
+### 5. Branch and release strategy
+
+The documented recommended path is:
+
+- keep one repository for now
+- use level branches and tags first
+- only split into separate repositories if divergence becomes heavy
+
+Why:
+
+- that keeps the base cleaner while still making future levels traceable
+
+### Laravel concepts involved
+
+- not a code-level Laravel feature batch
+- this is architecture and release strategy around a Laravel codebase
+
+### Important files
+
+- `TheRoadmap/boilerplateLevels.md`
+- `TheRoadmap/BoilerplateRoadmap.md`
+- `TheRoadmap/BoilerplateTaskList.md`
+
+### What to remember
+
+- not every reusable feature belongs in the lowest boilerplate level
+- define level boundaries before adding more modules
+- freeze `starter-core` before building `starter-business`

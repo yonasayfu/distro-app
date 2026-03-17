@@ -31,6 +31,7 @@ Suggested branch pattern:
 - `phase-12-public-website-foundation`
 - `phase-12-handbook-module`
 - `phase-12-public-handbook-access`
+- `phase-13-boilerplate-levels-planning`
 
 ### 2. Commit at Logical Milestones
 
@@ -133,14 +134,15 @@ Branch history so far:
 - `phase-12-public-website-foundation`
 - `phase-12-handbook-module`
 - `phase-12-public-handbook-access`
+- `phase-13-boilerplate-levels-planning`
 
 Current active phase branch:
 
-- `phase-12-public-handbook-access`
+- `phase-13-boilerplate-levels-planning`
 
 Current phase purpose:
 
-- make the handbook publicly readable and link it directly from the landing page
+- define the tiered boilerplate strategy and map this repository to the correct starter level
 
 ## Important Security Note
 

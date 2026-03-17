@@ -260,6 +260,18 @@ Acceptance criteria:
 - Draft content is never shown publicly.
 - Public and private layouts are intentionally separate.
 
+## Levels Strategy
+
+- [x] `[P1]` Define the boilerplate levels strategy: `starter-core`, `starter-business`, and `starter-enterprise`.
+- [x] `[P1]` Map the current repository to `starter-core`.
+- [ ] `[P1]` Freeze the remaining `starter-core` scope before branching into `starter-business`.
+- [ ] `[P1]` Create the branch/tag release plan for `starter-core-v1`.
+
+Acceptance criteria:
+
+- The current repo has a clear level identity.
+- Future features can be placed into the correct level before implementation starts.
+
 Implementation notes:
 
 - Global search now exists as a permission-aware cross-module search page.
