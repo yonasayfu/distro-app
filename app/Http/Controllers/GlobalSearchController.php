@@ -187,8 +187,8 @@ class GlobalSearchController extends Controller
         if ($query->getConnection()->getDriverName() === 'pgsql') {
             $query->where(function (Builder $notificationQuery) use ($pattern): void {
                 $notificationQuery
-                    ->whereRaw("LOWER(data->>'title') LIKE ?", [$pattern])
-                    ->orWhereRaw("LOWER(data->>'message') LIKE ?", [$pattern]);
+                    ->whereRaw("LOWER(COALESCE((data::jsonb->>'title'), '')) LIKE ?", [$pattern])
+                    ->orWhereRaw("LOWER(COALESCE((data::jsonb->>'message'), '')) LIKE ?", [$pattern]);
             });
 
             return;

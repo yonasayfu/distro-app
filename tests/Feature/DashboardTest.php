@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Permission;
 
 test('authenticated users without dashboard permission are forbidden', function () {
@@ -24,5 +25,7 @@ test('authenticated users with dashboard permission can visit the dashboard', fu
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
-    $response->assertOk();
+    $response
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Dashboard'));
 });

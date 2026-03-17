@@ -4528,3 +4528,227 @@ Programmatic checks run for this batch:
 - remove starter/demo leftovers as soon as they stop serving the product
 - personal settings should have one clear navigation home
 - PostgreSQL JSON searching often needs explicit handling instead of assuming generic JSON path syntax will behave the same across drivers
+
+## Entry 015: Sidebar Group Cleanup and PostgreSQL Notification Casting Fix
+
+### Goal
+
+Tighten the signed-in sidebar so it reads like a real grouped admin shell, and finish the PostgreSQL notification search fix by handling the actual `text` column type used in the notifications table.
+
+### What triggered this batch
+
+- the sidebar still looked noisy after the previous cleanup
+- the search shortcut was duplicated in the sidebar and the header
+- global search still failed on PostgreSQL with:
+  - `operator does not exist: text ->> unknown`
+
+Important clarification:
+
+- this was **not** caused by skipping `migrate:fresh` or `db:seed`
+- the actual issue was the schema: `notifications.data` is stored as `text`, so PostgreSQL cannot use `->>` directly without casting
+
+### 1. `database/migrations/2026_03_16_203825_create_notifications_table.php`
+
+What we verified:
+
+- the notifications table stores payloads like this:
+
+```php
+$table->text('data');
+```
+
+Why this matters:
+
+- PostgreSQL JSON operators like `->>` work on `json` / `jsonb`, not plain `text`
+- so searching notification payloads requires casting the column first
+
+### 2. `app/Http/Controllers/GlobalSearchController.php`
+
+Before:
+
+- the PostgreSQL branch searched notification payloads like this:
+
+```php
+- ->whereRaw("LOWER(data->>'title') LIKE ?", [$pattern])
+- ->orWhereRaw("LOWER(data->>'message') LIKE ?", [$pattern]);
+```
+
+Problem:
+
+- `data` is a `text` column
+- PostgreSQL rejected `text ->> 'title'`
+
+After:
+
+- cast the payload to `jsonb` before extracting keys
+- wrapped values with `COALESCE(..., '')` so missing keys do not break the search
+
+Diff-style summary:
+
+```php
++ ->whereRaw("LOWER(COALESCE((data::jsonb->>'title'), '')) LIKE ?", [$pattern])
++ ->orWhereRaw("LOWER(COALESCE((data::jsonb->>'message'), '')) LIKE ?", [$pattern]);
+```
+
+Why:
+
+- this is the correct PostgreSQL-safe approach for JSON payloads stored in a text column
+- it keeps the existing table intact while making the search work correctly
+
+### 3. `resources/js/navigation/app.ts`
+
+Before:
+
+- sidebar groups had extra descriptive copy
+- `Search` was listed in the sidebar even though search already existed in the header
+- group labels were:
+  - `Workspace`
+  - `Updates`
+  - `Operations`
+
+After:
+
+- removed the sidebar `Search` item
+- shortened group names to cleaner navigation buckets:
+  - `Core`
+  - `Insight`
+  - `Management`
+- removed the descriptive paragraph text from the navigation structure
+
+Diff-style summary:
+
+```ts
+- import { index as searchIndex } from '@/routes/search';
+- import { Search } from 'lucide-vue-next';
+...
+- title: 'Workspace',
+- description: 'Shared for all signed-in users',
++ title: 'Core',
+...
+- {
+-   title: 'Search',
+-   href: searchIndex(),
+-   icon: Search,
+-   permission: 'search.view',
+- },
+```
+
+Why:
+
+- the sidebar should be a stable destination map, not a second toolbar
+- search is a header action, so repeating it in navigation makes the sidebar feel cluttered
+- shorter group names scan better
+
+### 4. `resources/js/components/AppSidebar.vue`
+
+Before:
+
+- the sidebar header had a large explanatory block:
+  - `Current access`
+  - role text
+  - explanatory copy about common items and administration links
+
+After:
+
+- replaced the large block with a compact access chip:
+  - `Access`
+  - current primary role
+
+Diff-style summary:
+
+```vue
+- <div class="font-medium text-foreground">Current access</div>
+- <div class="mt-1">{{ roleSummary }}</div>
+- <div class="mt-2 text-[11px]">
+-   Common items remain visible for everyone...
+- </div>
++ <div class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Access</div>
++ <div class="mt-1 text-sm font-medium text-foreground">{{ roleSummary }}</div>
+```
+
+Why:
+
+- the sidebar header should orient the user quickly, not explain the authorization model in prose
+- role context is useful, but the long explanation made the shell look busy
+
+### 5. `resources/js/components/NavMain.vue`
+
+Before:
+
+- every group showed:
+  - label
+  - description paragraph
+  - items
+
+After:
+
+- removed description rendering from the sidebar
+- added visual separators between groups
+
+Diff-style summary:
+
+```vue
+- <p v-if="group.description" class="...">
+-   {{ group.description }}
+- </p>
++ <SidebarSeparator v-if="index > 0" class="mx-2 my-3" />
+```
+
+Why:
+
+- group separation should be mostly visual, not paragraph-based
+- labels plus clean spacing are enough for a boilerplate sidebar
+
+### 6. `tests/Feature/DashboardTest.php`
+
+Before:
+
+- the authenticated dashboard test only checked for `200 OK`
+
+After:
+
+- the test now also asserts the Inertia component name
+
+Diff-style summary:
+
+```php
+- $response->assertOk();
++ $response
++     ->assertOk()
++     ->assertInertia(fn (Assert $page) => $page->component('Dashboard'));
+```
+
+Why:
+
+- this gives us one more regression guard around the signed-in app shell
+
+### Laravel concepts involved
+
+- PostgreSQL casting from `text` to `jsonb`
+- Eloquent search queries against stored JSON payloads
+- Inertia shell cleanup through centralized navigation config
+- keeping action UI separate from navigation UI
+
+### Important files
+
+- `database/migrations/2026_03_16_203825_create_notifications_table.php`
+- `app/Http/Controllers/GlobalSearchController.php`
+- `resources/js/navigation/app.ts`
+- `resources/js/components/AppSidebar.vue`
+- `resources/js/components/NavMain.vue`
+- `tests/Feature/DashboardTest.php`
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `vendor/bin/pint --dirty --format agent`
+- `php artisan test --compact tests/Feature/Feature/GlobalSearchTest.php tests/Feature/DashboardTest.php`
+- `npm run build`
+- `npm run types:check`
+
+### What to remember
+
+- if a PostgreSQL error mentions `text ->> ...`, inspect the actual column type before blaming seed data
+- sidebars work best when they show destinations, not explanations
+- search belongs in the header or command surface, not duplicated inside the main navigation
