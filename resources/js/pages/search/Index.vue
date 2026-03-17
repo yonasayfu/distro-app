@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Search, SearchX } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
 import EmptyState from '@/components/EmptyState.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -26,14 +26,59 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const query = ref(props.filters.q);
+const isSearching = ref(false);
+let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const submit = (): void => {
+    if (searchDebounceTimeout) {
+        clearTimeout(searchDebounceTimeout);
+    }
+
+    if (query.value === props.filters.q) {
+        return;
+    }
+
+    isSearching.value = true;
+
     router.get(searchIndex.url({ query: { q: query.value || undefined } }), {}, {
         preserveState: true,
         preserveScroll: true,
         replace: true,
+        only: ['filters', 'results'],
+        onFinish: () => {
+            isSearching.value = false;
+        },
     });
 };
+
+watch(
+    () => props.filters.q,
+    (value) => {
+        if (value !== query.value) {
+            query.value = value;
+        }
+    },
+);
+
+watch(query, (value) => {
+    if (searchDebounceTimeout) {
+        clearTimeout(searchDebounceTimeout);
+    }
+
+    if (value === props.filters.q) {
+        return;
+    }
+
+    searchDebounceTimeout = setTimeout(() => {
+        submit();
+    }, 250);
+});
+
+onBeforeUnmount(() => {
+    if (searchDebounceTimeout) {
+        clearTimeout(searchDebounceTimeout);
+    }
+});
 </script>
 
 <template>
@@ -50,14 +95,18 @@ const submit = (): void => {
                 <form class="flex flex-col gap-3 md:flex-row" @submit.prevent="submit">
                     <Input
                         v-model="query"
+                        autofocus
                         placeholder="Search users, roles, notifications, or activity logs"
                         class="h-11"
                     />
                     <Button type="submit" class="h-11">
                         <Search class="size-4" />
-                        Search
+                        {{ isSearching ? 'Searching...' : 'Search' }}
                     </Button>
                 </form>
+                <p class="mt-3 text-sm text-muted-foreground">
+                    Results update automatically while you type.
+                </p>
             </section>
 
             <div v-if="filters.q === ''">

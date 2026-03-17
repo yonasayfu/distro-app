@@ -5018,3 +5018,120 @@ Important archived point:
 - “deployable” and “production-finished” are not the same thing
 - Laravel Cloud and Forge fit this boilerplate much better than low-end shared hosting
 - Mailpit is the correct local tool for confirming auth emails before using a real provider
+
+## Entry 018: Global Search Autofocus and Live Search Behavior
+
+### Goal
+
+Make global search behave like a fast search surface instead of a traditional submit-only form.
+
+### What triggered this batch
+
+Before this change:
+
+- opening global search did not focus the input
+- you had to click into the field manually
+- the page waited until you finished typing and submitted the form
+
+That is slower than it should be for a global search entry point.
+
+### 1. `resources/js/pages/search/Index.vue`
+
+Before:
+
+- the page used a classic form submit pattern
+- searching required the submit button or Enter
+- there was no live request cycle while typing
+- there was no visible searching state
+
+Core previous pattern:
+
+```ts
+const query = ref(props.filters.q);
+
+const submit = (): void => {
+    router.get(searchIndex.url({ query: { q: query.value || undefined } }), {}, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+};
+```
+
+After:
+
+- the input now uses `autofocus`
+- typing triggers a debounced search request after `250ms`
+- the submit button still exists as a fallback
+- the button label changes to `Searching...` while the request is active
+- the page now tells the user that results update automatically
+
+Core updated pattern:
+
+```ts
++ const isSearching = ref(false);
++ let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+...
++ watch(query, (value) => {
++     if (searchDebounceTimeout) {
++         clearTimeout(searchDebounceTimeout);
++     }
++
++     if (value === props.filters.q) {
++         return;
++     }
++
++     searchDebounceTimeout = setTimeout(() => {
++         submit();
++     }, 250);
++ });
+```
+
+```vue
++ <Input
++     v-model="query"
++     autofocus
++     placeholder="Search users, roles, notifications, or activity logs"
++     class="h-11"
++ />
+```
+
+Why:
+
+- global search should minimize friction
+- autofocus removes one unnecessary click
+- debounced live search is a better fit for this kind of cross-module lookup
+- keeping the submit button still preserves keyboard/form fallback behavior
+
+### Behavior details
+
+- if the current query already matches the page props, no extra request is sent
+- the search request only refreshes:
+  - `filters`
+  - `results`
+- debounce prevents a request on every single keystroke
+- the timeout is cleared on component unmount
+
+### Laravel concepts involved
+
+- Inertia partial reloads with `only`
+- client-side debounce for request pacing
+- preserving state and scroll during same-page search updates
+- keeping server-driven results while improving client UX
+
+### Important file
+
+- `resources/js/pages/search/Index.vue`
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `php artisan test --compact tests/Feature/Feature/GlobalSearchTest.php`
+- `npm run types:check`
+- `npm run build`
+
+### What to remember
+
+- search pages are one of the clearest places where old form UX should usually give way to debounced live queries
+- the backend can stay server-driven while the frontend becomes much faster to use
