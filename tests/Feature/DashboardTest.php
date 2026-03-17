@@ -27,5 +27,9 @@ test('authenticated users with dashboard permission can visit the dashboard', fu
     $response = $this->get(route('dashboard'));
     $response
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('Dashboard'));
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard')
+            ->has('auth.roles')
+            ->has('auth.permissions'),
+        );
 });

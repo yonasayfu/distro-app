@@ -4752,3 +4752,166 @@ Programmatic checks run for this batch:
 - if a PostgreSQL error mentions `text ->> ...`, inspect the actual column type before blaming seed data
 - sidebars work best when they show destinations, not explanations
 - search belongs in the header or command surface, not duplicated inside the main navigation
+
+## Entry 016: Collapsible Sidebar Groups and Global Group Toggle
+
+### Goal
+
+Make the sidebar behave like a real navigation system:
+
+- no overflowing access badge
+- each group can be collapsed individually
+- one footer control can collapse or expand all groups at once
+
+### What triggered this batch
+
+- the `Access / Admin` block still felt oversized and could overflow visually
+- the grouped navigation was static instead of interactive
+- there was no fast way to collapse all groups together
+
+### 1. `resources/js/components/AppSidebar.vue`
+
+Before:
+
+- the access badge was always visible, even when the sidebar itself collapsed to icon mode
+- there was no state for group open/closed behavior
+- the footer only showed the user menu
+
+After:
+
+- hid the access badge when the sidebar is in icon-collapsed mode
+- trimmed the role line with `truncate`
+- added local Vue state to track open groups
+- added one icon-only footer button to expand or collapse all groups
+
+Diff-style summary:
+
+```vue
++ import { ChevronsDownUp, ChevronsUpDown } from 'lucide-vue-next';
++ import { computed, ref, watch } from 'vue';
++ import { useSidebar } from '@/components/ui/sidebar';
+...
++ const openGroups = ref<Record<string, boolean>>({});
++ const allGroupsExpanded = computed(() => ...);
++ const toggleGroup = (title: string): void => { ... };
++ const toggleAllGroups = (): void => { ... };
+...
+- <div class="mt-3 px-2">
++ <div class="mt-3 px-2 group-data-[collapsible=icon]:hidden">
+...
+- <div class="mt-1 text-sm font-medium text-foreground">{{ roleSummary }}</div>
++ <div class="mt-1 truncate text-sm font-medium text-foreground">{{ roleSummary }}</div>
+...
++ <SidebarMenuButton
++     :tooltip="allGroupsExpanded ? 'Collapse all groups' : 'Expand all groups'"
++     @click="toggleAllGroups"
++ >
++     <component :is="allGroupsExpanded ? ChevronsDownUp : ChevronsUpDown" />
++ </SidebarMenuButton>
+```
+
+Why:
+
+- the access badge is contextual information, so it should disappear when the sidebar is icon-only
+- group open/close state is a pure UI concern, so it belongs in local Vue state, not in server props
+- the footer control gives a quick “collapse all / expand all” action without adding more text to the layout
+
+### 2. `resources/js/components/NavMain.vue`
+
+Before:
+
+- groups were visually separated but always fully open
+- there was no interaction on the group headers
+
+After:
+
+- wrapped each group in a `Collapsible`
+- added a `SidebarGroupAction` toggle button with a chevron
+- each group now receives its open state from `AppSidebar`
+- each group emits a `toggleGroup` event back to the parent
+
+Diff-style summary:
+
+```vue
++ import { ChevronDown } from 'lucide-vue-next';
++ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
++ import { SidebarGroupAction } from '@/components/ui/sidebar';
+...
++ defineProps<{ items: NavGroup[]; openGroups: Record<string, boolean>; }>();
++ const emit = defineEmits<{ toggleGroup: [title: string]; }>();
+...
++ <Collapsible :open="openGroups[group.title]">
++   <SidebarGroup>
++     <SidebarGroupLabel>{{ group.title }}</SidebarGroupLabel>
++     <CollapsibleTrigger as-child>
++       <SidebarGroupAction @click="emit('toggleGroup', group.title)">
++         <ChevronDown :class="openGroups[group.title] ? 'rotate-0' : '-rotate-90'" />
++       </SidebarGroupAction>
++     </CollapsibleTrigger>
++     <CollapsibleContent>
++       ...
++     </CollapsibleContent>
++   </SidebarGroup>
++ </Collapsible>
+```
+
+Why:
+
+- group collapse is a presentation concern, not a routing concern
+- keeping the state in the parent and the interaction in the child keeps the component responsibilities clear
+- the chevron control makes the sidebar feel structured instead of static
+
+### 3. `tests/Feature/DashboardTest.php`
+
+Before:
+
+- the dashboard access test only asserted the component and status
+
+After:
+
+- the test now also asserts the shared auth payload includes:
+  - `auth.roles`
+  - `auth.permissions`
+
+Diff-style summary:
+
+```php
++ ->assertInertia(fn (Assert $page) => $page
++     ->component('Dashboard')
++     ->has('auth.roles')
++     ->has('auth.permissions'),
++ );
+```
+
+Why:
+
+- the sidebar access badge and permission-aware grouping depend on those shared auth props
+- this gives one regression check that the server is still sending the data the shell expects
+
+### Laravel concepts involved
+
+- Inertia shared props powering frontend authorization context
+- Vue local state for UI-only interaction
+- parent-child event flow in component composition
+- keeping navigation behavior on the client while authorization remains server-driven
+
+### Important files
+
+- `resources/js/components/AppSidebar.vue`
+- `resources/js/components/NavMain.vue`
+- `tests/Feature/DashboardTest.php`
+
+### Verification
+
+Programmatic checks run for this batch:
+
+- `vendor/bin/pint --dirty --format agent`
+- `php artisan test --compact tests/Feature/DashboardTest.php tests/Feature/Feature/GlobalSearchTest.php`
+- `npm run build`
+- `npm run types:check`
+
+### What to remember
+
+- authorization data can come from Laravel, while open/closed UI state stays local in Vue
+- grouped sidebars feel cleaner when the groups are interactive, not just labeled
+- a global collapse/expand control is useful, but it should not replace individual group control
