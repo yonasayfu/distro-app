@@ -6,14 +6,18 @@ import PageHeader from '@/components/PageHeader.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
+import PublicLayout from '@/layouts/public/PublicLayout.vue';
 import { index as handbookIndex } from '@/routes/handbook';
 import type {
+    Auth,
     BreadcrumbItem,
     HandbookDocument,
     HandbookFilters,
     HandbookGroup,
     HandbookLesson,
 } from '@/types';
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 type Props = {
     groups: HandbookGroup[];
@@ -24,6 +28,9 @@ type Props = {
 };
 
 const props = defineProps<Props>();
+const page = usePage();
+const auth = computed(() => page.props.auth as Auth);
+const isGuestView = computed(() => auth.value.user === null);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -69,18 +76,21 @@ const selectLesson = (lessonKey: string): void => {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <component
+        :is="isGuestView ? PublicLayout : AppLayout"
+        v-bind="isGuestView ? { title: 'Handbook' } : { breadcrumbs }"
+    >
         <Head title="Handbook" />
 
         <PageContainer>
             <PageHeader
                 title="Handbook"
-                description="Read the roadmap, workflow guides, and Laravel learning archive inside the app while you build."
+                description="Read the roadmap, workflow guides, and Laravel learning archive inside the app or from the public learning surface."
             >
                 <template #eyebrow>
                     <div class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium tracking-[0.2em] text-sky-900 uppercase dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
                         <BookOpenText class="size-3.5" />
-                        Internal knowledge
+                        {{ isGuestView ? 'Learning surface' : 'Internal knowledge' }}
                     </div>
                 </template>
             </PageHeader>
@@ -202,7 +212,7 @@ const selectLesson = (lessonKey: string): void => {
                 </section>
             </div>
         </PageContainer>
-    </AppLayout>
+    </component>
 </template>
 
 <style scoped>

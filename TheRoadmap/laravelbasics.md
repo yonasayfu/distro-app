@@ -5551,3 +5551,136 @@ Why:
 - internal documentation can be treated as a real module when it actively supports how the product is built
 - if the archive is meant to teach, it should be structured like lessons, not just stored like files
 - server-rendered markdown keeps the UI simple while preserving Laravel control over the content
+
+## Entry 022: Public Handbook Access from the Landing Page
+
+### Goal
+
+Make the handbook readable directly from the public side and turn the landing page into an educational entry point, not just a product overview page.
+
+### What triggered this batch
+
+The handbook module existed, but it still had a mismatch with the original goal:
+
+- the learning archive was inside the app
+- the public landing page described the boilerplate but did not actually open the guides
+
+So this batch removed that gap.
+
+### 1. `routes/web.php`
+
+Before:
+
+- `handbook.index` lived inside the authenticated route group
+
+After:
+
+- moved `handbook.index` to a public route
+
+Diff-style summary:
+
+```php
++ Route::get('handbook', HandbookController::class)->name('handbook.index');
+...
+- Route::get('handbook', HandbookController::class)
+-     ->middleware('permission:handbook.view')
+-     ->name('handbook.index');
+```
+
+Why:
+
+- a learning surface should be readable from the landing page without forcing sign-in first
+
+### 2. `app/Http/Requests/HandbookIndexRequest.php`
+
+Before:
+
+- authorization required a signed-in user with `handbook.view`
+
+After:
+
+- authorization now allows public access
+
+Diff-style summary:
+
+```php
+- return $this->user()?->can('handbook.view') ?? false;
++ return true;
+```
+
+Why:
+
+- route-level public access is now intentional
+- signed-in users still keep the handbook in the sidebar, but guests can also read it
+
+### 3. `resources/js/pages/handbook/Index.vue`
+
+Before:
+
+- the handbook always rendered inside `AppLayout`
+- it looked like an internal module only
+
+After:
+
+- the page now chooses layout by auth state:
+  - guests use `PublicLayout`
+  - signed-in users use `AppLayout`
+
+Why:
+
+- the same content now works in both contexts without pretending guests are inside the admin shell
+
+### 4. `resources/js/pages/Welcome.vue`
+
+Before:
+
+- the landing page described the platform
+- but it did not contain real educational navigation into the guides
+
+After:
+
+- added a dedicated learning section with clickable cards for:
+  - roadmap
+  - task checklist
+  - Laravel lessons
+- added a direct `Read the handbook` button near the hero CTA area
+
+Why:
+
+- this turns the front page into a real learning entrance
+- it matches the original goal: understand the boilerplate and Laravel while using the product itself
+
+### 5. `tests/Feature/Feature/HandbookPageTest.php`
+
+Before:
+
+- the test assumed guests were redirected away
+
+After:
+
+- updated the test to prove guests can open the handbook
+- kept signed-in and lesson-selection coverage
+
+Why:
+
+- the test now reflects the new public-learning behavior
+
+### Laravel concepts involved
+
+- changing access policy at the request and route layer
+- reusing one Inertia page across public and authenticated layouts
+- query-driven document and lesson selection
+
+### Important files
+
+- `routes/web.php`
+- `app/Http/Requests/HandbookIndexRequest.php`
+- `resources/js/pages/handbook/Index.vue`
+- `resources/js/pages/Welcome.vue`
+- `tests/Feature/Feature/HandbookPageTest.php`
+
+### What to remember
+
+- if a page is meant to teach the product, it often belongs on the public side too
+- one feature can still use two layouts when the audience changes
+- educational entry points should be clickable, not just described

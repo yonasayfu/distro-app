@@ -30,6 +30,7 @@ Suggested branch pattern:
 - `phase-12-public-website-planning`
 - `phase-12-public-website-foundation`
 - `phase-12-handbook-module`
+- `phase-12-public-handbook-access`
 
 ### 2. Commit at Logical Milestones
 
@@ -131,14 +132,15 @@ Branch history so far:
 - `phase-12-public-website-planning`
 - `phase-12-public-website-foundation`
 - `phase-12-handbook-module`
+- `phase-12-public-handbook-access`
 
 Current active phase branch:
 
-- `phase-12-handbook-module`
+- `phase-12-public-handbook-access`
 
 Current phase purpose:
 
-- add an in-app handbook module for roadmap, workflow docs, and Laravel lesson archives
+- make the handbook publicly readable and link it directly from the landing page
 
 ## Important Security Note
 

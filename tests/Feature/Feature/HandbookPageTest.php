@@ -4,9 +4,13 @@ use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
-test('guests are redirected away from the handbook', function () {
+test('guests can read the handbook', function () {
     $this->get(route('handbook.index'))
-        ->assertRedirect(route('login'));
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('handbook/Index')
+            ->where('filters.document', 'roadmap'),
+        );
 });
 
 test('signed in member can read the handbook index', function () {

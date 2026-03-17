@@ -14,6 +14,8 @@ Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
+Route::get('handbook', HandbookController::class)->name('handbook.index');
+
 Route::middleware(['auth', 'verified', 'permission:dashboard.view'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 });
@@ -22,10 +24,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('search', GlobalSearchController::class)
         ->middleware('permission:search.view')
         ->name('search.index');
-
-    Route::get('handbook', HandbookController::class)
-        ->middleware('permission:handbook.view')
-        ->name('handbook.index');
 
     Route::get('exports', [ExportCenterController::class, 'index'])
         ->middleware('permission:exports.view')

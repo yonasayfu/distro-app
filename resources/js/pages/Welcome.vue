@@ -3,8 +3,10 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import {
     ArrowRight,
     Blocks,
+    BookOpenText,
     Fingerprint,
     Globe2,
+    GraduationCap,
     Rocket,
     ShieldCheck,
     Workflow,
@@ -13,6 +15,7 @@ import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import PublicLayout from '@/layouts/public/PublicLayout.vue';
 import { dashboard, login, register } from '@/routes';
+import { index as handbookIndex } from '@/routes/handbook';
 import type { Auth } from '@/types';
 
 withDefaults(
@@ -70,6 +73,43 @@ const architecturePanels = [
         description: 'Laravel routes, Form Requests, RBAC, API versioning, and tests hold the whole system together.',
     },
 ];
+
+const learningCards = [
+    {
+        title: 'Boilerplate roadmap',
+        description: 'Read the full phase plan and understand what this starter already covers and what comes next.',
+        href: handbookIndex.url({
+            query: {
+                document: 'roadmap',
+            },
+        }),
+        icon: BookOpenText,
+        label: 'Roadmap',
+    },
+    {
+        title: 'Task checklist',
+        description: 'Open the implementation tracker and see what is complete, pending, and still planned.',
+        href: handbookIndex.url({
+            query: {
+                document: 'task-list',
+            },
+        }),
+        icon: Workflow,
+        label: 'Tasks',
+    },
+    {
+        title: 'Laravel lessons',
+        description: 'Read the code-level learning archive entry by entry, grouped like lessons instead of raw notes.',
+        href: handbookIndex.url({
+            query: {
+                document: 'laravelbasics',
+                lesson: 'entry-20-public-layout-and-landing-page-foundation',
+            },
+        }),
+        icon: GraduationCap,
+        label: 'Lessons',
+    },
+];
 </script>
 
 <template>
@@ -111,6 +151,16 @@ const architecturePanels = [
                             class="rounded-full border-stone-900/15 bg-white/70 px-6"
                         >
                             <Link :href="register()">Create starter access</Link>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            as-child
+                            class="rounded-full border-stone-900/15 bg-white/70 px-6"
+                        >
+                            <Link :href="handbookIndex()">
+                                <BookOpenText class="size-4" />
+                                Read the handbook
+                            </Link>
                         </Button>
                     </div>
                 </div>
@@ -164,6 +214,44 @@ const architecturePanels = [
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mx-auto max-w-7xl px-5 py-4 lg:px-8 lg:py-8">
+            <div class="rounded-[2rem] border border-stone-900/10 bg-white/75 p-6 shadow-sm backdrop-blur lg:p-8">
+                <div class="max-w-3xl">
+                    <div class="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-stone-500">Learn inside the product</div>
+                    <h2 class="mt-4 text-3xl font-semibold tracking-[-0.03em] text-stone-950">Use the front page as your learning entrance, not just as a marketing screen.</h2>
+                    <p class="mt-4 text-sm leading-7 text-stone-700">
+                        The handbook is now readable from the public side too. Open the roadmap, task list, or Laravel lesson archive directly from here while you learn the structure of your boilerplate.
+                    </p>
+                </div>
+
+                <div class="mt-8 grid gap-5 lg:grid-cols-3">
+                    <Link
+                        v-for="card in learningCards"
+                        :key="card.title"
+                        :href="card.href"
+                        class="group rounded-[1.6rem] border border-stone-900/10 bg-[#f6efe3] p-5 shadow-sm transition hover:-translate-y-1 hover:bg-stone-900 hover:text-stone-50"
+                    >
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="inline-flex rounded-2xl bg-stone-900 p-3 text-stone-50 transition group-hover:bg-stone-50 group-hover:text-stone-900">
+                                <component :is="card.icon" class="size-5" />
+                            </div>
+                            <span class="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-stone-500 transition group-hover:text-stone-300">
+                                {{ card.label }}
+                            </span>
+                        </div>
+                        <h3 class="mt-5 text-lg font-semibold tracking-[-0.02em]">{{ card.title }}</h3>
+                        <p class="mt-3 text-sm leading-7 text-stone-700 transition group-hover:text-stone-300">
+                            {{ card.description }}
+                        </p>
+                        <div class="mt-5 inline-flex items-center gap-2 text-sm font-medium">
+                            Open guide
+                            <ArrowRight class="size-4 transition group-hover:translate-x-1" />
+                        </div>
+                    </Link>
                 </div>
             </div>
         </section>
