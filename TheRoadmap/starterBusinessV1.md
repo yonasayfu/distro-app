@@ -79,6 +79,7 @@ Before tagging `starter-business-v1`, these should be complete:
 - stat cards
 - report table pattern
 - export hook points
+- dashboard and report tests
 
 ### 7. Release Readiness
 

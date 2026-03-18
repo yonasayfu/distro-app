@@ -1195,6 +1195,226 @@ Programmatic checks run for this batch:
 
 - `npm run build`
 - `npm run types:check`
+
+## Entry 038: `starter-business` Dashboard and Reporting Base
+
+### Goal
+
+Add one reusable metrics and reporting surface so future business modules can plug into a shared dashboard/report pattern instead of creating custom summary pages each time.
+
+### What we built
+
+This batch added:
+
+- a controller-backed dashboard with real metrics
+- reusable stat-card and recent-activity widgets
+- a filterable reporting page for page records
+- CSV export from the report surface
+- dashboard/report feature tests
+
+This is the first dashboard/reporting baseline for `starter-business`, not a domain-specific analytics system.
+
+### 1. Dashboard moved from static page data to controller-backed metrics
+
+Files:
+
+- `app/Http/Controllers/DashboardController.php`
+- `routes/web.php`
+- `resources/js/pages/Dashboard.vue`
+
+Before:
+
+- the dashboard UI was already cleaner than the original starter, but the business-level data still lived as static placeholder content inside the page
+
+After:
+
+- `DashboardController` now loads:
+  - metric cards
+  - recent activity
+  - report highlights
+- the dashboard route now points to the controller instead of a direct Inertia route
+- the Vue page now renders actual reporting props from Laravel
+
+Representative change:
+
+```diff
+- Route::inertia('dashboard', 'Dashboard')->name('dashboard');
++ Route::get('dashboard', DashboardController::class)->name('dashboard');
+```
+
+Why:
+
+- business starters need a real summary surface driven by backend data, not page-local placeholders
+
+### 2. Shared widget primitives for metrics and activity
+
+Files:
+
+- `resources/js/components/admin/StatCard.vue`
+- `resources/js/components/admin/RecentActivityPanel.vue`
+
+Before:
+
+- there was no reusable widget primitive for business summary cards or dashboard feeds
+
+After:
+
+- `StatCard` now renders a reusable colored metric tile
+- `RecentActivityPanel` now renders the shared activity-feed widget pattern
+
+Representative change:
+
+```diff
++ <StatCard
++     v-for="metric in metrics"
++     :key="metric.key"
++     :label="metric.label"
++     :value="metric.value"
++     :description="metric.description"
++     :tone="metric.tone"
++ />
+```
+
+Why:
+
+- reusable widgets are what make later dashboard assembly fast across future modules
+
+### 3. Permission-aware dashboard quick links
+
+Files:
+
+- `resources/js/pages/Dashboard.vue`
+- `resources/js/types/auth.ts`
+- `app/Http/Middleware/HandleInertiaRequests.php`
+
+Before:
+
+- the quick-link section could expose links that a lower-permission role could not actually open
+
+After:
+
+- dashboard quick links now filter by the shared `auth.can` and `auth.permissions` props
+- roles only see report/settings/page actions that match their current access
+
+Representative change:
+
+```diff
+- const quickLinks = [
++ const quickLinks = computed(() => [
+    {
+        title: 'Reports',
++       visible: auth.value.can.viewReports,
+    },
+- ];
++ ].filter((item) => item.visible));
+```
+
+Why:
+
+- business-level dashboards should summarize the workspace without leaking unusable entry points
+
+### 4. First shared reporting page
+
+Files:
+
+- `app/Http/Controllers/ReportsController.php`
+- `resources/js/pages/reports/Index.vue`
+- `routes/web.php`
+- `resources/js/navigation/app.ts`
+- `database/seeders/RolePermissionSeeder.php`
+- `app/Http/Controllers/Admin/RoleManagementController.php`
+
+Before:
+
+- there was no reporting surface in the business starter
+
+After:
+
+- added `/reports`
+- added `reports.view`
+- reporting UI now supports:
+  - text search
+  - status filter
+  - deleted-record filter
+  - CSV export of the current filter slice
+- reports now appear in the sidebar for roles with reporting access
+
+Representative change:
+
+```diff
++ Route::get('reports', [ReportsController::class, 'index'])
++     ->middleware('permission:reports.view')
++     ->name('reports.index');
++
++ Route::get('reports/pages.csv', [ReportsController::class, 'pagesCsv'])
++     ->middleware('permission:reports.view')
++     ->name('reports.pages.csv');
+```
+
+Why:
+
+- a reusable business starter should have one neutral report pattern before domain modules start inventing custom analytics pages
+
+### 5. Cross-database search handling inside reports
+
+Files:
+
+- `app/Http/Controllers/ReportsController.php`
+
+What changed:
+
+- the report search path uses `LOWER(...) LIKE ?` instead of `ilike`
+- search now works in both:
+  - PostgreSQL in local development
+  - SQLite in Pest tests
+
+Representative change:
+
+```diff
+- ->where('title', 'ilike', "%{$search}%")
++ ->whereRaw('LOWER(title) LIKE ?', [$term])
+```
+
+Why:
+
+- test-only SQL differences are exactly the kind of friction that should be removed at the shared business-layer code
+
+### 6. Test coverage
+
+Files:
+
+- `tests/Feature/DashboardWidgetsTest.php`
+- `tests/Feature/ReportsIndexTest.php`
+- `tests/Feature/DashboardTest.php`
+
+What it proves:
+
+- managers can see real dashboard widget props
+- managers can filter the pages report
+- managers can export report CSV output
+- members are still blocked from reports
+
+### Verification run
+
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `php artisan test --compact tests/Feature/DashboardWidgetsTest.php tests/Feature/ReportsIndexTest.php tests/Feature/DashboardTest.php`
+- `npm run build`
+- `npm run types:check`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `app/Http/Controllers/DashboardController.php`
+- `app/Http/Controllers/ReportsController.php`
+- `resources/js/components/admin/StatCard.vue`
+- `resources/js/components/admin/RecentActivityPanel.vue`
+- `resources/js/pages/reports/Index.vue`
+
+### What to remember
+
+- move dashboard data into Laravel controllers once the page becomes part of the shared platform, not just a frontend showcase
+- widget primitives matter more than one-off page markup because future business modules will reuse those surfaces
+- report filters and exports should be shaped as one repeatable pattern early, before domain reporting gets complex
 - `php artisan test --compact tests/Feature/DashboardTest.php`
 
 ### What to remember

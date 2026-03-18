@@ -2,6 +2,7 @@ import {
     Bell,
     BookOpenText,
     FileOutput,
+    FileSpreadsheet,
     FileText,
     FolderOpen,
     LayoutGrid,
@@ -18,6 +19,7 @@ import { index as handbookIndex } from '@/routes/handbook';
 import { index as mediaIndex } from '@/routes/media';
 import { index as notificationsIndex } from '@/routes/notifications';
 import { index as pagesIndex } from '@/routes/pages';
+import { index as reportsIndex } from '@/routes/reports';
 import { index as rolesIndex } from '@/routes/roles';
 import { index as usersIndex } from '@/routes/users';
 import type { NavGroup } from '@/types';
@@ -54,6 +56,12 @@ export const appNavigation: NavGroup[] = [
                 href: activityLogsIndex(),
                 icon: ScrollText,
                 permission: 'activity-logs.view',
+            },
+            {
+                title: 'Reports',
+                href: reportsIndex(),
+                icon: FileSpreadsheet,
+                permission: 'reports.view',
             },
         ],
     },

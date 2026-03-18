@@ -20,6 +20,7 @@ export type Auth = {
         viewSearch: boolean;
         viewHandbook: boolean;
         viewExports: boolean;
+        viewReports: boolean;
         manageSettings: boolean;
         managePages: boolean;
         manageUsers: boolean;

@@ -53,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                     'viewSearch' => $user?->can('search.view') ?? false,
                     'viewHandbook' => $user?->can('handbook.view') ?? false,
                     'viewExports' => $user?->can('exports.view') ?? false,
+                    'viewReports' => $user?->can('reports.view') ?? false,
                     'manageSettings' => $user?->can('settings.view') ?? false,
                     'managePages' => $user?->can('pages.view') ?? false,
                     'manageUsers' => $user?->can('users.view') ?? false,

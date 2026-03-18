@@ -1,17 +1,48 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { ArrowRight, Blocks, SearchX, ShieldCheck, Sparkles } from 'lucide-vue-next';
-import EmptyState from '@/components/EmptyState.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import LoadingState from '@/components/LoadingState.vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { BarChart3, FileSpreadsheet, FileText, Settings2 } from 'lucide-vue-next';
+import { computed } from 'vue';
+import RecentActivityPanel from '@/components/admin/RecentActivityPanel.vue';
+import StatCard from '@/components/admin/StatCard.vue';
 import PageContainer from '@/components/PageContainer.vue';
-import PageErrorState from '@/components/PageErrorState.vue';
 import PageHeader from '@/components/PageHeader.vue';
-import { edit as editAppearance } from '@/routes/appearance';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { edit as adminSettingsEdit } from '@/routes/admin-settings';
 import { dashboard } from '@/routes';
-import { edit as editProfile } from '@/routes/profile';
-import { edit as editSecurity } from '@/routes/security';
-import type { BreadcrumbItem } from '@/types';
+import { importMethod as pagesImportIndex, index as pagesIndex } from '@/routes/pages';
+import { index as reportsIndex } from '@/routes/reports';
+import type { Auth, BreadcrumbItem } from '@/types';
+
+type Metric = {
+    key: string;
+    label: string;
+    value: number;
+    description: string;
+    tone: 'amber' | 'sky' | 'emerald' | 'violet';
+};
+
+type ActivityItem = {
+    id: number;
+    event: string;
+    description: string;
+    createdAt: string | null;
+};
+
+type Props = {
+    metrics: Metric[];
+    recentActivity: ActivityItem[];
+    reportHighlights: {
+        publishedPages: number;
+        reviewPages: number;
+        deletedPages: number;
+        completedImports: number;
+    };
+};
+
+defineProps<Props>();
+
+const page = usePage();
+const auth = computed(() => page.props.auth as Auth);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -20,41 +51,36 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const starterTracks = [
+const quickLinks = computed(() => [
     {
-        title: 'App shell',
-        description:
-            'Replace starter defaults with a reusable workspace layout, navigation system, and page patterns.',
+        title: 'Reports',
+        description: 'Open the filterable reporting surface and export the current page report.',
+        href: reportsIndex(),
+        icon: BarChart3,
+        visible: auth.value.can.viewReports,
     },
     {
-        title: 'Identity and security',
-        description:
-            'Build on Fortify with polished account settings, two-factor auth, and a stronger admin foundation.',
+        title: 'Pages',
+        description: 'Manage public content records and restore deleted pages when needed.',
+        href: pagesIndex(),
+        icon: FileText,
+        visible: auth.value.can.managePages,
     },
     {
-        title: 'Reusable modules',
-        description:
-            'Add RBAC, users, roles, notifications, activity logs, and API foundations for future projects.',
-    },
-];
-
-const quickLinks = [
-    {
-        title: 'Profile settings',
-        description: 'Update account details and baseline user preferences.',
-        href: editProfile(),
+        title: 'Page import',
+        description: 'Preview CSV imports before creating content in bulk.',
+        href: pagesImportIndex(),
+        icon: FileSpreadsheet,
+        visible: auth.value.permissions.includes('pages.create'),
     },
     {
-        title: 'Security settings',
-        description: 'Review password and two-factor authentication.',
-        href: editSecurity(),
+        title: 'Business settings',
+        description: 'Adjust organization-level configuration and public-site values.',
+        href: adminSettingsEdit(),
+        icon: Settings2,
+        visible: auth.value.can.manageSettings,
     },
-    {
-        title: 'Appearance settings',
-        description: 'Set theme preferences for the starter shell.',
-        href: editAppearance(),
-    },
-];
+].filter((item) => item.visible));
 </script>
 
 <template>
@@ -63,129 +89,80 @@ const quickLinks = [
     <AppLayout :breadcrumbs="breadcrumbs">
         <PageContainer class="bg-[radial-gradient(circle_at_top_left,#fef3c7,transparent_28%),radial-gradient(circle_at_top_right,#dbeafe,transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_24%)]">
             <PageHeader
-                title="Build the reusable admin shell before adding modules."
-                description="This starter now acts like a real project workspace instead of a demo page. The next phases will add RBAC, user administration, notifications, activity logs, and API foundations on top of this shell."
+                title="Business starter workspace"
+                description="This dashboard now acts like the shared reporting surface for the business-level starter, not a static placeholder page."
             >
-                <template #eyebrow>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium tracking-[0.2em] text-amber-900 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-                        <Sparkles class="size-3.5" />
-                        Phase 1 workspace
+                <template #actions>
+                    <div v-if="quickLinks.length > 0" class="text-sm text-muted-foreground">
+                        {{ quickLinks.length }} business surface{{ quickLinks.length === 1 ? '' : 's' }} available from your current access set.
                     </div>
                 </template>
             </PageHeader>
 
-            <section
-                class="overflow-hidden rounded-[1.75rem] border border-border/70 bg-card/90 p-6 shadow-sm backdrop-blur xl:p-8"
-            >
-                <div class="grid gap-10 xl:grid-cols-[1.7fr_1fr]">
-                    <div class="space-y-6">
-                        <div class="grid gap-3 md:grid-cols-3">
-                            <article
-                                v-for="track in starterTracks"
-                                :key="track.title"
-                                class="rounded-2xl border border-border/70 bg-background/80 p-4"
+            <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                    v-for="metric in metrics"
+                    :key="metric.key"
+                    :label="metric.label"
+                    :value="metric.value"
+                    :description="metric.description"
+                    :tone="metric.tone"
+                />
+            </section>
+
+            <section class="grid gap-4 xl:grid-cols-[1.3fr_1fr]">
+                <RecentActivityPanel :items="recentActivity" />
+
+                <div class="space-y-4">
+                    <section class="rounded-[1.5rem] border border-border/70 bg-card/90 p-6 shadow-sm backdrop-blur">
+                        <h2 class="text-lg font-semibold">Report highlights</h2>
+                        <div class="mt-5 grid gap-3">
+                            <div class="rounded-2xl border border-border/70 bg-background/80 px-4 py-4">
+                                <div class="text-sm text-muted-foreground">Published pages</div>
+                                <div class="mt-1 text-2xl font-semibold">{{ reportHighlights.publishedPages }}</div>
+                            </div>
+                            <div class="rounded-2xl border border-border/70 bg-background/80 px-4 py-4">
+                                <div class="text-sm text-muted-foreground">Pages in review</div>
+                                <div class="mt-1 text-2xl font-semibold">{{ reportHighlights.reviewPages }}</div>
+                            </div>
+                            <div class="rounded-2xl border border-border/70 bg-background/80 px-4 py-4">
+                                <div class="text-sm text-muted-foreground">Deleted pages</div>
+                                <div class="mt-1 text-2xl font-semibold">{{ reportHighlights.deletedPages }}</div>
+                            </div>
+                            <div class="rounded-2xl border border-border/70 bg-background/80 px-4 py-4">
+                                <div class="text-sm text-muted-foreground">Completed imports</div>
+                                <div class="mt-1 text-2xl font-semibold">{{ reportHighlights.completedImports }}</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="rounded-[1.5rem] border border-border/70 bg-card/90 p-6 shadow-sm backdrop-blur">
+                        <h2 class="text-lg font-semibold">Quick access</h2>
+                        <div class="mt-5 grid gap-3">
+                            <Link
+                                v-for="item in quickLinks"
+                                :key="item.title"
+                                :href="item.href"
+                                class="rounded-2xl border border-border/70 bg-background/80 px-4 py-4 transition hover:border-foreground/20 hover:bg-background"
                             >
-                                <h2 class="text-sm font-semibold">
-                                    {{ track.title }}
-                                </h2>
-                                <p class="mt-2 text-sm leading-6 text-muted-foreground">
-                                    {{ track.description }}
-                                </p>
-                            </article>
-                        </div>
-                    </div>
-                    <aside
-                        class="rounded-[1.5rem] border border-border/70 bg-[linear-gradient(180deg,rgba(17,24,39,0.96),rgba(31,41,55,0.92))] p-5 text-slate-100 shadow-inner"
-                    >
-                        <div class="flex items-center gap-2 text-sm font-medium text-amber-200">
-                            <Blocks class="size-4" />
-                            Starter checklist
-                        </div>
-                        <div class="mt-5 space-y-4">
-                            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                                <div class="text-xs uppercase tracking-[0.2em] text-slate-300">
-                                    Current focus
+                                <div class="flex items-start gap-3">
+                                    <component :is="item.icon" class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                                    <div>
+                                        <div class="text-sm font-medium text-foreground">{{ item.title }}</div>
+                                        <p class="mt-1 text-sm leading-6 text-muted-foreground">{{ item.description }}</p>
+                                    </div>
                                 </div>
-                                <p class="mt-2 text-sm leading-6 text-slate-100">
-                                    Centralized navigation and a neutral dashboard shell are in place. Next comes the shared page header structure and role-aware navigation.
-                                </p>
-                            </div>
-                            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                                <div class="flex items-center gap-2 text-sm font-medium">
-                                    <ShieldCheck class="size-4 text-emerald-300" />
-                                    Immediate next phase
-                                </div>
-                                <p class="mt-2 text-sm leading-6 text-slate-300">
-                                    Add RBAC and turn the shell into a real admin foundation rather than a single-user starter.
-                                </p>
-                            </div>
-                        </div>
-                    </aside>
-                </div>
-            </section>
+                            </Link>
 
-            <section class="mt-4 grid gap-4 xl:grid-cols-[1.3fr_1fr]">
-                <div
-                    class="rounded-[1.5rem] border border-border/70 bg-card/90 p-6 shadow-sm backdrop-blur"
-                >
-                    <div class="flex items-center justify-between gap-4">
-                        <div>
-                            <h2 class="text-lg font-semibold">Quick access</h2>
-                            <p class="mt-1 text-sm text-muted-foreground">
-                                Use these pages to verify the current shell, settings flow, and account foundation before deeper module work begins.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="mt-6 grid gap-3">
-                        <a
-                            v-for="link in quickLinks"
-                            :key="link.title"
-                            :href="link.href.url"
-                            class="group rounded-2xl border border-border/70 bg-background/80 p-4 transition hover:border-foreground/20 hover:bg-background"
-                        >
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <h3 class="text-sm font-semibold">
-                                        {{ link.title }}
-                                    </h3>
-                                    <p class="mt-2 text-sm leading-6 text-muted-foreground">
-                                        {{ link.description }}
-                                    </p>
-                                </div>
-                                <ArrowRight class="mt-0.5 size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+                            <div
+                                v-if="quickLinks.length === 0"
+                                class="rounded-2xl border border-dashed border-border/70 bg-background/50 px-4 py-6 text-sm text-muted-foreground"
+                            >
+                                No extra quick links are exposed for this role yet. The dashboard metrics and recent activity still reflect the shared business baseline.
                             </div>
-                        </a>
-                    </div>
+                        </div>
+                    </section>
                 </div>
-                <div
-                    class="rounded-[1.5rem] border border-border/70 bg-card/90 p-6 shadow-sm backdrop-blur"
-                >
-                    <h2 class="text-lg font-semibold">How to judge progress</h2>
-                    <div class="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
-                        <p>
-                            The shell is correct when new pages no longer invent their own layout, starter links are gone, and navigation lives in one reusable place.
-                        </p>
-                        <p>
-                            The next checkpoints should always update the roadmap task list, add a learning note to <span class="font-medium text-foreground">laravelbasics.md</span>, and include verification steps.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="grid gap-4 xl:grid-cols-3">
-                <LoadingState />
-                <EmptyState
-                    title="Empty states are now reusable"
-                    description="Future list and detail pages can use one consistent zero-state pattern instead of inventing a different placeholder every time."
-                    :icon="SearchX"
-                />
-                <PageErrorState
-                    title="Error presentation pattern"
-                    :errors="[
-                        'Show actionable, human-readable errors near the page content.',
-                        'Reuse this shell-level pattern for future failed states.',
-                    ]"
-                />
             </section>
         </PageContainer>
     </AppLayout>

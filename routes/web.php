@@ -8,11 +8,13 @@ use App\Http\Controllers\Admin\PageManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\SettingsManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportCenterController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\HandbookController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicPageController;
+use App\Http\Controllers\ReportsController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -23,7 +25,7 @@ Route::inertia('/', 'Welcome', [
 Route::get('handbook', HandbookController::class)->name('handbook.index');
 
 Route::middleware(['auth', 'verified', 'permission:dashboard.view'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -34,6 +36,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('exports', [ExportCenterController::class, 'index'])
         ->middleware('permission:exports.view')
         ->name('exports.index');
+
+    Route::get('reports', [ReportsController::class, 'index'])
+        ->middleware('permission:reports.view')
+        ->name('reports.index');
+
+    Route::get('reports/pages.csv', [ReportsController::class, 'pagesCsv'])
+        ->middleware('permission:reports.view')
+        ->name('reports.pages.csv');
 
     Route::get('exports/users.csv', [ExportCenterController::class, 'usersCsv'])
         ->middleware(['permission:exports.view', 'permission:users.view'])

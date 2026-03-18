@@ -218,6 +218,7 @@ class RoleManagementController extends Controller
             'notes.view' => 'Shows internal notes attached to supported records such as users, pages, and files.',
             'notes.create' => 'Allows creating internal notes on supported records.',
             'notes.delete' => 'Allows deleting internal notes from supported records.',
+            'reports.view' => 'Shows shared dashboard reporting surfaces and download-ready report outputs.',
             'pages.view' => 'Shows the public pages module and allows access to the page index.',
             'pages.create' => 'Allows creating new public pages for the guest-facing website.',
             'pages.update' => 'Allows editing page content, slug, SEO, and publish state.',

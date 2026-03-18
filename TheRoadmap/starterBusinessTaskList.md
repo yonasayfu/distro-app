@@ -118,15 +118,22 @@ Implementation notes:
 
 ## Phase B6: Dashboard and Reporting Base
 
-- [ ] `[P1]` Add reusable stat card widgets.
-- [ ] `[P1]` Add recent activity widget pattern.
-- [ ] `[P1]` Add filterable report table pattern.
-- [ ] `[P1]` Add report export hook points.
-- [ ] `[P1]` Add dashboard/report tests.
+- [x] `[P1]` Add reusable stat card widgets.
+- [x] `[P1]` Add recent activity widget pattern.
+- [x] `[P1]` Add filterable report table pattern.
+- [x] `[P1]` Add report export hook points.
+- [x] `[P1]` Add dashboard/report tests.
 
 Acceptance criteria:
 
 - future business modules can expose metrics without inventing new widget structures each time
+
+Implementation notes:
+
+- the old static dashboard page now loads real business-level metrics, activity, and quick-link data through a dedicated controller instead of placeholder copy
+- shared `StatCard` and `RecentActivityPanel` components now define the first reusable widget surface for later modules
+- the first reporting page now supports search, workflow-status filters, deleted-record filters, and CSV export through one neutral report pattern
+- report export actions are activity-logged so future report downloads follow the same audit trail pattern as other shared modules
 
 ## First Implementation Slice
 

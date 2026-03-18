@@ -153,14 +153,15 @@ Branch history so far:
 - `level/starter-business-notes-layer`
 - `level/starter-business-status-workflow`
 - `level/starter-business-import-restore`
+- `level/starter-business-dashboard-reporting`
 
 Current active phase branch:
 
-- `level/starter-business-import-restore`
+- `level/starter-business-dashboard-reporting`
 
 Current phase purpose:
 
-- implement the fifth `starter-business` slice through the shared import and restore foundation
+- implement the sixth `starter-business` slice through the shared dashboard and reporting base
 
 ## Tagging `starter-core-v1`
 
