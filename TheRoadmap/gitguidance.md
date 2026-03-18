@@ -148,14 +148,15 @@ Branch history so far:
 - `phase-19-starter-core-usage-guidance`
 - `level/starter-business-planning`
 - `level/starter-business-settings-foundation`
+- `level/starter-business-pwa-guidance`
 
 Current active phase branch:
 
-- `level/starter-business-settings-foundation`
+- `level/starter-business-pwa-guidance`
 
 Current phase purpose:
 
-- implement the first `starter-business` slice through the shared settings foundation
+- record the PWA versus Flutter guidance for future mobile decisions
 
 ## Tagging `starter-core-v1`
 

@@ -7328,3 +7328,70 @@ What it proves:
 - a reusable business-level settings system needs both storage and a fixed registry
 - settings should flow through the same RBAC, policy, validation, and Inertia patterns as the rest of the app
 - if the UI does not consume the stored values, the settings module is only a form, not a real foundation
+
+## Entry 034: PWA and Mobile Guidance
+
+### Goal
+
+Answer whether the frozen boilerplate is already PWA-ready and define the recommended mobile direction for future projects.
+
+### What we checked
+
+We reviewed the current repository for actual PWA infrastructure.
+
+What exists:
+
+- normal responsive web UI
+- standard icon references in `resources/views/app.blade.php`
+
+What does not exist:
+
+- manifest
+- service worker
+- install prompt flow
+- offline strategy
+- caching strategy
+
+### Result
+
+`starter-core-v1` is not a real PWA.
+
+It is a strong web application baseline, but not an installable/offline-capable PWA baseline.
+
+### New guide
+
+File:
+
+- `TheRoadmap/pwaGuidance.md`
+
+What it explains:
+
+- current status of this repo
+- what PWA would require here
+- when PWA is a good fit
+- when Flutter is a better fit
+- the recommended strategy for your future app mix
+
+### Recommendation
+
+The guidance recommends:
+
+- do not stop `starter-business` to retrofit PWA into the base right now
+- keep PWA as an optional future layer
+- continue building Laravel as the backend and API source of truth
+- prefer Flutter later for truly mobile-heavy workflows
+
+Why:
+
+- your likely future apps often need stronger mobile capabilities than a basic PWA gives
+- barcode, camera, richer offline behavior, and native device workflows usually point toward Flutter
+
+### Verification run
+
+- `php artisan test --compact tests/Feature/Auth/AuthenticationTest.php`
+
+### What to remember
+
+- responsive web does not mean PWA
+- PWA should be optional unless the project explicitly needs installable web behavior
+- Laravel backend plus Flutter mobile is the stronger long-term default for the types of systems you plan to build
