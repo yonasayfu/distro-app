@@ -23,6 +23,8 @@ class UserManagementController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', User::class);
+
         $search = $request->string('search')->trim()->toString();
 
         return Inertia::render('admin/Users/Index', [
@@ -51,6 +53,8 @@ class UserManagementController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('create', User::class);
+
         return Inertia::render('admin/Users/Create', [
             'roles' => $this->roleOptions(),
         ]);
@@ -61,6 +65,8 @@ class UserManagementController extends Controller
      */
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        $this->authorize('create', User::class);
+
         $user = User::query()->create([
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),
@@ -94,6 +100,8 @@ class UserManagementController extends Controller
      */
     public function edit(Request $request, User $user): Response
     {
+        $this->authorize('view', $user);
+
         $user->load('roles');
 
         return Inertia::render('admin/Users/Edit', [
@@ -107,6 +115,8 @@ class UserManagementController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        $this->authorize('update', $user);
+
         $validated = $request->validated();
 
         $user->fill([
@@ -144,6 +154,8 @@ class UserManagementController extends Controller
      */
     public function updateRoles(UpdateUserRolesRequest $request, User $user): RedirectResponse
     {
+        $this->authorize('updateRoles', $user);
+
         $roles = $request->validated('roles', []);
 
         if ($request->user()?->is($user) && ! in_array('Admin', $roles, true)) {
@@ -179,6 +191,8 @@ class UserManagementController extends Controller
      */
     public function destroy(Request $request, User $user): RedirectResponse
     {
+        $this->authorize('delete', $user);
+
         if ($request->user()?->is($user)) {
             return to_route('users.index')->with('error', 'You cannot delete the currently signed-in user.');
         }

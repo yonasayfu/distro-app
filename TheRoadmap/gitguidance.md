@@ -35,6 +35,7 @@ Suggested branch pattern:
 - `phase-13-starter-core-freeze`
 - `phase-14-public-pages-module`
 - `phase-15-auth-review-closeout`
+- `phase-16-policy-conventions`
 
 ### 2. Commit at Logical Milestones
 
@@ -140,14 +141,15 @@ Branch history so far:
 - `phase-13-starter-core-freeze`
 - `phase-14-public-pages-module`
 - `phase-15-auth-review-closeout`
+- `phase-16-policy-conventions`
 
 Current active phase branch:
 
-- `phase-15-auth-review-closeout`
+- `phase-16-policy-conventions`
 
 Current phase purpose:
 
-- close the remaining Phase 2 auth and security review items for `starter-core-v1`
+- close the admin-module policy conventions required for `starter-core-v1`
 
 ## Important Security Note
 

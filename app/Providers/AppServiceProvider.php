@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Page;
 use App\Models\User;
+use App\Policies\PagePolicy;
+use App\Policies\RolePolicy;
+use App\Policies\UserPolicy;
 use App\Support\ActivityLogger;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
@@ -13,6 +17,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,6 +43,10 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Page::class, PagePolicy::class);
+        Gate::policy(Role::class, RolePolicy::class);
 
         Gate::before(fn (User $user, string $ability): ?bool => $user->hasRole('Admin') ? true : null);
 

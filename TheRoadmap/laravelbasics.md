@@ -6373,3 +6373,222 @@ Why:
 - explicit framework contracts matter for maintainability
 - security tests should follow the real request path whenever possible
 - if the app shell quality increases, auth pages should not stay in starter-demo condition
+
+## Entry 027: Policy Conventions for Admin Modules
+
+### Goal
+
+Define one repeatable authorization pattern for future admin modules instead of relying only on route middleware.
+
+### What triggered this batch
+
+The boilerplate already had permission middleware on routes, but the freeze checklist still called out one missing piece:
+
+- policy conventions for admin modules
+
+Without that, future modules would face an unclear question:
+
+- should authorization live only in routes
+- or should controllers also enforce model-aware checks
+
+This batch answers that clearly.
+
+### 1. `app/Policies/UserPolicy.php`
+
+Before:
+
+- the generated policy returned `false` for everything
+
+After:
+
+- added:
+  - `viewAny`
+  - `view`
+  - `create`
+  - `update`
+  - `delete`
+  - `updateRoles`
+- each method maps directly to the existing `users.*` permission naming
+
+Why:
+
+- the `Users` module is one of the best places to show a future-proof policy pattern
+
+### 2. `app/Policies/RolePolicy.php`
+
+Before:
+
+- the policy file existed only as an empty generated class
+
+After:
+
+- added:
+  - `viewAny`
+  - `view`
+  - `create`
+  - `update`
+  - `updatePermissions`
+  - `delete`
+
+Why:
+
+- roles have both metadata updates and permission updates
+- the policy should expose those as explicit abilities
+
+### 3. `app/Policies/PagePolicy.php`
+
+Before:
+
+- the generated policy returned `false` for everything
+
+After:
+
+- added:
+  - `viewAny`
+  - `view`
+  - `create`
+  - `update`
+  - `delete`
+
+Why:
+
+- `Pages` is the first public-content admin module, so it is a good second example after `Users`
+
+### Example of the policy shift
+
+```diff
+- public function update(User $user, Page $page): bool
+- {
+-     return false;
+- }
++ public function update(User $user, Page $page): bool
++ {
++     return $user->can('pages.update');
++ }
+```
+
+### 4. `app/Providers/AppServiceProvider.php`
+
+Before:
+
+- policies were not registered explicitly
+
+After:
+
+- registered:
+  - `UserPolicy`
+  - `RolePolicy`
+  - `PagePolicy`
+
+Why:
+
+- explicit registration removes ambiguity
+- `Role` is a vendor model, so explicit registration is the safest convention
+
+### 5. `app/Http/Controllers/Controller.php`
+
+Before:
+
+- the base controller did not include Laravel's authorization helper trait
+
+After:
+
+- added `AuthorizesRequests`
+
+Why:
+
+- admin controllers should be able to call `$this->authorize()` consistently
+
+### Example of the controller foundation shift
+
+```diff
+- abstract class Controller
+- {
+-     //
+- }
++ abstract class Controller
++ {
++     use AuthorizesRequests;
++ }
+```
+
+### 6. Admin controllers
+
+Files:
+
+- `app/Http/Controllers/Admin/UserManagementController.php`
+- `app/Http/Controllers/Admin/RoleManagementController.php`
+- `app/Http/Controllers/Admin/PageManagementController.php`
+
+Before:
+
+- controllers relied on route middleware and Form Request authorization
+
+After:
+
+- each action now calls the relevant policy method, for example:
+  - `viewAny`
+  - `create`
+  - `view`
+  - `update`
+  - `updateRoles`
+  - `updatePermissions`
+  - `delete`
+
+Why:
+
+- route middleware answers coarse access
+- policies answer controller-level intent
+- together they create the convention future modules should follow
+
+### Example of the controller shift
+
+```diff
+- public function edit(Page $page): Response
+- {
+-     return Inertia::render(...)
+- }
++ public function edit(Page $page): Response
++ {
++     $this->authorize('view', $page);
++     return Inertia::render(...)
++ }
+```
+
+### 7. Policy verification test
+
+File:
+
+- `tests/Feature/Admin/PolicyConventionTest.php`
+
+What it proves:
+
+- `Manager` can manage pages at the intended level
+- `Manager` cannot manage users or roles through policy abilities
+- `Admin` still receives full access through the `Gate::before` recovery rule
+
+Why:
+
+- this is the first test that directly verifies Gate/policy behavior, not just route middleware behavior
+
+### Verification run
+
+- `php artisan test --compact tests/Feature/Admin/PolicyConventionTest.php tests/Feature/Admin/UserManagementTest.php tests/Feature/Admin/RoleManagementTest.php tests/Feature/Admin/PageCrudTest.php tests/Feature/RoleAccessTest.php`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `app/Policies/UserPolicy.php`
+- `app/Policies/RolePolicy.php`
+- `app/Policies/PagePolicy.php`
+- `app/Providers/AppServiceProvider.php`
+- `app/Http/Controllers/Controller.php`
+- `tests/Feature/Admin/PolicyConventionTest.php`
+
+### What to remember
+
+- in this boilerplate, the intended admin authorization pattern is:
+  - route permission middleware
+  - controller policy authorization
+- explicit policies are not optional decoration; they are the reusable rule set for future modules
+- vendor models like `Role` should use explicit policy registration

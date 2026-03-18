@@ -61,7 +61,7 @@ Implementation notes:
 - [x] `[P0]` Install and configure Spatie Permission.
 - [x] `[P0]` Create role and permission seeders.
 - [x] `[P0]` Define a default role matrix for the boilerplate.
-- [ ] `[P0]` Add policy conventions for admin modules.
+- [x] `[P0]` Add policy conventions for admin modules.
 - [x] `[P0]` Enforce permissions in routes and controllers.
 - [x] `[P0]` Gate sidebar items by permission.
 - [x] `[P0]` Add tests for unauthorized access and visible navigation rules.
@@ -70,6 +70,12 @@ Implementation notes:
 Acceptance criteria:
 
 - Authorization is enforced at route, controller, and UI levels.
+
+Implementation notes:
+
+- `UserPolicy`, `RolePolicy`, and `PagePolicy` now exist as the reference policy examples for future modules.
+- Admin controllers now follow one convention: route permission middleware plus explicit policy authorization in the controller action.
+- The base controller now includes Laravel's `AuthorizesRequests` trait so future controllers can call `$this->authorize()` consistently.
 
 ## Phase 4: RBAC Management and Role Experience
 
@@ -290,7 +296,7 @@ Implementation notes:
 - Export center now exists as a reusable surface for future CSV, PDF, and print actions.
 - The first working print/export examples are users CSV download and a print-friendly workspace summary page.
 - `starterCoreV1.md` now acts as the release-freeze checklist for the first stable `starter-core` tag.
-- The remaining freeze items are now explicit: policy conventions, final CRUD wrappers, and release-readiness closeout.
+- The remaining freeze items are now explicit: final CRUD wrappers and release-readiness closeout.
 
 ## First Implementation Slice
 

@@ -68,21 +68,23 @@ Why it matters:
 - the starter's authentication layer is now explicitly reviewed instead of only assumed to work
 - the tracker now reflects the real implementation state
 
-### 1. Policy conventions for admin modules
+### Policy conventions status
 
-Permissions already protect routes and controllers, but the boilerplate should document and demonstrate a consistent policy layer for admin-managed resources.
+This closeout item is now complete.
 
-Required closeout:
+Completed:
 
-- define policy usage rule for future modules
-- add at least one clear policy example if missing
-- document the pattern in the tracker and learning notes
+- `UserPolicy`, `RolePolicy`, and `PagePolicy` now exist as reference examples
+- admin controllers now call explicit policy checks through `$this->authorize(...)`
+- policy registration is explicit in the application service provider
+- the convention is now documented in the tracker and learning archive
 
-Why:
+Why it matters:
 
-- future modules should not guess when to use permissions, policies, or both
+- future modules no longer need to guess whether authorization belongs only in routes
+- `starter-core` now demonstrates the intended pattern: route permission plus controller policy
 
-### 2. Shared CRUD remaining wrappers
+### 1. Shared CRUD remaining wrappers
 
 The CRUD foundation is strong, but a few shared pieces are still marked incomplete.
 
@@ -114,7 +116,7 @@ Why it matters:
 - the public side is no longer limited to hardcoded marketing content
 - `starter-core` now demonstrates one backend-managed public content flow before branching into `starter-business`
 
-### 3. Release readiness checklist
+### 2. Release readiness checklist
 
 Before tagging `starter-core-v1`, do a final release closeout.
 
@@ -134,7 +136,6 @@ Why:
 
 The biggest remaining `starter-core-v1` items are now:
 
-- policy conventions for admin modules
 - final shared CRUD wrappers
 - release-readiness closeout
 

@@ -16,6 +16,8 @@ class PageManagementController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Page::class);
+
         $search = $request->string('search')->trim()->toString();
 
         return Inertia::render('admin/Pages/Index', [
@@ -40,11 +42,15 @@ class PageManagementController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('create', Page::class);
+
         return Inertia::render('admin/Pages/Create');
     }
 
     public function store(StorePageRequest $request): RedirectResponse
     {
+        $this->authorize('create', Page::class);
+
         $page = Page::query()->create($this->payload($request->validated()));
 
         ActivityLogger::record(
@@ -63,6 +69,8 @@ class PageManagementController extends Controller
 
     public function edit(Page $page): Response
     {
+        $this->authorize('view', $page);
+
         return Inertia::render('admin/Pages/Edit', [
             'page' => [
                 ...$this->pageSummary($page),
@@ -75,6 +83,8 @@ class PageManagementController extends Controller
 
     public function update(UpdatePageRequest $request, Page $page): RedirectResponse
     {
+        $this->authorize('update', $page);
+
         $page->update($this->payload($request->validated(), $page));
 
         ActivityLogger::record(
@@ -93,6 +103,8 @@ class PageManagementController extends Controller
 
     public function destroy(Request $request, Page $page): RedirectResponse
     {
+        $this->authorize('delete', $page);
+
         ActivityLogger::record(
             actor: $request->user(),
             event: 'pages.deleted',

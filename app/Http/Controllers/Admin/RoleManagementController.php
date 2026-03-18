@@ -24,6 +24,8 @@ class RoleManagementController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Role::class);
+
         $search = $request->string('search')->trim()->toString();
 
         return Inertia::render('admin/Roles/Index', [
@@ -52,6 +54,8 @@ class RoleManagementController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('create', Role::class);
+
         return Inertia::render('admin/Roles/Create', [
             'permissionGroups' => $this->permissionGroups(),
         ]);
@@ -62,6 +66,8 @@ class RoleManagementController extends Controller
      */
     public function store(StoreRoleRequest $request): RedirectResponse
     {
+        $this->authorize('create', Role::class);
+
         $role = Role::query()->create([
             'name' => $request->validated('name'),
             'guard_name' => 'web',
@@ -89,6 +95,8 @@ class RoleManagementController extends Controller
      */
     public function edit(Role $role): Response
     {
+        $this->authorize('view', $role);
+
         $role->load('permissions');
 
         return Inertia::render('admin/Roles/Edit', [
@@ -105,6 +113,8 @@ class RoleManagementController extends Controller
      */
     public function update(UpdateRoleDetailsRequest $request, Role $role): RedirectResponse
     {
+        $this->authorize('update', $role);
+
         if ($this->isSystemRole($role) && $role->name !== $request->validated('name')) {
             return to_route('roles.edit', $role)->withErrors([
                 'name' => 'System role names are fixed because other access rules depend on them.',
@@ -135,6 +145,8 @@ class RoleManagementController extends Controller
      */
     public function updatePermissions(UpdateRoleRequest $request, Role $role): RedirectResponse
     {
+        $this->authorize('updatePermissions', $role);
+
         if ($role->name === 'Admin') {
             return to_route('roles.edit', $role)->withErrors([
                 'permissions' => 'The Admin role is managed automatically and cannot be edited from this screen.',
@@ -162,6 +174,8 @@ class RoleManagementController extends Controller
      */
     public function destroy(Request $request, Role $role): RedirectResponse
     {
+        $this->authorize('delete', $role);
+
         if ($this->isSystemRole($role)) {
             return to_route('roles.index')->with('error', 'System roles cannot be deleted.');
         }
