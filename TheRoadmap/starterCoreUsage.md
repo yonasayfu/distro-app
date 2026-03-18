@@ -4,14 +4,17 @@ This file explains how to find, freeze, fetch, and reuse the `starter-core` boil
 
 ## Current Status
 
-At the time of this note:
+The intended stable reference for this boilerplate is:
 
-- the freeze work is complete on branch `phase-18-release-readiness-closeout`
-- the follow-up operator guide lives on branch `phase-19-starter-core-usage-guidance`
-- `starter-core-v1` has not been tagged yet unless you run the tag commands below
-- `main` has not been merged yet unless you run the merge commands below
+- level name: `starter-core`
+- stable release tag: `starter-core-v1`
 
-That means the boilerplate is ready, but the final release promotion step is still a git action.
+The freeze work was completed through:
+
+- `phase-18-release-readiness-closeout`
+- `phase-19-starter-core-usage-guidance`
+
+After release promotion, prefer the tag over any phase branch.
 
 ## Canonical Names
 
@@ -61,7 +64,7 @@ Use this when:
 
 ### Option 2: Use the release branch
 
-Use this only if the tag is not created yet:
+Use this only if you intentionally need the pre-tag freeze branch:
 
 ```bash
 git fetch origin

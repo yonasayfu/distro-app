@@ -6985,3 +6985,33 @@ Why:
 - use the tag for stable reuse
 - use the release branch only if the tag does not exist yet
 - do not treat `main` as the only reliable release reference unless the freeze branch has already been merged
+
+## Entry 031: Final Release Promotion Prep
+
+### Goal
+
+Make the usage guide point to the stable long-term reference before promoting the boilerplate to `main` and tagging it.
+
+### What changed
+
+File:
+
+- `TheRoadmap/starterCoreUsage.md`
+
+Before:
+
+- the guide still described the boilerplate as not yet merged or tagged
+
+After:
+
+- the guide now treats `starter-core-v1` as the intended stable reference
+- the phase branches are described as historical freeze paths, not the preferred long-term retrieval point
+
+Why:
+
+- once a boilerplate reaches release promotion, the guide should center the stable tag instead of temporary phase branches
+
+### What to remember
+
+- branches describe implementation history
+- tags describe reusable release points
