@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Shield, ShieldCheck } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
+import FormSection from '@/components/admin/FormSection.vue';
 import RolePermissionCard from '@/components/admin/RolePermissionCard.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -81,22 +82,17 @@ const savePermissions = (): void => {
             </PageHeader>
 
             <form class="grid gap-6" @submit.prevent="saveDetails">
-                <section class="rounded-[1.5rem] border border-border/70 bg-card/85 p-5 shadow-sm backdrop-blur">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <h2 class="text-lg font-semibold text-foreground">
-                                Role details
-                            </h2>
-                            <p class="mt-1 text-sm leading-6 text-muted-foreground">
-                                System role names are fixed so the boilerplate always keeps predictable baseline roles.
-                            </p>
-                        </div>
+                <FormSection
+                    title="Role details"
+                    description="System role names are fixed so the boilerplate always keeps predictable baseline roles."
+                >
+                    <template #headerAction>
                         <Button type="submit" :disabled="detailsForm.processing || !detailsForm.isDirty">
                             Save details
                         </Button>
-                    </div>
+                    </template>
 
-                    <div class="mt-5 grid gap-5 md:grid-cols-2">
+                    <div class="grid gap-5 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="name">Role name</Label>
                             <Input
@@ -118,7 +114,7 @@ const savePermissions = (): void => {
                             <InputError :message="detailsForm.errors.description" />
                         </div>
                     </div>
-                </section>
+                </FormSection>
             </form>
 
             <form class="grid gap-3" @submit.prevent="savePermissions">

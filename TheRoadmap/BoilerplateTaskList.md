@@ -133,14 +133,20 @@ Acceptance criteria:
 - [x] `[P0]` Standardize action buttons as icons with accessible labels.
 - [x] `[P0]` Standardize confirmation modal behavior for destructive actions.
 - [x] `[P0]` Standardize toast or flash success and error messaging.
-- [ ] `[P1]` Create reusable form section wrappers.
-- [ ] `[P1]` Create reusable empty state and zero-state components.
-- [ ] `[P1]` Add loading skeletons for list and form pages.
+- [x] `[P1]` Create reusable form section wrappers.
+- [x] `[P1]` Create reusable empty state and zero-state components.
+- [x] `[P1]` Add loading skeletons for list and form pages.
 - [x] `[P1]` Document the CRUD page pattern in `followTemplate.md`.
 
 Acceptance criteria:
 
 - Future modules can follow one repeatable page structure.
+
+Implementation notes:
+
+- `FormSection` now standardizes the repeated admin form-card structure and optional header action area.
+- `FormSectionSkeleton` and `ResourceTableSkeleton` now provide reusable loading shapes for future form and list pages.
+- The `Users`, `Roles`, and `Pages` form screens now use the shared section wrapper instead of repeating custom section markup.
 
 ## Phase 5.5: Early API Foundation
 

@@ -84,19 +84,20 @@ Why it matters:
 - future modules no longer need to guess whether authorization belongs only in routes
 - `starter-core` now demonstrates the intended pattern: route permission plus controller policy
 
-### 1. Shared CRUD remaining wrappers
+### Shared CRUD foundation status
 
-The CRUD foundation is strong, but a few shared pieces are still marked incomplete.
+This closeout item is now complete.
 
-Required closeout:
+Completed:
 
 - reusable form section wrapper
-- zero-state and empty-state reuse review
-- loading skeleton review for list and form pages
+- empty-state and zero-state review
+- loading skeletons for list and form pages
 
-Why:
+Why it matters:
 
-- `starter-core-v1` should show one repeatable CRUD pattern, not mostly-repeatable patterns
+- `starter-core` now exposes a more complete CRUD UI kit instead of mostly-repeated markup
+- future modules can follow the same form/list shape with less custom page structure
 
 ### Public pages minimum cut status
 
@@ -116,7 +117,7 @@ Why it matters:
 - the public side is no longer limited to hardcoded marketing content
 - `starter-core` now demonstrates one backend-managed public content flow before branching into `starter-business`
 
-### 2. Release readiness checklist
+### 1. Release readiness checklist
 
 Before tagging `starter-core-v1`, do a final release closeout.
 
@@ -136,7 +137,6 @@ Why:
 
 The biggest remaining `starter-core-v1` items are now:
 
-- final shared CRUD wrappers
 - release-readiness closeout
 
 ## What is intentionally deferred to `starter-business`

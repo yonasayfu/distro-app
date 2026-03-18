@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Shield, Sparkles } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
+import FormSection from '@/components/admin/FormSection.vue';
 import RolePermissionCard from '@/components/admin/RolePermissionCard.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -66,7 +67,7 @@ const submit = (): void => {
             </PageHeader>
 
             <form class="grid gap-6" @submit.prevent="submit">
-                <section class="rounded-[1.5rem] border border-border/70 bg-card/85 p-5 shadow-sm backdrop-blur">
+                <FormSection>
                     <div class="grid gap-5 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="name">Role name</Label>
@@ -86,7 +87,7 @@ const submit = (): void => {
                             <InputError :message="form.errors.description" />
                         </div>
                     </div>
-                </section>
+                </FormSection>
 
                 <RolePermissionCard
                     v-model:permissions="form.permissions"

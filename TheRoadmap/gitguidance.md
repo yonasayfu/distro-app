@@ -36,6 +36,7 @@ Suggested branch pattern:
 - `phase-14-public-pages-module`
 - `phase-15-auth-review-closeout`
 - `phase-16-policy-conventions`
+- `phase-17-crud-wrappers`
 
 ### 2. Commit at Logical Milestones
 
@@ -142,14 +143,15 @@ Branch history so far:
 - `phase-14-public-pages-module`
 - `phase-15-auth-review-closeout`
 - `phase-16-policy-conventions`
+- `phase-17-crud-wrappers`
 
 Current active phase branch:
 
-- `phase-16-policy-conventions`
+- `phase-17-crud-wrappers`
 
 Current phase purpose:
 
-- close the admin-module policy conventions required for `starter-core-v1`
+- close the remaining shared CRUD wrapper items required for `starter-core-v1`
 
 ## Important Security Note
 

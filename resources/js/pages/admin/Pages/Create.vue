@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, FileText, Globe } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
+import FormSection from '@/components/admin/FormSection.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -64,7 +65,7 @@ const submit = (): void => {
             </PageHeader>
 
             <form class="grid gap-6" @submit.prevent="submit">
-                <section class="rounded-[1.5rem] border border-border/70 bg-card/85 p-5 shadow-sm backdrop-blur">
+                <FormSection>
                     <div class="grid gap-5 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="title">Title</Label>
@@ -103,17 +104,13 @@ const submit = (): void => {
                             <InputError :message="form.errors.content" />
                         </div>
                     </div>
-                </section>
+                </FormSection>
 
-                <section class="rounded-[1.5rem] border border-border/70 bg-card/85 p-5 shadow-sm backdrop-blur">
-                    <div class="space-y-2">
-                        <h2 class="text-lg font-semibold text-foreground">Publishing and SEO</h2>
-                        <p class="text-sm leading-6 text-muted-foreground">
-                            Draft pages stay private. Publish only when the slug and content are ready for guests.
-                        </p>
-                    </div>
-
-                    <div class="mt-5 grid gap-5 md:grid-cols-2">
+                <FormSection
+                    title="Publishing and SEO"
+                    description="Draft pages stay private. Publish only when the slug and content are ready for guests."
+                >
+                    <div class="grid gap-5 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="seo_title">SEO title</Label>
                             <Input id="seo_title" v-model="form.seo_title" placeholder="About | Product name" />
@@ -146,7 +143,7 @@ const submit = (): void => {
                         </div>
                     </label>
                     <InputError :message="form.errors.is_published" />
-                </section>
+                </FormSection>
 
                 <div class="flex items-center justify-end gap-3">
                     <Button type="submit" :disabled="form.processing">

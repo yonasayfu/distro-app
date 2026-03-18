@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, ShieldCheck, UserCog } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
+import FormSection from '@/components/admin/FormSection.vue';
 import UserRoleCard from '@/components/admin/UserRoleCard.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -87,22 +88,17 @@ const saveRoles = (): void => {
             </PageHeader>
 
             <form class="grid gap-6" @submit.prevent="saveDetails">
-                <section class="rounded-[1.5rem] border border-border/70 bg-card/85 p-5 shadow-sm backdrop-blur">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <h2 class="text-lg font-semibold text-foreground">
-                                User details
-                            </h2>
-                            <p class="mt-1 text-sm leading-6 text-muted-foreground">
-                                Changing the email address will reset email verification for this user.
-                            </p>
-                        </div>
+                <FormSection
+                    title="User details"
+                    description="Changing the email address will reset email verification for this user."
+                >
+                    <template #headerAction>
                         <Button type="submit" :disabled="detailsForm.processing || !detailsForm.isDirty">
                             Save details
                         </Button>
-                    </div>
+                    </template>
 
-                    <div class="mt-5 grid gap-5 md:grid-cols-2">
+                    <div class="grid gap-5 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="name">Name</Label>
                             <Input id="name" v-model="detailsForm.name" />
@@ -126,7 +122,7 @@ const saveRoles = (): void => {
                             <Input id="password_confirmation" v-model="detailsForm.password_confirmation" type="password" />
                         </div>
                     </div>
-                </section>
+                </FormSection>
             </form>
 
             <form class="grid gap-3" @submit.prevent="saveRoles">

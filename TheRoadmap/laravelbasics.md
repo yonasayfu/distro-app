@@ -6592,3 +6592,152 @@ Why:
   - controller policy authorization
 - explicit policies are not optional decoration; they are the reusable rule set for future modules
 - vendor models like `Role` should use explicit policy registration
+
+## Entry 028: Final Shared CRUD Wrappers
+
+### Goal
+
+Finish the remaining shared CRUD UI pieces so future modules can reuse one stable form/list pattern.
+
+### What triggered this batch
+
+The boilerplate already had shared tables, toolbars, pagination, empty states, and destructive-action dialogs.
+
+The remaining inconsistency was in the form pages:
+
+- several admin pages still repeated the same section-card markup
+- loading skeletons existed only as isolated examples, not as reusable CRUD primitives
+
+This batch closed that gap.
+
+### 1. `resources/js/components/admin/FormSection.vue`
+
+Before:
+
+- admin form pages repeated the same section shell:
+  - rounded card
+  - border
+  - spacing
+  - optional title/description area
+  - optional action button area
+
+After:
+
+- added `FormSection` as a reusable wrapper
+- supports:
+  - `title`
+  - `description`
+  - `headerAction` slot
+  - content slot
+
+Why:
+
+- repeated structure should move into a shared primitive once it appears in multiple modules
+
+### Example of the form-section shift
+
+```diff
+- <section class="rounded-[1.5rem] border border-border/70 bg-card/85 p-5 shadow-sm backdrop-blur">
+-   ...
+- </section>
++ <FormSection title="Role details" description="...">
++   ...
++ </FormSection>
+```
+
+### 2. `resources/js/components/admin/FormSectionSkeleton.vue`
+
+Before:
+
+- there was no reusable skeleton for form pages
+
+After:
+
+- added a configurable form-section skeleton
+- supports:
+  - header on/off
+  - one or two columns
+  - configurable field count
+  - optional tall final field
+
+Why:
+
+- future deferred or loading form pages should not invent their own placeholder markup
+
+### 3. `resources/js/components/admin/ResourceTableSkeleton.vue`
+
+Before:
+
+- there was no reusable loading skeleton for list/table pages
+
+After:
+
+- added a reusable table skeleton
+- supports configurable rows and columns
+
+Why:
+
+- list pages are one of the most repeated surfaces in admin systems
+
+### 4. Admin form pages updated
+
+Files:
+
+- `resources/js/pages/admin/Users/Create.vue`
+- `resources/js/pages/admin/Users/Edit.vue`
+- `resources/js/pages/admin/Roles/Create.vue`
+- `resources/js/pages/admin/Roles/Edit.vue`
+- `resources/js/pages/admin/Pages/Create.vue`
+- `resources/js/pages/admin/Pages/Edit.vue`
+
+Before:
+
+- each page used near-duplicate card markup
+
+After:
+
+- those repeated sections now use `FormSection`
+- pages with save buttons in the section header now use the `headerAction` slot
+
+Why:
+
+- this turns the CRUD convention into code, not just documentation
+
+### 5. Empty and zero-state review
+
+Files reviewed:
+
+- `resources/js/components/EmptyState.vue`
+- `resources/js/components/admin/ResourceTable.vue`
+- `resources/js/pages/search/Index.vue`
+
+Result:
+
+- the existing `EmptyState` and `ResourceTable` pattern already covered the zero-state requirement well enough
+- the remaining real gap was form/list loading reuse, which this batch added
+
+Why:
+
+- not every open checklist item requires a new component if an existing shared component already satisfies the pattern
+
+### Verification run
+
+- `php artisan test --compact tests/Feature/Admin/UserCrudTest.php tests/Feature/Admin/RoleCrudTest.php tests/Feature/Admin/PageCrudTest.php`
+- `npm run build`
+- `npm run types:check`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `resources/js/components/admin/FormSection.vue`
+- `resources/js/components/admin/FormSectionSkeleton.vue`
+- `resources/js/components/admin/ResourceTableSkeleton.vue`
+- `resources/js/pages/admin/Users/Edit.vue`
+- `resources/js/pages/admin/Roles/Edit.vue`
+- `resources/js/pages/admin/Pages/Edit.vue`
+
+### What to remember
+
+- a reusable CRUD system needs both structure components and loading components
+- if multiple modules repeat the same card layout, extract it
+- the goal is not just less code; the goal is one obvious pattern for future modules

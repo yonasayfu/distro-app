@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, ShieldCheck, UserPlus } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
+import FormSection from '@/components/admin/FormSection.vue';
 import UserRoleCard from '@/components/admin/UserRoleCard.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -68,7 +69,7 @@ const submit = (): void => {
             </PageHeader>
 
             <form class="grid gap-6" @submit.prevent="submit">
-                <section class="rounded-[1.5rem] border border-border/70 bg-card/85 p-5 shadow-sm backdrop-blur">
+                <FormSection>
                     <div class="grid gap-5 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="name">Name</Label>
@@ -93,7 +94,7 @@ const submit = (): void => {
                             <Input id="password_confirmation" v-model="form.password_confirmation" type="password" />
                         </div>
                     </div>
-                </section>
+                </FormSection>
 
                 <UserRoleCard
                     v-model:selected-roles="form.roles"
