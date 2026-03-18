@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\PageStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -24,7 +25,7 @@ class StorePageRequest extends FormRequest
 
         $this->merge([
             'slug' => Str::slug($slug !== '' ? $slug : $title),
-            'is_published' => $this->boolean('is_published'),
+            'status' => (string) $this->input('status', PageStatus::Draft->value),
         ]);
     }
 
@@ -49,7 +50,7 @@ class StorePageRequest extends FormRequest
             'content' => ['required', 'string'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:1000'],
-            'is_published' => ['required', 'boolean'],
+            'status' => ['required', Rule::enum(PageStatus::class)],
         ];
     }
 

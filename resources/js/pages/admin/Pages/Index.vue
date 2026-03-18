@@ -7,6 +7,7 @@ import ConfirmActionDialog from '@/components/admin/ConfirmActionDialog.vue';
 import ResourcePagination from '@/components/admin/ResourcePagination.vue';
 import ResourceTable from '@/components/admin/ResourceTable.vue';
 import ResourceToolbar from '@/components/admin/ResourceToolbar.vue';
+import StatusBadge from '@/components/admin/StatusBadge.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Badge } from '@/components/ui/badge';
@@ -123,9 +124,7 @@ const deleteSelectedPage = (page: ManagedPage): void => {
                             /{{ page.slug }}
                         </td>
                         <td class="px-4 py-4">
-                            <Badge :variant="page.isPublished ? 'secondary' : 'outline'">
-                                {{ page.isPublished ? 'Published' : 'Draft' }}
-                            </Badge>
+                            <StatusBadge :label="page.statusLabel" :tone="page.statusTone" />
                         </td>
                         <td class="px-4 py-4 text-sm text-muted-foreground">
                             {{ page.updatedAt ? new Date(page.updatedAt).toLocaleDateString() : 'N/A' }}

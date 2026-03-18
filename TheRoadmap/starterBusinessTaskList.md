@@ -80,15 +80,22 @@ Implementation notes:
 
 ## Phase B4: Status and Workflow Pattern
 
-- [ ] `[P0]` Define reusable status vocabulary and conventions.
-- [ ] `[P0]` Add status badge UI primitives.
-- [ ] `[P0]` Add status transition rules/pattern.
-- [ ] `[P1]` Add workflow-aware audit logging.
-- [ ] `[P1]` Add status tests.
+- [x] `[P0]` Define reusable status vocabulary and conventions.
+- [x] `[P0]` Add status badge UI primitives.
+- [x] `[P0]` Add status transition rules/pattern.
+- [x] `[P1]` Add workflow-aware audit logging.
+- [x] `[P1]` Add status tests.
 
 Acceptance criteria:
 
 - future modules can model business-state transitions consistently
+
+Implementation notes:
+
+- the first shared workflow implementation now lives on `Page` through a backed enum instead of only a page-specific publish checkbox
+- status vocabulary is now explicit: `draft`, `review`, `published`, `archived`
+- transition rules are enforced in one `WorkflowTransitionRegistry` so invalid status jumps fail validation instead of becoming controller conditionals
+- `StatusBadge` now provides one reusable visual primitive for workflow state across future business modules
 
 ## Phase B5: Import and Restore Foundations
 
@@ -121,5 +128,6 @@ Start in this order:
 - [x] `[P0]` Settings foundation
 - [x] `[P0]` Media/file foundation
 - [x] `[P0]` Notes/comments layer
+- [x] `[P0]` Status and workflow pattern
 
 This first slice gives `starter-business` its identity without turning it into a domain app.

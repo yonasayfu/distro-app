@@ -3,7 +3,10 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Page;
+use App\PageStatus;
+use App\Support\WorkflowTransitionRegistry;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -25,7 +28,7 @@ class UpdatePageRequest extends FormRequest
 
         $this->merge([
             'slug' => Str::slug($slug !== '' ? $slug : $title),
-            'is_published' => $this->boolean('is_published'),
+            'status' => (string) $this->input('status', PageStatus::Draft->value),
         ]);
     }
 
@@ -53,8 +56,26 @@ class UpdatePageRequest extends FormRequest
             'content' => ['required', 'string'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:1000'],
-            'is_published' => ['required', 'boolean'],
+            'status' => ['required', Rule::enum(PageStatus::class)],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            /** @var Page $page */
+            $page = $this->route('page');
+
+            $targetStatus = (string) $this->input('status');
+
+            if ($targetStatus === '' || $page->status->value === $targetStatus) {
+                return;
+            }
+
+            if (! WorkflowTransitionRegistry::canTransitionPage($page->status->value, $targetStatus)) {
+                $validator->errors()->add('status', 'That page status transition is not allowed by the shared workflow rules.');
+            }
+        });
     }
 
     /**

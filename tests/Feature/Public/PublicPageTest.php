@@ -28,6 +28,15 @@ test('draft pages are not visible publicly', function () {
         ->assertNotFound();
 });
 
+test('review pages are not visible publicly', function () {
+    $page = Page::factory()->review()->create([
+        'slug' => 'review-page',
+    ]);
+
+    $this->get(route('public-pages.show', ['page' => $page->slug]))
+        ->assertNotFound();
+});
+
 test('signed in users still use the public layout for published pages', function () {
     $user = User::factory()->create();
     $page = Page::factory()->published()->create([

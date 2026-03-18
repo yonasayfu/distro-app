@@ -28,6 +28,9 @@ export type ManagedPage = {
     content?: string;
     seoTitle?: string | null;
     seoDescription?: string | null;
+    status: string;
+    statusLabel: string;
+    statusTone: string;
     isPublished: boolean;
     publishedAt: string | null;
     updatedAt: string | null;

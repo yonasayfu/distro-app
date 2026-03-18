@@ -7827,3 +7827,222 @@ What it proves:
 - polymorphic notes are a strong business-level reusable pattern because they decouple note storage from any one module
 - use a safe alias registry instead of sending raw model class names from the frontend
 - attaching the first reusable UI to existing edit pages is a cleaner foundation than building a separate notes dashboard too early
+
+## Entry 036: `starter-business` Status and Workflow Pattern
+
+### Goal
+
+Replace one-off publish toggles with a reusable workflow foundation that future business modules can apply to their own states and transitions.
+
+### What we built
+
+This batch added:
+
+- a shared page-status enum
+- a transition registry with allowed moves
+- a reusable status badge component
+- page CRUD updated to use workflow status instead of a raw publish checkbox
+- tests proving valid and invalid workflow transitions
+
+The first record using the shared workflow pattern is `Page`, but the intent is broader than pages.
+
+### 1. Shared status vocabulary
+
+Files:
+
+- `app/PageStatus.php`
+- `app/Models/Page.php`
+- `database/migrations/2026_03_18_104431_add_status_to_pages_table.php`
+
+Before:
+
+- pages only had:
+  - `is_published`
+  - `published_at`
+- that was enough for public visibility, but not enough for a reusable business workflow
+
+After:
+
+- added a backed enum `PageStatus` with:
+  - `Draft`
+  - `Review`
+  - `Published`
+  - `Archived`
+- added a `status` column on `pages`
+- cast `Page::$status` to `PageStatus`
+- migrated old page rows from the boolean model into the new enum state
+
+Representative change:
+
+```diff
++ enum PageStatus: string
++ {
++     case Draft = 'draft';
++     case Review = 'review';
++     case Published = 'published';
++     case Archived = 'archived';
++ }
+```
+
+Why:
+
+- reusable business starters need explicit workflow vocabulary, not only booleans
+
+### 2. Transition rules
+
+File:
+
+- `app/Support/WorkflowTransitionRegistry.php`
+
+Before:
+
+- there was no central place to define allowed status changes
+
+After:
+
+- `WorkflowTransitionRegistry` now defines allowed page transitions
+- `UpdatePageRequest` checks transitions through that registry and blocks invalid jumps
+
+Representative change:
+
+```diff
++ PageStatus::Archived->value => [
++     PageStatus::Draft->value,
++ ],
+```
+
+Why:
+
+- transition rules belong in one shared place, otherwise each controller starts inventing its own workflow exceptions
+
+### 3. Request and controller flow
+
+Files:
+
+- `app/Http/Requests/Admin/StorePageRequest.php`
+- `app/Http/Requests/Admin/UpdatePageRequest.php`
+- `app/Http/Controllers/Admin/PageManagementController.php`
+- `app/Http/Controllers/PublicPageController.php`
+
+Before:
+
+- create and update requests validated `is_published`
+- the controller converted a checkbox into `published_at`
+- public visibility depended directly on `is_published`
+
+After:
+
+- requests validate `status`
+- update requests reject disallowed transitions
+- the controller derives:
+  - `status`
+  - `is_published`
+  - `published_at`
+  from the selected workflow state
+- public page visibility now checks `PageStatus::Published`
+
+Representative change:
+
+```diff
+- 'is_published' => ['required', 'boolean'],
++ 'status' => ['required', Rule::enum(PageStatus::class)],
+```
+
+Why:
+
+- this keeps the public website behavior compatible while making the business workflow more expressive
+
+### 4. Reusable status badge UI
+
+Files:
+
+- `resources/js/components/admin/StatusBadge.vue`
+- `resources/js/pages/admin/Pages/Index.vue`
+- `resources/js/pages/admin/Pages/Edit.vue`
+
+Before:
+
+- page state was rendered with ad hoc `Badge` usage and page-local published/draft wording
+
+After:
+
+- added one reusable `StatusBadge` component with visual tones for:
+  - draft
+  - review
+  - published
+  - archived
+- page index and edit pages now render the shared badge instead of hardcoded `Published` / `Draft` checks
+
+Why:
+
+- status becomes a reusable primitive only when the UI is reusable too
+
+### 5. Page editor workflow UI
+
+Files:
+
+- `resources/js/pages/admin/Pages/Create.vue`
+- `resources/js/pages/admin/Pages/Edit.vue`
+- `resources/js/types/admin.ts`
+
+Before:
+
+- page forms used a publish checkbox
+
+After:
+
+- page forms use a status select
+- page props now include:
+  - `status`
+  - `statusLabel`
+  - `statusTone`
+
+Representative change:
+
+```diff
+- is_published: false,
++ status: 'draft',
+```
+
+Why:
+
+- users should choose a business state, not only “published or not”
+
+### 6. Test coverage
+
+Files:
+
+- `tests/Feature/Admin/PageStatusWorkflowTest.php`
+- `tests/Feature/Admin/PageCrudTest.php`
+- `tests/Feature/Public/PublicPageTest.php`
+
+What it proves:
+
+- the transition registry allows valid moves and rejects invalid ones
+- managers can move pages from `draft` to `review`
+- archived pages cannot jump directly to `published`
+- public pages remain visible only when status is `published`
+- review pages stay private
+
+### Verification run
+
+- `php artisan migrate --no-interaction`
+- `php artisan test --compact tests/Feature/Admin/PageStatusWorkflowTest.php tests/Feature/Admin/PageCrudTest.php tests/Feature/Public/PublicPageTest.php`
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `npm run build`
+- `npm run types:check`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `app/PageStatus.php`
+- `app/Support/WorkflowTransitionRegistry.php`
+- `app/Http/Requests/Admin/UpdatePageRequest.php`
+- `resources/js/components/admin/StatusBadge.vue`
+- `tests/Feature/Admin/PageStatusWorkflowTest.php`
+
+### What to remember
+
+- a workflow foundation becomes reusable when status is an enum, transitions are centralized, and the UI uses one shared badge/selector pattern
+- use one real model first to prove the pattern before applying it everywhere
+- keep compatibility layers where needed, like deriving `is_published` from status instead of deleting public behavior outright

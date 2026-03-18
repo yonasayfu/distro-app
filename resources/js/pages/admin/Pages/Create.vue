@@ -5,10 +5,10 @@ import InputError from '@/components/InputError.vue';
 import FormSection from '@/components/admin/FormSection.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { create as createPage, index as pagesIndex, store as storePage } from '@/routes/pages';
 import type { BreadcrumbItem } from '@/types';
@@ -31,7 +31,7 @@ const form = useForm({
     content: '',
     seo_title: '',
     seo_description: '',
-    is_published: false,
+    status: 'draft',
 });
 
 const submit = (): void => {
@@ -108,9 +108,25 @@ const submit = (): void => {
 
                 <FormSection
                     title="Publishing and SEO"
-                    description="Draft pages stay private. Publish only when the slug and content are ready for guests."
+                    description="Use the shared workflow statuses instead of a simple publish toggle so page state stays explicit and reusable."
                 >
                     <div class="grid gap-5 md:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="status">Status</Label>
+                            <Select v-model="form.status">
+                                <SelectTrigger id="status">
+                                    <SelectValue placeholder="Select a status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="draft">Draft</SelectItem>
+                                    <SelectItem value="review">In review</SelectItem>
+                                    <SelectItem value="published">Published</SelectItem>
+                                    <SelectItem value="archived">Archived</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <InputError :message="form.errors.status" />
+                        </div>
+
                         <div class="grid gap-2">
                             <Label for="seo_title">SEO title</Label>
                             <Input id="seo_title" v-model="form.seo_title" placeholder="About | Product name" />
@@ -129,20 +145,6 @@ const submit = (): void => {
                             <InputError :message="form.errors.seo_description" />
                         </div>
                     </div>
-
-                    <label class="mt-6 flex items-start gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-4">
-                        <Checkbox
-                            :checked="form.is_published"
-                            @update:checked="form.is_published = $event === true"
-                        />
-                        <div class="min-w-0">
-                            <div class="text-sm font-medium text-foreground">Publish immediately</div>
-                            <p class="mt-1 text-sm leading-6 text-muted-foreground">
-                                When enabled, the page becomes available on its public slug as soon as you save it.
-                            </p>
-                        </div>
-                    </label>
-                    <InputError :message="form.errors.is_published" />
                 </FormSection>
 
                 <div class="flex items-center justify-end gap-3">

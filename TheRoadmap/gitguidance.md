@@ -151,14 +151,15 @@ Branch history so far:
 - `level/starter-business-pwa-guidance`
 - `level/starter-business-media-foundation`
 - `level/starter-business-notes-layer`
+- `level/starter-business-status-workflow`
 
 Current active phase branch:
 
-- `level/starter-business-notes-layer`
+- `level/starter-business-status-workflow`
 
 Current phase purpose:
 
-- implement the third `starter-business` slice through the shared notes and comments foundation
+- implement the fourth `starter-business` slice through the shared status and workflow foundation
 
 ## Tagging `starter-core-v1`
 

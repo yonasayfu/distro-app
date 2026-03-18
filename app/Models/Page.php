@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\PageStatus;
 use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,7 @@ class Page extends Model
         'content',
         'seo_title',
         'seo_description',
+        'status',
         'is_published',
         'published_at',
     ];
@@ -33,6 +35,7 @@ class Page extends Model
     protected function casts(): array
     {
         return [
+            'status' => PageStatus::class,
             'is_published' => 'boolean',
             'published_at' => 'datetime',
         ];
@@ -41,6 +44,7 @@ class Page extends Model
     public function scopePublished(Builder $query): void
     {
         $query
+            ->where('status', PageStatus::Published)
             ->where('is_published', true)
             ->whereNotNull('published_at');
     }

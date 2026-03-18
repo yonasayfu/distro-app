@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePageRequest;
 use App\Http\Requests\Admin\UpdatePageRequest;
 use App\Models\Page;
+use App\PageStatus;
 use App\Support\ActivityLogger;
 use App\Support\NotePresenter;
 use Illuminate\Http\RedirectResponse;
@@ -60,7 +61,7 @@ class PageManagementController extends Controller
             description: "Created page {$page->slug}.",
             subject: $page,
             properties: [
-                'published' => $page->is_published,
+                'status' => $page->status->value,
             ],
             request: $request,
         );
@@ -106,7 +107,7 @@ class PageManagementController extends Controller
             description: "Updated page {$page->slug}.",
             subject: $page,
             properties: [
-                'published' => $page->is_published,
+                'status' => $page->status->value,
             ],
             request: $request,
         );
@@ -137,11 +138,8 @@ class PageManagementController extends Controller
      */
     private function payload(array $validated, ?Page $page = null): array
     {
-        $publishedAt = null;
-
-        if ($validated['is_published']) {
-            $publishedAt = $page?->published_at ?? now();
-        }
+        $status = PageStatus::from($validated['status']);
+        $publishedAt = $status === PageStatus::Published ? ($page?->published_at ?? now()) : null;
 
         return [
             'title' => $validated['title'],
@@ -150,13 +148,14 @@ class PageManagementController extends Controller
             'content' => $validated['content'],
             'seo_title' => $validated['seo_title'] ?: null,
             'seo_description' => $validated['seo_description'] ?: null,
-            'is_published' => $validated['is_published'],
+            'status' => $status,
+            'is_published' => $status === PageStatus::Published,
             'published_at' => $publishedAt,
         ];
     }
 
     /**
-     * @return array{id: int, title: string, slug: string, excerpt: string|null, isPublished: bool, publishedAt: string|null, updatedAt: string|null, publicUrl: string|null}
+     * @return array{id: int, title: string, slug: string, excerpt: string|null, status: string, statusLabel: string, statusTone: string, isPublished: bool, publishedAt: string|null, updatedAt: string|null, publicUrl: string|null}
      */
     private function pageSummary(Page $page): array
     {
@@ -165,6 +164,9 @@ class PageManagementController extends Controller
             'title' => $page->title,
             'slug' => $page->slug,
             'excerpt' => $page->excerpt,
+            'status' => $page->status->value,
+            'statusLabel' => $page->status->label(),
+            'statusTone' => $page->status->tone(),
             'isPublished' => $page->is_published,
             'publishedAt' => $page->published_at?->toDateTimeString(),
             'updatedAt' => $page->updated_at?->toDateTimeString(),

@@ -4,13 +4,14 @@ import { ArrowLeft, ExternalLink, FileText, Globe } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import FormSection from '@/components/admin/FormSection.vue';
 import NotesPanel from '@/components/admin/NotesPanel.vue';
+import StatusBadge from '@/components/admin/StatusBadge.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { edit as editPage, index as pagesIndex, update as updatePage } from '@/routes/pages';
 import type { BreadcrumbItem, ManagedPage, NoteTarget } from '@/types';
@@ -41,7 +42,7 @@ const form = useForm({
     content: props.page.content ?? '',
     seo_title: props.page.seoTitle ?? '',
     seo_description: props.page.seoDescription ?? '',
-    is_published: props.page.isPublished,
+    status: props.page.status,
 });
 
 const submit = (): void => {
@@ -66,9 +67,7 @@ const submit = (): void => {
                 </template>
                 <template #actions>
                     <div class="flex items-center gap-2">
-                        <Badge :variant="page.isPublished ? 'secondary' : 'outline'">
-                            {{ page.isPublished ? 'Published' : 'Draft' }}
-                        </Badge>
+                        <StatusBadge :label="page.statusLabel" :tone="page.statusTone" />
                         <Button v-if="page.publicUrl" as-child variant="outline">
                             <a :href="page.publicUrl" target="_blank" rel="noopener noreferrer">
                                 <ExternalLink class="size-4" />
@@ -126,9 +125,25 @@ const submit = (): void => {
 
                 <FormSection
                     title="Publishing and SEO"
-                    description="Publishing exposes the page on its slug. Draft pages stay private even if someone guesses the URL."
+                    description="The shared workflow status decides whether the page is private, under review, live, or archived."
                 >
                     <div class="grid gap-5 md:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="status">Status</Label>
+                            <Select v-model="form.status">
+                                <SelectTrigger id="status">
+                                    <SelectValue placeholder="Select a status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="draft">Draft</SelectItem>
+                                    <SelectItem value="review">In review</SelectItem>
+                                    <SelectItem value="published">Published</SelectItem>
+                                    <SelectItem value="archived">Archived</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <InputError :message="form.errors.status" />
+                        </div>
+
                         <div class="grid gap-2">
                             <Label for="seo_title">SEO title</Label>
                             <Input id="seo_title" v-model="form.seo_title" />
@@ -146,20 +161,6 @@ const submit = (): void => {
                             <InputError :message="form.errors.seo_description" />
                         </div>
                     </div>
-
-                    <label class="mt-6 flex items-start gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-4">
-                        <Checkbox
-                            :checked="form.is_published"
-                            @update:checked="form.is_published = $event === true"
-                        />
-                        <div class="min-w-0">
-                            <div class="text-sm font-medium text-foreground">Published</div>
-                            <p class="mt-1 text-sm leading-6 text-muted-foreground">
-                                Toggle this off to hide the page from the public website without deleting its content.
-                            </p>
-                        </div>
-                    </label>
-                    <InputError :message="form.errors.is_published" />
                 </FormSection>
 
                 <div class="flex items-center justify-end gap-3">

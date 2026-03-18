@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Page;
+use App\PageStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -27,6 +28,7 @@ class PageFactory extends Factory
             'content' => implode("\n\n", fake()->paragraphs(4)),
             'seo_title' => $title,
             'seo_description' => fake()->sentence(20),
+            'status' => PageStatus::Draft,
             'is_published' => false,
             'published_at' => null,
         ];
@@ -35,6 +37,7 @@ class PageFactory extends Factory
     public function published(): static
     {
         return $this->state(fn (): array => [
+            'status' => PageStatus::Published,
             'is_published' => true,
             'published_at' => now(),
         ]);
@@ -43,6 +46,25 @@ class PageFactory extends Factory
     public function draft(): static
     {
         return $this->state(fn (): array => [
+            'status' => PageStatus::Draft,
+            'is_published' => false,
+            'published_at' => null,
+        ]);
+    }
+
+    public function review(): static
+    {
+        return $this->state(fn (): array => [
+            'status' => PageStatus::Review,
+            'is_published' => false,
+            'published_at' => null,
+        ]);
+    }
+
+    public function archived(): static
+    {
+        return $this->state(fn (): array => [
+            'status' => PageStatus::Archived,
             'is_published' => false,
             'published_at' => null,
         ]);

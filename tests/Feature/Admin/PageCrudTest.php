@@ -36,13 +36,14 @@ test('manager can create and update public pages', function () {
             'content' => 'Detailed public page content.',
             'seo_title' => 'About the starter',
             'seo_description' => 'SEO summary.',
-            'is_published' => true,
+            'status' => 'published',
         ])
         ->assertRedirect();
 
     $page = Page::query()->where('slug', 'about-starter')->firstOrFail();
 
-    expect($page->is_published)->toBeTrue()
+    expect($page->status->value)->toBe('published')
+        ->and($page->is_published)->toBeTrue()
         ->and($page->published_at)->not->toBeNull();
 
     $this->actingAs($manager)
@@ -53,12 +54,13 @@ test('manager can create and update public pages', function () {
             'content' => 'Updated public page content.',
             'seo_title' => 'About the boilerplate',
             'seo_description' => 'Updated SEO summary.',
-            'is_published' => false,
+            'status' => 'draft',
         ])
         ->assertRedirect(route('pages.edit', $page));
 
     expect($page->fresh()->title)->toBe('About the boilerplate')
         ->and($page->fresh()->slug)->toBe('about-boilerplate')
+        ->and($page->fresh()->status->value)->toBe('draft')
         ->and($page->fresh()->is_published)->toBeFalse()
         ->and($page->fresh()->published_at)->toBeNull();
 });
@@ -107,7 +109,7 @@ test('reserved page slugs are rejected', function () {
             'content' => 'Reserved slug content.',
             'seo_title' => '',
             'seo_description' => '',
-            'is_published' => false,
+            'status' => 'draft',
         ])
         ->assertSessionHasErrors('slug');
 });
