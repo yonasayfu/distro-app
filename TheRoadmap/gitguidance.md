@@ -146,14 +146,15 @@ Branch history so far:
 - `phase-17-crud-wrappers`
 - `phase-18-release-readiness-closeout`
 - `phase-19-starter-core-usage-guidance`
+- `level/starter-business-planning`
 
 Current active phase branch:
 
-- `phase-19-starter-core-usage-guidance`
+- `level/starter-business-planning`
 
 Current phase purpose:
 
-- record the retrieval, tagging, and reuse workflow for `starter-core`
+- define the roadmap, scope, and freeze plan for `starter-business`
 
 ## Tagging `starter-core-v1`
 

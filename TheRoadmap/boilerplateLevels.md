@@ -187,6 +187,22 @@ But do not create them yet unless one of these becomes true:
 4. implement business-level shared modules there
 5. only after that define `starter-enterprise` implementation in detail
 
+## Current progression
+
+Current released base:
+
+- `starter-core-v1`
+
+Current next planning branch:
+
+- `level/starter-business-planning`
+
+Current recommended first `starter-business` slice:
+
+- settings foundation
+- media/file foundation
+- notes/comments layer
+
 ## Decision rule
 
 When evaluating a feature, ask:

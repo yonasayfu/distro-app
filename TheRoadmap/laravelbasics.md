@@ -7015,3 +7015,110 @@ Why:
 
 - branches describe implementation history
 - tags describe reusable release points
+
+## Entry 032: Planning `starter-business`
+
+### Goal
+
+Start the second boilerplate level from the frozen `starter-core-v1` baseline without mixing in domain-specific ERP or ecommerce logic.
+
+### What triggered this batch
+
+Once `starter-core-v1` was frozen and tagged, the next correct move was not to keep editing core.
+
+The next move was to create a new level:
+
+- `starter-business`
+
+That required a clean planning layer first.
+
+### 1. New planning documents
+
+Files:
+
+- `TheRoadmap/starterBusinessRoadmap.md`
+- `TheRoadmap/starterBusinessTaskList.md`
+- `TheRoadmap/starterBusinessV1.md`
+
+What they define:
+
+- the scope of `starter-business`
+- the phased build order
+- the detailed task list
+- the first stable freeze boundary for `starter-business-v1`
+
+Why:
+
+- higher starter levels need their own identity
+- otherwise the branch turns into a random feature pile instead of a reusable level
+
+### 2. Scope decision
+
+`starter-business` is defined as the reusable business-foundation layer.
+
+It should contain:
+
+- settings
+- files and attachments
+- notes/comments
+- workflow status conventions
+- import baseline
+- restore conventions
+- dashboard/reporting primitives
+
+It should not contain:
+
+- products
+- payroll
+- warehouse flows
+- accounting
+- procurement
+- stock-market domain logic
+
+Why:
+
+- those are domain starters, not shared business foundations
+
+### 3. First implementation slice
+
+The first recommended implementation slice is now:
+
+1. settings foundation
+2. media/file foundation
+3. notes/comments layer
+
+Why:
+
+- these features help almost every business application
+- they create a reusable backbone for later domain modules
+
+### 4. Branching model
+
+This planning batch starts from the frozen core release point:
+
+- `starter-core-v1`
+
+And moves into the next level branch:
+
+- `level/starter-business-planning`
+
+Why:
+
+- level work should branch upward from the stable tag, not from a drifting in-progress branch
+
+### Verification run
+
+- `php artisan test --compact tests/Feature/Auth/AuthenticationTest.php`
+
+### Important files
+
+- `TheRoadmap/starterBusinessRoadmap.md`
+- `TheRoadmap/starterBusinessTaskList.md`
+- `TheRoadmap/starterBusinessV1.md`
+- `TheRoadmap/boilerplateLevels.md`
+
+### What to remember
+
+- create the next level from the frozen release tag
+- define the level boundary before implementation starts
+- reusable business foundations are different from domain modules
