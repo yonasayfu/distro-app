@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StorePageRequest;
 use App\Http\Requests\Admin\UpdatePageRequest;
 use App\Models\Page;
 use App\Support\ActivityLogger;
+use App\Support\NotePresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -71,13 +72,25 @@ class PageManagementController extends Controller
     {
         $this->authorize('view', $page);
 
+        $page->load('notes.author:id,name');
+
         return Inertia::render('admin/Pages/Edit', [
             'page' => [
                 ...$this->pageSummary($page),
                 'content' => $page->content,
                 'seoTitle' => $page->seo_title,
                 'seoDescription' => $page->seo_description,
+                'notes' => NotePresenter::collection(
+                    $page->notes,
+                    request()->user()?->can('notes.delete') ?? false,
+                ),
             ],
+            'noteTarget' => [
+                'type' => 'page',
+                'id' => $page->id,
+                'title' => $page->title,
+            ],
+            'canCreateNotes' => request()->user()?->can('notes.create') ?? false,
         ]);
     }
 

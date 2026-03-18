@@ -17,6 +17,7 @@ export type ManagedUser = {
     isCurrentUser: boolean;
     emailVerifiedAt: string | null;
     createdAt: string | null;
+    notes?: ManagedNote[];
 };
 
 export type ManagedPage = {
@@ -31,6 +32,7 @@ export type ManagedPage = {
     publishedAt: string | null;
     updatedAt: string | null;
     publicUrl: string | null;
+    notes?: ManagedNote[];
 };
 
 export type ManagedSettingField = {
@@ -60,6 +62,20 @@ export type ManagedMedia = {
     uploadedBy: string | null;
     createdAt: string | null;
     downloadUrl: string;
+};
+
+export type ManagedNote = {
+    id: number;
+    content: string;
+    author: string | null;
+    createdAt: string | null;
+    canDelete: boolean;
+};
+
+export type NoteTarget = {
+    type: string;
+    id: number;
+    title: string;
 };
 
 export type RoleOption = {

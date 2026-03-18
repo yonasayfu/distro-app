@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, ExternalLink, FileText, Globe } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import FormSection from '@/components/admin/FormSection.vue';
+import NotesPanel from '@/components/admin/NotesPanel.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { edit as editPage, index as pagesIndex, update as updatePage } from '@/routes/pages';
-import type { BreadcrumbItem, ManagedPage } from '@/types';
+import type { BreadcrumbItem, ManagedPage, NoteTarget } from '@/types';
 
 type Props = {
     page: ManagedPage;
+    noteTarget: NoteTarget;
+    canCreateNotes: boolean;
 };
 
 const props = defineProps<Props>();
@@ -166,6 +169,12 @@ const submit = (): void => {
                     </Button>
                 </div>
             </form>
+
+            <NotesPanel
+                :target="noteTarget"
+                :notes="page.notes ?? []"
+                :can-create="canCreateNotes"
+            />
         </PageContainer>
     </AppLayout>
 </template>

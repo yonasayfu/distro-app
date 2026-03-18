@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\MediaManagementController;
+use App\Http\Controllers\Admin\NoteManagementController;
 use App\Http\Controllers\Admin\PageManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\SettingsManagementController;
@@ -72,6 +73,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('admin/media/{media}', [MediaManagementController::class, 'destroy'])
         ->middleware('permission:media.delete')
         ->name('media.destroy');
+
+    Route::post('admin/notes', [NoteManagementController::class, 'store'])
+        ->middleware('permission:notes.create')
+        ->name('notes.store');
+
+    Route::delete('admin/notes/{note}', [NoteManagementController::class, 'destroy'])
+        ->middleware('permission:notes.delete')
+        ->name('notes.destroy');
 
     Route::get('admin/pages/create', [PageManagementController::class, 'create'])
         ->middleware('permission:pages.create')

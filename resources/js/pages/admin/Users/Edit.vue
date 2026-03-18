@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, ShieldCheck, UserCog } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import FormSection from '@/components/admin/FormSection.vue';
+import NotesPanel from '@/components/admin/NotesPanel.vue';
 import UserRoleCard from '@/components/admin/UserRoleCard.vue';
 import PageContainer from '@/components/PageContainer.vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -13,11 +14,13 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { edit as editUser, index as usersIndex, update as updateUser } from '@/routes/users';
 import { update as updateUserRoles } from '@/routes/users/roles';
-import type { BreadcrumbItem, ManagedUser, RoleOption } from '@/types';
+import type { BreadcrumbItem, ManagedUser, NoteTarget, RoleOption } from '@/types';
 
 type Props = {
     user: ManagedUser;
     roles: RoleOption[];
+    noteTarget: NoteTarget;
+    canCreateNotes: boolean;
 };
 
 const props = defineProps<Props>();
@@ -139,6 +142,12 @@ const saveRoles = (): void => {
                     </Button>
                 </div>
             </form>
+
+            <NotesPanel
+                :target="noteTarget"
+                :notes="user.notes ?? []"
+                :can-create="canCreateNotes"
+            />
         </PageContainer>
     </AppLayout>
 </template>

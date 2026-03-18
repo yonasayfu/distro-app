@@ -60,16 +60,23 @@ Implementation notes:
 
 ## Phase B3: Notes and Comments Layer
 
-- [ ] `[P0]` Add reusable notes/comments model pattern.
-- [ ] `[P0]` Add note create/list/delete behavior.
+- [x] `[P0]` Add reusable notes/comments model pattern.
+- [x] `[P0]` Add note create/list/delete behavior.
 - [ ] `[P1]` Add note edit behavior if needed.
-- [ ] `[P1]` Add permission-aware note actions.
-- [ ] `[P1]` Add audit logging for note changes where appropriate.
-- [ ] `[P1]` Add notes tests.
+- [x] `[P1]` Add permission-aware note actions.
+- [x] `[P1]` Add audit logging for note changes where appropriate.
+- [x] `[P1]` Add notes tests.
 
 Acceptance criteria:
 
 - any future record can support internal notes through one shared pattern
+
+Implementation notes:
+
+- the shared `notes` table now uses a polymorphic `noteable` target so one note pattern can attach to users, pages, media, and future business records
+- note creation and deletion flow through one generic controller and one reusable `NotesPanel` UI instead of per-module note endpoints
+- notes are now embedded into the existing user and page edit screens so record-level context stays with the record
+- note actions are governed by dedicated `notes.view`, `notes.create`, and `notes.delete` permissions and recorded in the activity log
 
 ## Phase B4: Status and Workflow Pattern
 
@@ -113,6 +120,6 @@ Start in this order:
 
 - [x] `[P0]` Settings foundation
 - [x] `[P0]` Media/file foundation
-- [ ] `[P0]` Notes/comments layer
+- [x] `[P0]` Notes/comments layer
 
 This first slice gives `starter-business` its identity without turning it into a domain app.

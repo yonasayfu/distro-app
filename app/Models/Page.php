@@ -6,6 +6,7 @@ use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Page extends Model
 {
@@ -42,5 +43,10 @@ class Page extends Model
         $query
             ->where('is_published', true)
             ->whereNotNull('published_at');
+    }
+
+    public function notes(): MorphMany
+    {
+        return $this->morphMany(Note::class, 'noteable')->latest();
     }
 }

@@ -150,14 +150,15 @@ Branch history so far:
 - `level/starter-business-settings-foundation`
 - `level/starter-business-pwa-guidance`
 - `level/starter-business-media-foundation`
+- `level/starter-business-notes-layer`
 
 Current active phase branch:
 
-- `level/starter-business-media-foundation`
+- `level/starter-business-notes-layer`
 
 Current phase purpose:
 
-- implement the second `starter-business` slice through the shared media and file foundation
+- implement the third `starter-business` slice through the shared notes and comments foundation
 
 ## Tagging `starter-core-v1`
 

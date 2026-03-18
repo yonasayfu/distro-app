@@ -7599,3 +7599,231 @@ What it proves:
 - a good file foundation starts with one neutral media table, not per-module uploads
 - uploads should pass through one service so storage rules stay consistent
 - add attachment capability early through polymorphic relations even if the first UI is only a shared media library
+
+## Entry 035: `starter-business` Notes and Comments Layer
+
+### Goal
+
+Add one reusable internal-notes pattern so future records can hold operational context directly on the record instead of scattering that context across chat, email, or ad hoc fields.
+
+### What we built
+
+This batch added:
+
+- a shared polymorphic `notes` table
+- a generic notes controller and validation request
+- permission-aware create and delete actions
+- a reusable `NotesPanel` Vue component
+- note support on existing `User` and `Page` edit screens
+
+The first cut is intentionally internal and operational. It is not a public comments feature.
+
+### 1. Shared note model strategy
+
+Files:
+
+- `app/Models/Note.php`
+- `database/migrations/2026_03_18_103243_create_notes_table.php`
+- `database/factories/NoteFactory.php`
+- `app/Support/NoteableRegistry.php`
+
+Before:
+
+- there was no shared record-level notes pattern
+- each future module would have needed its own comment table or random text field
+
+After:
+
+- added a `notes` table with:
+  - `author_id`
+  - `noteable_type`
+  - `noteable_id`
+  - `content`
+  - `metadata`
+- added a `Note` model with:
+  - `author()` relation
+  - `noteable()` morph relation
+- added a `NoteableRegistry` so the browser submits a safe alias like `user`, `page`, or `media` instead of raw PHP class names
+
+Representative change:
+
+```diff
++ $table->foreignId('author_id')->nullable()->constrained('users')->nullOnDelete();
++ $table->nullableMorphs('noteable');
++ $table->text('content');
++ $table->json('metadata')->nullable();
+```
+
+Why:
+
+- business apps need shared internal context patterns across many record types, and polymorphic notes are the clean Laravel way to do that without creating one notes table per module
+
+### 2. Note target relationships
+
+Files:
+
+- `app/Models/User.php`
+- `app/Models/Page.php`
+- `app/Models/Media.php`
+
+Before:
+
+- existing records had no standard way to expose notes
+
+After:
+
+- added a shared `notes()` morph-many relation to `User`, `Page`, and `Media`
+
+Representative change:
+
+```diff
++ public function notes(): MorphMany
++ {
++     return $this->morphMany(Note::class, 'noteable')->latest();
++ }
+```
+
+Why:
+
+- future modules should join the notes system by adding one relation, not by inventing another controller or table
+
+### 3. Validation and generic controller flow
+
+Files:
+
+- `app/Http/Requests/Admin/StoreNoteRequest.php`
+- `app/Http/Controllers/Admin/NoteManagementController.php`
+- `routes/web.php`
+
+Before:
+
+- there was no note endpoint at all
+
+After:
+
+- added:
+  - `POST /admin/notes`
+  - `DELETE /admin/notes/{note}`
+- note creation validates:
+  - allowed note target alias
+  - target record id
+  - note content length
+- the controller resolves the target through `NoteableRegistry`, authorizes access to the target record, stores the note, and records an activity log event
+
+Representative change:
+
+```diff
++ Route::post('admin/notes', [NoteManagementController::class, 'store'])
++     ->middleware('permission:notes.create')
++     ->name('notes.store');
++
++ Route::delete('admin/notes/{note}', [NoteManagementController::class, 'destroy'])
++     ->middleware('permission:notes.delete')
++     ->name('notes.destroy');
+```
+
+Why:
+
+- one generic note route is easier to reuse and easier to remove later than creating `users.notes`, `pages.notes`, and `media.notes` as separate module-specific flows
+
+### 4. Permission and policy layer
+
+Files:
+
+- `app/Policies/NotePolicy.php`
+- `app/Providers/AppServiceProvider.php`
+- `database/seeders/RolePermissionSeeder.php`
+- `app/Http/Controllers/Admin/RoleManagementController.php`
+
+Before:
+
+- notes were not part of RBAC
+
+After:
+
+- added:
+  - `notes.view`
+  - `notes.create`
+  - `notes.delete`
+- registered `NotePolicy`
+- granted `Admin` and `Manager` note access
+- documented the note permissions in the role-management UI
+
+Why:
+
+- operational notes often contain sensitive internal context, so they need their own permission surface instead of piggybacking on unrelated module permissions
+
+### 5. Reusable notes UI
+
+Files:
+
+- `resources/js/components/admin/NotesPanel.vue`
+- `resources/js/pages/admin/Users/Edit.vue`
+- `resources/js/pages/admin/Pages/Edit.vue`
+- `app/Support/NotePresenter.php`
+
+Before:
+
+- even if note routes existed, there was no reusable record-level note UI
+
+After:
+
+- added a shared `NotesPanel` component with:
+  - note textarea
+  - validation errors
+  - create action
+  - delete confirmation
+  - empty state
+- embedded the same component into both the user-edit and page-edit screens
+- `NotePresenter` normalizes note props for those pages
+
+Representative change:
+
+```diff
++ <NotesPanel
++     :target="noteTarget"
++     :notes="user.notes ?? []"
++     :can-create="canCreateNotes"
++ />
+```
+
+Why:
+
+- the pattern is only reusable if the UI is reusable too
+- attaching the panel to existing edit pages makes the notes feature immediately useful without inventing a standalone note-management page
+
+### 6. Test coverage
+
+File:
+
+- `tests/Feature/Admin/NoteManagementTest.php`
+
+What it proves:
+
+- `Admin` can create a note on a user and see it on the user edit page
+- `Manager` can create and delete a page note
+- `Manager` can attach a note to media through the same shared note route
+- `Member` cannot create notes
+
+### Verification run
+
+- `php artisan migrate --no-interaction`
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `php artisan test --compact tests/Feature/Admin/NoteManagementTest.php tests/Feature/Admin/PageCrudTest.php tests/Feature/Admin/UserCrudTest.php`
+- `npm run build`
+- `npm run types:check`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `app/Http/Controllers/Admin/NoteManagementController.php`
+- `app/Http/Requests/Admin/StoreNoteRequest.php`
+- `app/Support/NoteableRegistry.php`
+- `resources/js/components/admin/NotesPanel.vue`
+- `tests/Feature/Admin/NoteManagementTest.php`
+
+### What to remember
+
+- polymorphic notes are a strong business-level reusable pattern because they decouple note storage from any one module
+- use a safe alias registry instead of sending raw model class names from the frontend
+- attaching the first reusable UI to existing edit pages is a cleaner foundation than building a separate notes dashboard too early

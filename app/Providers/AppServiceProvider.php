@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Media;
+use App\Models\Note;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Models\User;
 use App\Policies\MediaPolicy;
+use App\Policies\NotePolicy;
 use App\Policies\PagePolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SettingPolicy;
@@ -51,6 +53,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Media::class, MediaPolicy::class);
         Gate::policy(Page::class, PagePolicy::class);
+        Gate::policy(Note::class, NotePolicy::class);
         Gate::policy(Setting::class, SettingPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
 

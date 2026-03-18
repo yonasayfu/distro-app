@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\UpdateUserRolesRequest;
 use App\Models\User;
 use App\Notifications\SystemMessageNotification;
 use App\Support\ActivityLogger;
+use App\Support\NotePresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -102,11 +103,20 @@ class UserManagementController extends Controller
     {
         $this->authorize('view', $user);
 
-        $user->load('roles');
+        $user->load([
+            'roles',
+            'notes.author:id,name',
+        ]);
 
         return Inertia::render('admin/Users/Edit', [
             'user' => $this->userSummary($user, $request),
             'roles' => $this->roleOptions(),
+            'noteTarget' => [
+                'type' => 'user',
+                'id' => $user->id,
+                'title' => $user->name,
+            ],
+            'canCreateNotes' => $request->user()?->can('notes.create') ?? false,
         ]);
     }
 
@@ -213,11 +223,11 @@ class UserManagementController extends Controller
     /**
      * Normalize a user for admin page props.
      *
-     * @return array{id: int, name: string, email: string, roles: array<int, string>, isCurrentUser: bool, emailVerifiedAt: string|null, createdAt: string|null}
+     * @return array{id: int, name: string, email: string, roles: array<int, string>, isCurrentUser: bool, emailVerifiedAt: string|null, createdAt: string|null, notes?: array<int, array{id: int, content: string, author: string|null, createdAt: string|null, canDelete: bool}>}
      */
     private function userSummary(User $user, Request $request): array
     {
-        return [
+        $summary = [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
@@ -226,6 +236,15 @@ class UserManagementController extends Controller
             'emailVerifiedAt' => $user->email_verified_at?->toDateTimeString(),
             'createdAt' => $user->created_at?->toDateTimeString(),
         ];
+
+        if ($user->relationLoaded('notes')) {
+            $summary['notes'] = NotePresenter::collection(
+                $user->notes,
+                $request->user()?->can('notes.delete') ?? false,
+            );
+        }
+
+        return $summary;
     }
 
     /**
