@@ -7328,3 +7328,274 @@ What it proves:
 - a reusable business-level settings system needs both storage and a fixed registry
 - settings should flow through the same RBAC, policy, validation, and Inertia patterns as the rest of the app
 - if the UI does not consume the stored values, the settings module is only a form, not a real foundation
+
+## Entry 034: `starter-business` Media and File Foundation
+
+### Goal
+
+Add one reusable media layer so future business modules can upload, list, download, and later attach files without inventing a separate file pattern each time.
+
+### What we built
+
+This batch added a shared media library with:
+
+- a real `media` table
+- upload validation
+- storage through one uploader service
+- a permission-aware admin library page
+- download and delete flows
+- an attachment-ready API resource for future modules
+
+It is a foundation module, not a project-specific document manager.
+
+### 1. Media storage model
+
+Files:
+
+- `app/Models/Media.php`
+- `database/migrations/2026_03_18_084542_create_media_table.php`
+- `database/factories/MediaFactory.php`
+
+Before:
+
+- there was no shared file model
+- each future module would have had to invent its own upload table and file metadata shape
+
+After:
+
+- added a `media` table that stores:
+  - uploader
+  - collection
+  - disk and path
+  - original and stored names
+  - MIME type and size
+  - optional `attachable_type` / `attachable_id`
+  - freeform metadata
+- added the `Media` model with:
+  - `uploadedBy()` relation
+  - `attachable()` morph relation
+
+Representative change:
+
+```diff
++ $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
++ $table->nullableMorphs('attachable');
++ $table->string('collection')->default('library');
++ $table->string('disk')->default('local');
++ $table->string('path');
++ $table->string('original_name');
++ $table->unsignedBigInteger('size')->default(0);
++ $table->json('metadata')->nullable();
+```
+
+Why:
+
+- the boilerplate needs one neutral file model that works for invoices later, employee documents later, product images later, and public assets later
+
+### 2. Reusable upload service
+
+File:
+
+- `app/Support/MediaUploader.php`
+
+Before:
+
+- upload logic would have lived inline in a controller or page-specific handler
+
+After:
+
+- `MediaUploader::store()` now:
+  - normalizes the collection name
+  - stores the uploaded file on the target disk
+  - creates the `Media` database record
+  - captures generated filename metadata
+
+Representative change:
+
+```diff
++ $normalizedCollection = str($collection)->trim()->lower()->slug()->toString() ?: 'library';
++ $directory = 'media/'.$normalizedCollection;
++ $storedPath = $file->store($directory, $disk);
++
++ return Media::query()->create([
++     'uploaded_by' => $user->id,
++     'collection' => $normalizedCollection,
++     'path' => $storedPath,
++     'original_name' => $file->getClientOriginalName(),
++     'mime_type' => $file->getClientMimeType(),
++     'size' => $file->getSize(),
++ ]);
+```
+
+Why:
+
+- file persistence is cross-project infrastructure, so it should live in one service instead of being duplicated in every controller
+
+### 3. Validation and admin endpoints
+
+Files:
+
+- `app/Http/Requests/Admin/StoreMediaRequest.php`
+- `app/Http/Controllers/Admin/MediaManagementController.php`
+- `routes/web.php`
+
+Before:
+
+- there was no admin media module
+
+After:
+
+- added:
+  - `GET /media`
+  - `POST /media`
+  - `GET /media/{media}/download`
+  - `DELETE /media/{media}`
+- uploads are validated in `StoreMediaRequest`
+- searching, pagination, downloading, and deleting now run through one media controller
+
+Representative change:
+
+```diff
++ Route::get('media', [MediaManagementController::class, 'index'])
++     ->middleware('permission:media.view')
++     ->name('media.index');
++
++ Route::post('media', [MediaManagementController::class, 'store'])
++     ->middleware('permission:media.create')
++     ->name('media.store');
++ Route::delete('media/{media}', [MediaManagementController::class, 'destroy'])
++     ->middleware('permission:media.delete')
++     ->name('media.destroy');
+```
+
+Why:
+
+- this keeps media aligned with the boilerplate’s standard structure:
+  - route middleware
+  - controller authorization
+  - Form Request validation
+  - activity logging
+  - Inertia rendering
+
+### 4. Permission and policy integration
+
+Files:
+
+- `app/Policies/MediaPolicy.php`
+- `app/Providers/AppServiceProvider.php`
+- `database/seeders/RolePermissionSeeder.php`
+- `app/Http/Controllers/Admin/RoleManagementController.php`
+
+Before:
+
+- file access was not part of the permission matrix
+
+After:
+
+- added:
+  - `media.view`
+  - `media.create`
+  - `media.delete`
+- registered `MediaPolicy`
+- gave `Admin` full media access
+- gave `Manager` upload/view access without delete
+- documented these permissions in the role-management screen
+
+Why:
+
+- shared media becomes dangerous quickly if upload and delete rights are not governed by the same RBAC layer as the rest of the app
+
+### 5. Reusable upload UI and media library page
+
+Files:
+
+- `resources/js/components/admin/MediaUploadField.vue`
+- `resources/js/pages/admin/Media/Index.vue`
+- `resources/js/navigation/app.ts`
+- `resources/js/types/admin.ts`
+
+Before:
+
+- there was no reusable upload component and no business-level media page
+
+After:
+
+- added `MediaUploadField` for file picking
+- added a real `Admin > Media` page with:
+  - upload form
+  - collection input
+  - search bar
+  - paginated results
+  - download action
+  - delete confirmation
+- added a `Media` sidebar entry
+
+Representative change:
+
+```diff
++ {
++     title: 'Media',
++     href: mediaIndex(),
++     icon: FolderOpen,
++     permission: 'media.view',
++ },
+```
+
+Why:
+
+- the media foundation only becomes reusable if teams can upload and inspect files in one predictable place before attachments are wired into downstream modules
+
+### 6. Attachment-ready API shape
+
+File:
+
+- `app/Http/Resources/Api/V1/MediaResource.php`
+
+Before:
+
+- there was no common resource shape for files in the API layer
+
+After:
+
+- `MediaResource` now exposes a stable serialized shape for future API endpoints and attachment-aware modules
+
+Why:
+
+- mobile clients or downstream APIs should not have to invent a separate file serialization format later
+
+### 7. Test coverage
+
+File:
+
+- `tests/Feature/Admin/MediaManagementTest.php`
+
+What it proves:
+
+- `Admin` can view the media library
+- `Manager` can upload media
+- `Manager` cannot delete media
+- `Admin` can download and delete media
+- `Member` is forbidden from media routes
+
+### Verification run
+
+- `php artisan migrate --no-interaction`
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `php artisan test --compact tests/Feature/Admin/MediaManagementTest.php tests/Feature/Admin/SettingsManagementTest.php`
+- `npm run types:check`
+- `npm run build`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `app/Support/MediaUploader.php`
+- `app/Http/Controllers/Admin/MediaManagementController.php`
+- `app/Models/Media.php`
+- `resources/js/pages/admin/Media/Index.vue`
+- `tests/Feature/Admin/MediaManagementTest.php`
+
+### What to remember
+
+- a good file foundation starts with one neutral media table, not per-module uploads
+- uploads should pass through one service so storage rules stay consistent
+- add attachment capability early through polymorphic relations even if the first UI is only a shared media library

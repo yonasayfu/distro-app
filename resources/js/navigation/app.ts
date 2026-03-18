@@ -3,6 +3,7 @@ import {
     BookOpenText,
     FileOutput,
     FileText,
+    FolderOpen,
     LayoutGrid,
     Settings2,
     Shield,
@@ -14,6 +15,7 @@ import { edit as adminSettingsEdit } from '@/routes/admin-settings';
 import { dashboard } from '@/routes';
 import { index as exportsIndex } from '@/routes/exports';
 import { index as handbookIndex } from '@/routes/handbook';
+import { index as mediaIndex } from '@/routes/media';
 import { index as notificationsIndex } from '@/routes/notifications';
 import { index as pagesIndex } from '@/routes/pages';
 import { index as rolesIndex } from '@/routes/roles';
@@ -69,6 +71,12 @@ export const appNavigation: NavGroup[] = [
                 href: adminSettingsEdit(),
                 icon: Settings2,
                 permission: 'settings.view',
+            },
+            {
+                title: 'Media',
+                href: mediaIndex(),
+                icon: FolderOpen,
+                permission: 'media.view',
             },
             {
                 title: 'Pages',

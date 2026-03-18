@@ -40,16 +40,23 @@ Implementation notes:
 
 ## Phase B2: Media and File Foundation
 
-- [ ] `[P0]` Define the attachment/file model strategy.
-- [ ] `[P0]` Add validated upload endpoints.
-- [ ] `[P0]` Add reusable upload UI pattern.
-- [ ] `[P1]` Add file list/download behavior.
-- [ ] `[P1]` Add attachment-ready API resource pattern.
-- [ ] `[P1]` Add media tests.
+- [x] `[P0]` Define the attachment/file model strategy.
+- [x] `[P0]` Add validated upload endpoints.
+- [x] `[P0]` Add reusable upload UI pattern.
+- [x] `[P1]` Add file list/download behavior.
+- [x] `[P1]` Add attachment-ready API resource pattern.
+- [x] `[P1]` Add media tests.
 
 Acceptance criteria:
 
 - future modules can attach files without inventing a new pattern every time
+
+Implementation notes:
+
+- the shared `media` table now stores uploader metadata, storage location, collection name, and an optional polymorphic `attachable` target
+- uploads are validated through a Form Request and persisted through one reusable `MediaUploader` service instead of page-local controller logic
+- `Admin > Media` is now a real business-level library with upload, search, download, and delete flows
+- the module is permission-aware and already shaped for future attachment reuse through the `Media` model and `MediaResource`
 
 ## Phase B3: Notes and Comments Layer
 
@@ -104,8 +111,8 @@ Acceptance criteria:
 
 Start in this order:
 
-- [ ] `[P0]` Settings foundation
-- [ ] `[P0]` Media/file foundation
+- [x] `[P0]` Settings foundation
+- [x] `[P0]` Media/file foundation
 - [ ] `[P0]` Notes/comments layer
 
 This first slice gives `starter-business` its identity without turning it into a domain app.

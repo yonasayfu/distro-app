@@ -148,14 +148,16 @@ Branch history so far:
 - `phase-19-starter-core-usage-guidance`
 - `level/starter-business-planning`
 - `level/starter-business-settings-foundation`
+- `level/starter-business-pwa-guidance`
+- `level/starter-business-media-foundation`
 
 Current active phase branch:
 
-- `level/starter-business-settings-foundation`
+- `level/starter-business-media-foundation`
 
 Current phase purpose:
 
-- implement the first `starter-business` slice through the shared settings foundation
+- implement the second `starter-business` slice through the shared media and file foundation
 
 ## Tagging `starter-core-v1`
 

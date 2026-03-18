@@ -50,6 +50,18 @@ export type ManagedSettingGroup = {
     fields: ManagedSettingField[];
 };
 
+export type ManagedMedia = {
+    id: number;
+    collection: string;
+    originalName: string;
+    extension: string | null;
+    mimeType: string | null;
+    size: number;
+    uploadedBy: string | null;
+    createdAt: string | null;
+    downloadUrl: string;
+};
+
 export type RoleOption = {
     name: string;
     label: string;

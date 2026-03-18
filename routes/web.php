@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Admin\MediaManagementController;
 use App\Http\Controllers\Admin\PageManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\SettingsManagementController;
@@ -55,6 +56,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('admin/settings', [SettingsManagementController::class, 'update'])
         ->middleware('permission:settings.update')
         ->name('admin-settings.update');
+
+    Route::get('admin/media', [MediaManagementController::class, 'index'])
+        ->middleware('permission:media.view')
+        ->name('media.index');
+
+    Route::post('admin/media', [MediaManagementController::class, 'store'])
+        ->middleware('permission:media.create')
+        ->name('media.store');
+
+    Route::get('admin/media/{media}/download', [MediaManagementController::class, 'download'])
+        ->middleware('permission:media.view')
+        ->name('media.download');
+
+    Route::delete('admin/media/{media}', [MediaManagementController::class, 'destroy'])
+        ->middleware('permission:media.delete')
+        ->name('media.destroy');
 
     Route::get('admin/pages/create', [PageManagementController::class, 'create'])
         ->middleware('permission:pages.create')
