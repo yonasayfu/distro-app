@@ -34,6 +34,7 @@ Suggested branch pattern:
 - `phase-13-boilerplate-levels-planning`
 - `phase-13-starter-core-freeze`
 - `phase-14-public-pages-module`
+- `phase-15-auth-review-closeout`
 
 ### 2. Commit at Logical Milestones
 
@@ -138,14 +139,15 @@ Branch history so far:
 - `phase-12-public-handbook-access`
 - `phase-13-starter-core-freeze`
 - `phase-14-public-pages-module`
+- `phase-15-auth-review-closeout`
 
 Current active phase branch:
 
-- `phase-14-public-pages-module`
+- `phase-15-auth-review-closeout`
 
 Current phase purpose:
 
-- close the public pages minimum cut required for `starter-core-v1`
+- close the remaining Phase 2 auth and security review items for `starter-core-v1`
 
 ## Important Security Note
 

@@ -6222,3 +6222,154 @@ What is covered now:
 - slug routes need reserved-name protection early
 - publish/draft is a content safety rule, not just a UI label
 - the public side and admin side can share the same backend while keeping separate experiences
+
+## Entry 026: Auth and Security Review Closeout
+
+### Goal
+
+Close the remaining `starter-core` auth review items so the authentication layer is explicitly verified and no longer left half-open in the tracker.
+
+### What triggered this batch
+
+The auth system was already implemented, but the freeze document still listed auth review as unfinished.
+
+That usually means one of two bad states:
+
+- the feature exists but nobody formally reviewed it
+- the docs no longer match the real application
+
+This batch closed that gap.
+
+### 1. `app/Models/User.php`
+
+Before:
+
+- the model still had the starter-style commented import for `MustVerifyEmail`
+- email verification worked in practice, but the model declaration was not explicit
+
+After:
+
+- `User` now implements Laravel's `MustVerifyEmail` contract directly
+
+Why:
+
+- email verification is a first-class feature in this boilerplate
+- the model should declare that clearly instead of relying on starter leftovers
+
+### Example of the model hardening
+
+```diff
+- // use Illuminate\Contracts\Auth\MustVerifyEmail;
+- class User extends Authenticatable
++ use Illuminate\Contracts\Auth\MustVerifyEmail;
++ class User extends Authenticatable implements MustVerifyEmail
+```
+
+### 2. `resources/js/layouts/auth/AuthSimpleLayout.vue`
+
+Before:
+
+- auth pages used a very plain starter-style wrapper
+- visually, that wrapper lagged behind the newer public landing page and admin shell
+
+After:
+
+- updated the auth layout to use:
+  - the shared app name from Inertia props
+  - a polished background treatment
+  - a stronger card surface
+  - a clearer branded home link and access framing
+
+Why:
+
+- Phase 2 included a styling-consistency review
+- auth pages should meet the same quality bar as the rest of the boilerplate
+
+### Example of the layout shift
+
+```diff
+- simple centered auth box on plain background
++ branded auth card with the same visual direction used across the public layer
+```
+
+### 3. `tests/Feature/Auth/AuthenticationTest.php`
+
+Before:
+
+- the rate-limiting test used a synthetic limiter-key setup that no longer reflected the real Fortify pipeline closely enough
+
+After:
+
+- the test now performs five real failed login attempts
+- the sixth request asserts `429 Too Many Requests`
+
+Why:
+
+- when reviewing security behavior, the test should exercise the actual user path
+- this is more trustworthy than manually mutating limiter state with an assumed key format
+
+### Example of the test shift
+
+```diff
+- manually increment a guessed limiter key
++ perform five real failed login requests, then assert the sixth is throttled
+```
+
+### 4. `tests/Feature/Auth/RegistrationTest.php`
+
+Before:
+
+- registration only asserted authentication and redirect
+- it did not prove the new user starts unverified while email verification is enabled
+
+After:
+
+- added a test that confirms a newly registered user is not verified yet
+
+Why:
+
+- if email verification is part of `starter-core`, registration should prove that state transition clearly
+
+### 5. Fortify route and middleware review
+
+Files reviewed:
+
+- `config/fortify.php`
+- `app/Providers/FortifyServiceProvider.php`
+- `routes/settings.php`
+
+What was confirmed:
+
+- Fortify uses the `web` guard
+- registration, password reset, email verification, and two-factor auth are enabled
+- custom Inertia auth views are registered
+- login and two-factor limiters are defined
+- profile and password settings routes are still protected consistently
+
+Why:
+
+- the tracker item was not just about tests
+- it also required confirming the actual Fortify wiring and middleware choices
+
+### Verification run
+
+- `php artisan route:list --only-vendor | rg 'Fortify|login|register|password|two-factor|verification'`
+- `php artisan test --compact tests/Feature/Auth/AuthenticationTest.php tests/Feature/Auth/RegistrationTest.php tests/Feature/Auth/PasswordResetTest.php tests/Feature/Auth/EmailVerificationTest.php tests/Feature/Auth/VerificationNotificationTest.php tests/Feature/Auth/TwoFactorChallengeTest.php tests/Feature/Auth/PasswordConfirmationTest.php tests/Feature/Settings/SecurityTest.php tests/Feature/Settings/ProfileUpdateTest.php`
+- `npm run build`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `app/Models/User.php`
+- `resources/js/layouts/auth/AuthSimpleLayout.vue`
+- `config/fortify.php`
+- `app/Providers/FortifyServiceProvider.php`
+- `tests/Feature/Auth/AuthenticationTest.php`
+- `tests/Feature/Auth/RegistrationTest.php`
+
+### What to remember
+
+- a finished auth layer is not just "it logs in"
+- explicit framework contracts matter for maintainability
+- security tests should follow the real request path whenever possible
+- if the app shell quality increases, auth pages should not stay in starter-demo condition

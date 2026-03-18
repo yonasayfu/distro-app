@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -22,4 +23,19 @@ test('new users can register', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+});
+
+test('newly registered users start unverified when email verification is enabled', function () {
+    $response = $this->post(route('register.store'), [
+        'name' => 'Verification User',
+        'email' => 'verification@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ]);
+
+    $response->assertRedirect(route('dashboard', absolute: false));
+
+    $user = User::query()->where('email', 'verification@example.com')->firstOrFail();
+
+    expect($user->hasVerifiedEmail())->toBeFalse();
 });

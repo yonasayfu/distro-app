@@ -39,16 +39,22 @@ Acceptance criteria:
 
 ## Phase 2: Auth, Account, and Security
 
-- [ ] `[P0]` Keep login, register, logout, forgot password, reset password, and verify email flows.
-- [ ] `[P0]` Keep two-factor authentication and recovery codes.
-- [ ] `[P0]` Keep profile, password, and appearance settings.
-- [ ] `[P1]` Review auth page styling and consistency with the new shell.
-- [ ] `[P1]` Review Fortify rate limiting and route middleware usage.
-- [ ] `[P0]` Add or update Pest coverage for login, password reset, 2FA, and settings flows.
+- [x] `[P0]` Keep login, register, logout, forgot password, reset password, and verify email flows.
+- [x] `[P0]` Keep two-factor authentication and recovery codes.
+- [x] `[P0]` Keep profile, password, and appearance settings.
+- [x] `[P1]` Review auth page styling and consistency with the new shell.
+- [x] `[P1]` Review Fortify rate limiting and route middleware usage.
+- [x] `[P0]` Add or update Pest coverage for login, password reset, 2FA, and settings flows.
 
 Acceptance criteria:
 
 - Core account management is stable and tested.
+
+Implementation notes:
+
+- The `User` model now explicitly implements Laravel's `MustVerifyEmail` contract instead of relying on starter leftovers.
+- The auth layout now uses the same visual quality bar as the newer public and admin surfaces.
+- Fortify route registration, limiter behavior, and auth-related feature tests were reviewed and revalidated against the actual application wiring.
 
 ## Phase 3: RBAC Foundation
 
@@ -284,7 +290,7 @@ Implementation notes:
 - Export center now exists as a reusable surface for future CSV, PDF, and print actions.
 - The first working print/export examples are users CSV download and a print-friendly workspace summary page.
 - `starterCoreV1.md` now acts as the release-freeze checklist for the first stable `starter-core` tag.
-- The remaining freeze items are now explicit: auth review closure, policy conventions, final CRUD wrappers, and release-readiness closeout.
+- The remaining freeze items are now explicit: policy conventions, final CRUD wrappers, and release-readiness closeout.
 
 ## First Implementation Slice
 

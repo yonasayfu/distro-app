@@ -52,22 +52,23 @@ The current repository already includes these completed areas:
 
 These are the remaining freeze items.
 
-### 1. Auth and security review closure
+### Auth and security review status
 
-Even though the auth system exists, the tracker still leaves Phase 2 partially open.
+This closeout item is now complete.
 
-Required closeout:
+Completed:
 
-- confirm login, register, logout, forgot password, reset password, verify email, and 2FA remain intentionally in scope
-- review styling consistency of auth screens against the newer public/app experience
-- confirm Fortify rate limiting and middleware choices
-- mark the tracker based on what is already implemented versus what still needs polish
+- confirmed login, register, logout, forgot password, reset password, verify email, and 2FA remain in scope
+- reviewed auth layout consistency against the newer public/app surfaces
+- reviewed Fortify route registration, middleware usage, and rate limiting
+- refreshed auth and settings feature coverage
 
-Why:
+Why it matters:
 
-- a starter cannot be tagged stable while the auth phase still looks unfinished in its own tracker
+- the starter's authentication layer is now explicitly reviewed instead of only assumed to work
+- the tracker now reflects the real implementation state
 
-### 2. Policy conventions for admin modules
+### 1. Policy conventions for admin modules
 
 Permissions already protect routes and controllers, but the boilerplate should document and demonstrate a consistent policy layer for admin-managed resources.
 
@@ -81,7 +82,7 @@ Why:
 
 - future modules should not guess when to use permissions, policies, or both
 
-### 3. Shared CRUD remaining wrappers
+### 2. Shared CRUD remaining wrappers
 
 The CRUD foundation is strong, but a few shared pieces are still marked incomplete.
 
@@ -113,7 +114,7 @@ Why it matters:
 - the public side is no longer limited to hardcoded marketing content
 - `starter-core` now demonstrates one backend-managed public content flow before branching into `starter-business`
 
-### 4. Release readiness checklist
+### 3. Release readiness checklist
 
 Before tagging `starter-core-v1`, do a final release closeout.
 
@@ -133,7 +134,6 @@ Why:
 
 The biggest remaining `starter-core-v1` items are now:
 
-- auth and security review closure
 - policy conventions for admin modules
 - final shared CRUD wrappers
 - release-readiness closeout
