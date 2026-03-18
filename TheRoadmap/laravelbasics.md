@@ -6914,3 +6914,74 @@ Why:
 - release readiness is a product-quality task, not a paperwork task
 - the repository name, env defaults, setup docs, and tag workflow should all describe the same starter
 - a boilerplate is only truly reusable once a fresh clone can be installed and released from the documentation alone
+
+## Entry 030: `starter-core` Retrieval and Reuse Guidance
+
+### Goal
+
+Document the exact practical workflow for finding and reusing this boilerplate later without guessing whether to use a branch, tag, or `main`.
+
+### What triggered this batch
+
+After the freeze closeout, one operational question remained:
+
+- when I want to reuse this boilerplate later, what exactly should I fetch and what should I call it
+
+That question is not code-level, but it is release-critical for a reusable starter.
+
+### 1. `TheRoadmap/starterCoreUsage.md`
+
+Before:
+
+- the repository had freeze guidance
+- but it did not yet have one direct operator file that answered:
+  - is it tagged
+  - is it merged
+  - what should be fetched later
+  - how to start a new project from it
+
+After:
+
+- added a dedicated usage guide for:
+  - current release status
+  - canonical naming
+  - final merge and tag flow
+  - fetch by tag
+  - fetch by branch
+  - clone into a new repository
+
+Why:
+
+- reusable starters fail in practice when retrieval is ambiguous
+- the consumer needs one exact source of truth for how to pick the stable baseline
+
+### 2. `TheRoadmap/gitguidance.md`
+
+Before:
+
+- it tracked the release-closeout branch
+- but not the follow-up guidance branch
+
+After:
+
+- added `phase-19-starter-core-usage-guidance`
+- updated the current active phase record
+
+Why:
+
+- the git workflow document should remain accurate batch by batch
+
+### Verification run
+
+- `php artisan test --compact tests/Feature/Auth/AuthenticationTest.php`
+
+### Important files
+
+- `TheRoadmap/starterCoreUsage.md`
+- `TheRoadmap/gitguidance.md`
+
+### What to remember
+
+- use the tag for stable reuse
+- use the release branch only if the tag does not exist yet
+- do not treat `main` as the only reliable release reference unless the freeze branch has already been merged

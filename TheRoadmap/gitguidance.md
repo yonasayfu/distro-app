@@ -145,14 +145,15 @@ Branch history so far:
 - `phase-16-policy-conventions`
 - `phase-17-crud-wrappers`
 - `phase-18-release-readiness-closeout`
+- `phase-19-starter-core-usage-guidance`
 
 Current active phase branch:
 
-- `phase-18-release-readiness-closeout`
+- `phase-19-starter-core-usage-guidance`
 
 Current phase purpose:
 
-- close the final release-readiness items required for `starter-core-v1`
+- record the retrieval, tagging, and reuse workflow for `starter-core`
 
 ## Tagging `starter-core-v1`
 
