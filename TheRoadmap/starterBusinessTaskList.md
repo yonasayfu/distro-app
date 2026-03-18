@@ -99,15 +99,22 @@ Implementation notes:
 
 ## Phase B5: Import and Restore Foundations
 
-- [ ] `[P0]` Add CSV import baseline.
-- [ ] `[P0]` Add import validation and preview pattern.
-- [ ] `[P1]` Add import result summary/history.
-- [ ] `[P0]` Add soft delete and restore conventions where appropriate.
-- [ ] `[P1]` Add import and restore tests.
+- [x] `[P0]` Add CSV import baseline.
+- [x] `[P0]` Add import validation and preview pattern.
+- [x] `[P1]` Add import result summary/history.
+- [x] `[P0]` Add soft delete and restore conventions where appropriate.
+- [x] `[P1]` Add import and restore tests.
 
 Acceptance criteria:
 
 - the boilerplate supports safe bulk intake and safe record recovery
+
+Implementation notes:
+
+- the import baseline now uses a reusable `ImportRun` history model instead of a preview-only session flow
+- the first CSV intake path is implemented for `Page` records with upload, preview, confirm, and recent-run history
+- `Page` now uses soft deletes and a restore route so destructive actions become recoverable by default
+- the page index now exposes deleted-record filters and restore actions, which establishes the business-level recovery pattern for future modules
 
 ## Phase B6: Dashboard and Reporting Base
 
@@ -129,5 +136,6 @@ Start in this order:
 - [x] `[P0]` Media/file foundation
 - [x] `[P0]` Notes/comments layer
 - [x] `[P0]` Status and workflow pattern
+- [x] `[P0]` Import and restore foundations
 
 This first slice gives `starter-business` its identity without turning it into a domain app.

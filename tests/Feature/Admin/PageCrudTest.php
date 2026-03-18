@@ -126,5 +126,6 @@ test('admin can delete a page', function () {
         ->delete(route('pages.destroy', $page))
         ->assertRedirect(route('pages.index'));
 
-    expect(Page::query()->whereKey($page->id)->exists())->toBeFalse();
+    expect(Page::query()->whereKey($page->id)->exists())->toBeFalse()
+        ->and(Page::withTrashed()->whereKey($page->id)->exists())->toBeTrue();
 });

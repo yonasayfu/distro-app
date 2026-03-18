@@ -6,7 +6,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import InputError from '@/components/InputError.vue';
 import FormSection from '@/components/admin/FormSection.vue';
 import { Button } from '@/components/ui/button';
-import { destroy as destroyNote, store as storeNote } from '@/routes/notes/index';
+import { destroy as destroyNote, store as storeNote } from '@/routes/notes';
 import type { ManagedNote, NoteTarget } from '@/types';
 
 type Props = {

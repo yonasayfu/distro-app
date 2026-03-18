@@ -8046,3 +8046,230 @@ What it proves:
 - a workflow foundation becomes reusable when status is an enum, transitions are centralized, and the UI uses one shared badge/selector pattern
 - use one real model first to prove the pattern before applying it everywhere
 - keep compatibility layers where needed, like deriving `is_published` from status instead of deleting public behavior outright
+
+## Entry 037: `starter-business` Import and Restore Foundations
+
+### Goal
+
+Add one reusable bulk-intake and recovery pattern so future business modules can import records safely and recover deleted records without bypassing the normal application flow.
+
+### What we built
+
+This batch added:
+
+- a shared `ImportRun` history model
+- CSV preview and confirm-import flow for `Page` records
+- page soft deletes plus restore
+- deleted-record filtering and restore actions in the pages index
+
+This is the first import/recovery baseline for `starter-business`, not a domain-specific import subsystem.
+
+### 1. Import history model
+
+Files:
+
+- `app/Models/ImportRun.php`
+- `database/migrations/2026_03_18_110256_create_import_runs_table.php`
+- `database/factories/ImportRunFactory.php`
+
+Before:
+
+- there was no shared way to record imports, previews, or import outcomes
+
+After:
+
+- added `import_runs` with:
+  - `user_id`
+  - `resource`
+  - `status`
+  - `file_name`
+  - row counters
+  - `summary`
+  - `preview_rows`
+  - `completed_at`
+
+Representative change:
+
+```diff
++ $table->string('resource');
++ $table->string('status');
++ $table->string('file_name');
++ $table->unsignedInteger('rows_count')->default(0);
++ $table->json('summary')->nullable();
++ $table->json('preview_rows')->nullable();
+```
+
+Why:
+
+- imports need history if they are going to be trusted in real business workflows
+
+### 2. Soft delete and restore baseline
+
+Files:
+
+- `database/migrations/2026_03_18_110305_add_soft_deletes_to_pages_table.php`
+- `app/Models/Page.php`
+- `app/Policies/PagePolicy.php`
+- `app/Http/Controllers/Admin/PageManagementController.php`
+
+Before:
+
+- deleting a page removed it from the main query path with no recovery flow
+
+After:
+
+- `Page` now uses `SoftDeletes`
+- added a restore route and controller action
+- page policies now explicitly allow `restore`
+- page index can filter:
+  - active
+  - with deleted
+  - deleted only
+
+Representative change:
+
+```diff
++ use HasFactory, SoftDeletes;
+```
+
+Why:
+
+- business starters should default to recoverable destructive actions where that makes operational sense
+
+### 3. Import preview and processing services
+
+Files:
+
+- `app/Support/PageImportPreviewer.php`
+- `app/Support/PageCsvImporter.php`
+- `app/Http/Requests/Admin/PreviewPageImportRequest.php`
+- `app/Http/Requests/Admin/RunPageImportRequest.php`
+- `app/Http/Controllers/Admin/PageImportController.php`
+
+Before:
+
+- there was no import flow for any business record
+
+After:
+
+- `PreviewPageImportRequest` validates the uploaded CSV
+- `PageImportPreviewer` parses and validates each row before import
+- preview results are stored in `ImportRun`
+- `PageCsvImporter` creates only valid page rows and skips duplicates or invalid rows
+- `PageImportController` now supports:
+  - import screen
+  - preview
+  - confirm import
+  - recent import runs
+
+Representative change:
+
+```diff
++ Route::get('admin/pages/import', [PageImportController::class, 'index'])
++     ->middleware('permission:pages.create')
++     ->name('pages.import');
++
++ Route::post('admin/pages/import/preview', [PageImportController::class, 'preview'])
++     ->middleware('permission:pages.create')
++     ->name('pages.import.preview');
+```
+
+Why:
+
+- preview-first import is the safe baseline for a reusable business starter
+
+### 4. Pages UI for import and recovery
+
+Files:
+
+- `resources/js/pages/admin/Pages/Import.vue`
+- `resources/js/pages/admin/Pages/Index.vue`
+- `resources/js/types/admin.ts`
+
+Before:
+
+- pages only supported manual create/edit/delete
+
+After:
+
+- added a dedicated import screen with:
+  - file upload
+  - row preview
+  - valid/invalid counts
+  - confirm import
+  - recent import history
+- pages index now supports deleted-record filters and restore actions
+
+Representative change:
+
+```diff
++ <Button v-if="auth.permissions.includes('pages.create')" as-child variant="outline">
++     <Link :href="pagesImportIndex()">
++         <FileSpreadsheet class="size-4" />
++         Import CSV
++     </Link>
++ </Button>
+```
+
+Why:
+
+- the baseline only becomes reusable if both bulk intake and record recovery are visible in the admin UI
+
+### 5. Route-resolution cleanup for generated Wayfinder folders
+
+Files:
+
+- `resources/js/routes/profile.ts`
+- `resources/js/routes/search.ts`
+- `resources/js/routes/notes.ts`
+- `resources/js/routes/appearance.ts`
+- `resources/js/routes/security.ts`
+
+What changed:
+
+- added thin proxy files that re-export the generated folder indexes
+
+Why:
+
+- `vue-tsc` resolved some generated route folders inconsistently even though Vite built them correctly
+- the proxies keep the import style stable without changing application behavior
+
+### 6. Test coverage
+
+Files:
+
+- `tests/Feature/Admin/PageImportTest.php`
+- `tests/Feature/Admin/PageCrudTest.php`
+- `tests/Feature/Public/PublicPageTest.php`
+- `tests/Feature/Admin/PageStatusWorkflowTest.php`
+
+What it proves:
+
+- managers can preview page CSV imports
+- managers can run a previewed import
+- admins can restore soft-deleted pages
+- members cannot import or restore pages
+- page delete now preserves recoverability through soft deletes
+
+### Verification run
+
+- `php artisan migrate --no-interaction`
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `php artisan test --compact tests/Feature/Admin/PageImportTest.php tests/Feature/Admin/PageCrudTest.php tests/Feature/Public/PublicPageTest.php tests/Feature/Admin/PageStatusWorkflowTest.php`
+- `npm run build`
+- `npm run types:check`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `app/Models/ImportRun.php`
+- `app/Support/PageImportPreviewer.php`
+- `app/Support/PageCsvImporter.php`
+- `app/Http/Controllers/Admin/PageImportController.php`
+- `resources/js/pages/admin/Pages/Import.vue`
+
+### What to remember
+
+- preview-first import plus import history is a safer business baseline than direct CSV ingestion
+- soft deletes and explicit restore actions are part of the business workflow, not just a database concern
+- fix build tooling friction once at the shared route layer instead of scattering one-off import workarounds across components

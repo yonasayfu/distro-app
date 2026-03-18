@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\MediaManagementController;
 use App\Http\Controllers\Admin\NoteManagementController;
+use App\Http\Controllers\Admin\PageImportController;
 use App\Http\Controllers\Admin\PageManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\SettingsManagementController;
@@ -49,6 +50,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('admin/pages', [PageManagementController::class, 'index'])
         ->middleware('permission:pages.view')
         ->name('pages.index');
+
+    Route::get('admin/pages/import', [PageImportController::class, 'index'])
+        ->middleware('permission:pages.create')
+        ->name('pages.import');
+
+    Route::post('admin/pages/import/preview', [PageImportController::class, 'preview'])
+        ->middleware('permission:pages.create')
+        ->name('pages.import.preview');
+
+    Route::post('admin/pages/import', [PageImportController::class, 'store'])
+        ->middleware('permission:pages.create')
+        ->name('pages.import.store');
 
     Route::get('admin/settings', [SettingsManagementController::class, 'edit'])
         ->middleware('permission:settings.view')
@@ -101,6 +114,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('admin/pages/{page}', [PageManagementController::class, 'destroy'])
         ->middleware('permission:pages.delete')
         ->name('pages.destroy');
+
+    Route::post('admin/pages/{page}/restore', [PageManagementController::class, 'restore'])
+        ->middleware('permission:pages.delete')
+        ->name('pages.restore');
 
     Route::get('admin/users/create', [UserManagementController::class, 'create'])
         ->middleware('permission:users.create')

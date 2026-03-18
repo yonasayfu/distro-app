@@ -21,23 +21,29 @@ class PageManagementController extends Controller
         $this->authorize('viewAny', Page::class);
 
         $search = $request->string('search')->trim()->toString();
+        $trashed = $request->string('trashed')->toString();
+
+        $pages = Page::query()
+            ->when($trashed === 'with', fn ($query) => $query->withTrashed())
+            ->when($trashed === 'only', fn ($query) => $query->onlyTrashed())
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($pageQuery) use ($search): void {
+                    $pageQuery
+                        ->where('title', 'ilike', "%{$search}%")
+                        ->orWhere('slug', 'ilike', "%{$search}%")
+                        ->orWhere('excerpt', 'ilike', "%{$search}%");
+                });
+            })
+            ->orderByDesc('updated_at')
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (Page $page): array => $this->pageSummary($page));
 
         return Inertia::render('admin/Pages/Index', [
-            'pages' => Page::query()
-                ->when($search !== '', function ($query) use ($search): void {
-                    $query->where(function ($pageQuery) use ($search): void {
-                        $pageQuery
-                            ->where('title', 'ilike', "%{$search}%")
-                            ->orWhere('slug', 'ilike', "%{$search}%")
-                            ->orWhere('excerpt', 'ilike', "%{$search}%");
-                    });
-                })
-                ->orderByDesc('updated_at')
-                ->paginate(10)
-                ->withQueryString()
-                ->through(fn (Page $page): array => $this->pageSummary($page)),
+            'pages' => $pages,
             'filters' => [
                 'search' => $search,
+                'trashed' => $trashed,
             ],
         ]);
     }
@@ -132,6 +138,25 @@ class PageManagementController extends Controller
         return to_route('pages.index')->with('success', 'Page deleted successfully.');
     }
 
+    public function restore(Request $request, int $page): RedirectResponse
+    {
+        $pageModel = Page::withTrashed()->findOrFail($page);
+
+        $this->authorize('restore', $pageModel);
+
+        $pageModel->restore();
+
+        ActivityLogger::record(
+            actor: $request->user(),
+            event: 'pages.restored',
+            description: "Restored page {$pageModel->slug}.",
+            subject: $pageModel,
+            request: $request,
+        );
+
+        return to_route('pages.index', ['trashed' => 'with'])->with('success', 'Page restored successfully.');
+    }
+
     /**
      * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
@@ -155,7 +180,7 @@ class PageManagementController extends Controller
     }
 
     /**
-     * @return array{id: int, title: string, slug: string, excerpt: string|null, status: string, statusLabel: string, statusTone: string, isPublished: bool, publishedAt: string|null, updatedAt: string|null, publicUrl: string|null}
+     * @return array{id: int, title: string, slug: string, excerpt: string|null, status: string, statusLabel: string, statusTone: string, isPublished: bool, publishedAt: string|null, updatedAt: string|null, publicUrl: string|null, isDeleted: bool, deletedAt: string|null}
      */
     private function pageSummary(Page $page): array
     {
@@ -170,7 +195,9 @@ class PageManagementController extends Controller
             'isPublished' => $page->is_published,
             'publishedAt' => $page->published_at?->toDateTimeString(),
             'updatedAt' => $page->updated_at?->toDateTimeString(),
-            'publicUrl' => $page->is_published ? route('public-pages.show', ['page' => $page->slug]) : null,
+            'publicUrl' => $page->is_published && $page->deleted_at === null ? route('public-pages.show', ['page' => $page->slug]) : null,
+            'isDeleted' => $page->trashed(),
+            'deletedAt' => $page->deleted_at?->toDateTimeString(),
         ];
     }
 }

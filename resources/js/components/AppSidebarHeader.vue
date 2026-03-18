@@ -6,7 +6,7 @@ import NotificationBell from '@/components/NotificationBell.vue';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppearance } from '@/composables/useAppearance';
-import { index as searchIndex } from '@/routes/search/index';
+import { index as searchIndex } from '@/routes/search';
 import type { Auth, BreadcrumbItem } from '@/types';
 
 withDefaults(

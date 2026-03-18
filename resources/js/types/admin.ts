@@ -35,7 +35,44 @@ export type ManagedPage = {
     publishedAt: string | null;
     updatedAt: string | null;
     publicUrl: string | null;
+    isDeleted: boolean;
+    deletedAt: string | null;
     notes?: ManagedNote[];
+};
+
+export type ManagedImportRun = {
+    id: number;
+    fileName: string;
+    status: string;
+    rowsCount: number;
+    validRowsCount: number;
+    importedRowsCount: number;
+    completedAt: string | null;
+    createdAt: string | null;
+};
+
+export type PageImportPreviewRow = {
+    line: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    content: string;
+    seo_title: string | null;
+    seo_description: string | null;
+    status: string;
+    valid: boolean;
+    errors: string[];
+};
+
+export type PageImportPreview = {
+    importRunId: number;
+    fileName: string;
+    rows: PageImportPreviewRow[];
+    summary: {
+        rows: number;
+        validRows: number;
+        invalidRows: number;
+    };
 };
 
 export type ManagedSettingField = {
