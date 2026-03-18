@@ -4,6 +4,11 @@
 
 Define the exact finish line for the first stable `starter-business` release.
 
+Status:
+
+- freeze checklist complete
+- ready for release promotion and tag creation as `starter-business-v1`
+
 `starter-business` must remain:
 
 - above `starter-core`
@@ -88,6 +93,8 @@ Before tagging `starter-business-v1`, these should be complete:
 - update learning archive
 - define tag instructions for `starter-business-v1`
 
+All release-readiness items are now complete.
+
 ## Deferral Rules
 
 Do not block `starter-business-v1` on:
@@ -104,6 +111,28 @@ Those belong in later levels.
 - branch: `level/starter-business`
 - first stable tag: `starter-business-v1`
 
+## Verification Before Tagging
+
+Run:
+
+```bash
+composer validate --strict
+php artisan test --compact tests/Feature/Admin/SettingsManagementTest.php tests/Feature/Admin/MediaManagementTest.php tests/Feature/Admin/NoteManagementTest.php tests/Feature/Admin/PageStatusWorkflowTest.php tests/Feature/Admin/PageImportTest.php tests/Feature/DashboardWidgetsTest.php tests/Feature/ReportsIndexTest.php
+npm run types:check
+npm run build
+```
+
+Then promote and tag:
+
+```bash
+git checkout main
+git pull
+git merge --ff-only level/starter-business-release-readiness
+git push origin main
+git tag starter-business-v1
+git push origin starter-business-v1
+```
+
 ## Success Condition
 
 `starter-business-v1` is ready when:
@@ -111,3 +140,5 @@ Those belong in later levels.
 - common business foundations are stable
 - future projects can add their own modules without rebuilding settings/files/workflow basics
 - the codebase still feels modular and domain-neutral
+
+That condition is now met.

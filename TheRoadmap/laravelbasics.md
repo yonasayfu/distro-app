@@ -1415,6 +1415,111 @@ What it proves:
 - move dashboard data into Laravel controllers once the page becomes part of the shared platform, not just a frontend showcase
 - widget primitives matter more than one-off page markup because future business modules will reuse those surfaces
 - report filters and exports should be shaped as one repeatable pattern early, before domain reporting gets complex
+
+## Entry 039: `starter-business` Release Readiness and Freeze
+
+### Goal
+
+Close the first business-level release properly so `starter-business-v1` becomes a real reusable checkpoint instead of only a collection of completed feature branches.
+
+### What we changed
+
+This batch did not add new runtime features. It did three release-critical things:
+
+- froze the `starter-business-v1` scope
+- aligned the top-level README with the level-based strategy
+- recorded the exact verification and tag flow for the business starter
+
+### 1. README now reflects level-based releases
+
+Files:
+
+- `README.md`
+
+Before:
+
+- the README read like a `starter-core` document even though the repository had already moved into business-level foundations
+
+After:
+
+- the README now distinguishes:
+  - `starter-core-v1`
+  - `starter-business-v1`
+- it lists the business foundations that extend the core level
+- it records separate verification baselines for each tag
+
+Representative change:
+
+```diff
+- # Starter Core
++ # Starter Levels
+```
+
+Why:
+
+- once a repository serves multiple starter levels, the release document must name those levels explicitly or reuse gets ambiguous later
+
+### 2. Business freeze docs now contain the exact tag flow
+
+Files:
+
+- `TheRoadmap/starterBusinessV1.md`
+
+Before:
+
+- the business freeze file defined scope, but it did not yet declare the freeze complete or give the exact release commands
+
+After:
+
+- the file now states that the checklist is complete
+- it includes:
+  - verification commands
+  - merge flow
+  - `starter-business-v1` tag commands
+
+Representative change:
+
+```diff
++ Status:
++ - freeze checklist complete
++ - ready for release promotion and tag creation as `starter-business-v1`
+```
+
+Why:
+
+- a freeze file is only useful if it tells you exactly how to promote the release, not just what the scope was
+
+### 3. Task and branch tracking now treat release readiness as a real phase
+
+Files:
+
+- `TheRoadmap/starterBusinessTaskList.md`
+- `TheRoadmap/gitguidance.md`
+
+Before:
+
+- the business implementation phases were complete, but release readiness was implicit
+
+After:
+
+- added `Phase B7: Release Readiness and Freeze`
+- marked it complete
+- updated the active branch history with `level/starter-business-release-readiness`
+
+Why:
+
+- release hardening should be visible in the roadmap history, not hidden inside a generic docs edit
+
+### Verification run
+
+- `composer validate --strict`
+- `php artisan test --compact tests/Feature/Admin/SettingsManagementTest.php tests/Feature/Admin/MediaManagementTest.php tests/Feature/Admin/NoteManagementTest.php tests/Feature/Admin/PageStatusWorkflowTest.php tests/Feature/Admin/PageImportTest.php tests/Feature/DashboardWidgetsTest.php tests/Feature/ReportsIndexTest.php`
+
+### What to remember
+
+- freeze phases are not optional paperwork; they are what makes a starter reusable months later
+- once a repository has multiple levels, the README must describe levels, not only the original base
+- the release file should always contain the exact verification and tag sequence for that level
 - `php artisan test --compact tests/Feature/DashboardTest.php`
 
 ### What to remember

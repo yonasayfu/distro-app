@@ -1,6 +1,6 @@
-# Starter Core
+# Starter Levels
 
-Reusable Laravel 12 starter-core boilerplate for admin and public applications built with Inertia, Vue, Fortify, Sanctum, and Spatie Permission.
+Reusable Laravel 12 boilerplate repository with staged starter levels built on Inertia, Vue, Fortify, Sanctum, and Spatie Permission.
 
 ## Stack
 
@@ -12,6 +12,21 @@ Reusable Laravel 12 starter-core boilerplate for admin and public applications b
 - Spatie Permission for RBAC
 - Pest 4 for testing
 - Wayfinder for typed frontend routes
+
+## Stable Levels
+
+- `starter-core-v1`
+  - frozen and tagged
+  - base admin/public starter with auth, RBAC, CRUD patterns, API baseline, handbook, notifications, activity logs, exports, search, and public pages
+- `starter-business-v1`
+  - freeze-ready on the business release branch
+  - extends `starter-core-v1` with settings, media, notes, workflow, import/restore, and dashboard/reporting foundations
+
+Read these docs when choosing a level:
+
+- [starterCoreUsage.md](/Users/yonassayfu/Herd/distro-app/TheRoadmap/starterCoreUsage.md)
+- [starterBusinessV1.md](/Users/yonassayfu/Herd/distro-app/TheRoadmap/starterBusinessV1.md)
+- [boilerplateLevels.md](/Users/yonassayfu/Herd/distro-app/TheRoadmap/boilerplateLevels.md)
 
 ## Current Baseline
 
@@ -39,6 +54,14 @@ Reusable Laravel 12 starter-core boilerplate for admin and public applications b
   - notifications center
   - activity log
   - audit detail page
+- Business foundations:
+  - shared settings registry and admin settings UI
+  - media library with upload/download/delete
+  - polymorphic internal notes
+  - workflow status pattern
+  - CSV import preview/history
+  - restore pattern for soft-deleted records
+  - dashboard widgets and filterable reports
 - API baseline:
   - `/api/v1/auth/*`
   - `/api/v1/notifications`
@@ -208,9 +231,11 @@ GitHub Actions verifies:
 
 ## Release Freeze
 
-This repository is currently being frozen as `starter-core-v1`.
+### `starter-core-v1`
 
-Before tagging a release:
+This tag is already established and should be the stable base for new projects that only need the core layer.
+
+Verification baseline:
 
 ```bash
 composer validate --strict
@@ -219,11 +244,24 @@ npm run types:check
 npm run build
 ```
 
+### `starter-business-v1`
+
+This level should extend `starter-core-v1` and freeze only the reusable business foundations.
+
+Verification baseline:
+
+```bash
+composer validate --strict
+php artisan test --compact tests/Feature/Admin/SettingsManagementTest.php tests/Feature/Admin/MediaManagementTest.php tests/Feature/Admin/NoteManagementTest.php tests/Feature/Admin/PageStatusWorkflowTest.php tests/Feature/Admin/PageImportTest.php tests/Feature/DashboardWidgetsTest.php tests/Feature/ReportsIndexTest.php
+npm run types:check
+npm run build
+```
+
 Then tag and push:
 
 ```bash
-git tag starter-core-v1
-git push origin starter-core-v1
+git tag starter-business-v1
+git push origin starter-business-v1
 ```
 
 ## Project Workflow

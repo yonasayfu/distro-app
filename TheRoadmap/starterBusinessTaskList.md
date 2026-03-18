@@ -135,6 +135,24 @@ Implementation notes:
 - the first reporting page now supports search, workflow-status filters, deleted-record filters, and CSV export through one neutral report pattern
 - report export actions are activity-logged so future report downloads follow the same audit trail pattern as other shared modules
 
+## Phase B7: Release Readiness and Freeze
+
+- [x] `[P0]` Confirm the business-level freeze scope is complete.
+- [x] `[P0]` Update release docs for the business level.
+- [x] `[P0]` Update tracker and learning archive.
+- [x] `[P0]` Record the exact `starter-business-v1` verification and tag flow.
+
+Acceptance criteria:
+
+- the business level can be frozen without ambiguity
+- the release/tag instructions are explicit
+
+Implementation notes:
+
+- `starter-business-v1` is now defined as an extension of `starter-core-v1`, not as a drifting branch label
+- the README now documents both stable levels and their different verification baselines
+- the business freeze docs now include the exact tag workflow and the release boundary for what stays out of this level
+
 ## First Implementation Slice
 
 Start in this order:

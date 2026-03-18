@@ -154,14 +154,15 @@ Branch history so far:
 - `level/starter-business-status-workflow`
 - `level/starter-business-import-restore`
 - `level/starter-business-dashboard-reporting`
+- `level/starter-business-release-readiness`
 
 Current active phase branch:
 
-- `level/starter-business-dashboard-reporting`
+- `level/starter-business-release-readiness`
 
 Current phase purpose:
 
-- implement the sixth `starter-business` slice through the shared dashboard and reporting base
+- freeze `starter-business-v1` with explicit verification and release instructions
 
 ## Tagging `starter-core-v1`
 
