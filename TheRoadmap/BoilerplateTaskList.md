@@ -228,7 +228,7 @@ Implementation notes:
 - [x] `[P1]` Review `.env.example` for missing defaults.
 - [x] `[P0]` Add CI workflow for lint, types, tests, and build.
 - [ ] `[P1]` Add devcontainer or docker support if desired.
-- [ ] `[P1]` Add release or boilerplate snapshot guidance.
+- [x] `[P1]` Add release or boilerplate snapshot guidance.
 
 Acceptance criteria:
 
@@ -240,6 +240,7 @@ Implementation notes:
 - `.env.example` now includes clearer boilerplate naming, PostgreSQL guidance, and Sanctum stateful domain defaults.
 - GitHub Actions now run non-destructive formatting checks, ESLint, type checks, build verification, and the test suite.
 - `composer setup` now matches the documented local bootstrap path more closely.
+- Release guidance now includes a minimal freeze verification pass and tag commands for `starter-core-v1`.
 
 ## Phase 10: Optional Extensions
 
@@ -302,7 +303,7 @@ Implementation notes:
 - Export center now exists as a reusable surface for future CSV, PDF, and print actions.
 - The first working print/export examples are users CSV download and a print-friendly workspace summary page.
 - `starterCoreV1.md` now acts as the release-freeze checklist for the first stable `starter-core` tag.
-- The remaining freeze items are now explicit: final CRUD wrappers and release-readiness closeout.
+- The remaining freeze items were final CRUD wrappers and release-readiness closeout, and both are now complete.
 
 ## First Implementation Slice
 

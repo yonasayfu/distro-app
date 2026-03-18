@@ -6741,3 +6741,176 @@ Why:
 - a reusable CRUD system needs both structure components and loading components
 - if multiple modules repeat the same card layout, extract it
 - the goal is not just less code; the goal is one obvious pattern for future modules
+
+## Entry 029: Release-Readiness Closeout
+
+### Goal
+
+Freeze `starter-core-v1` as an actual reusable release candidate instead of a feature-complete but loosely documented branch.
+
+### What triggered this batch
+
+By the previous batch, the code features were effectively done.
+
+What was still weak:
+
+- the repository still identified itself like a Laravel starter skeleton in Composer metadata
+- the release path existed in planning docs, but not in the main operator docs
+- the environment defaults and README needed one final pass against the real current stack
+
+This batch closes that last gap.
+
+### 1. `composer.json`
+
+Before:
+
+- Composer metadata still used Laravel's default starter identity
+
+Before example:
+
+```diff
+- "name": "laravel/vue-starter-kit",
+- "description": "The skeleton application for the Laravel framework.",
+```
+
+After:
+
+- the package metadata now identifies this repository as `starter-core`
+
+After example:
+
+```diff
++ "name": "yonassayfu/starter-core",
++ "description": "Reusable Laravel starter-core boilerplate for admin and public applications.",
+```
+
+Why:
+
+- release readiness is not only runtime code
+- package metadata should reflect the real reusable starter identity
+
+### 2. `.env.example`
+
+Before:
+
+- the default app name was generic
+- Herd guidance was not visible directly in the template
+
+After:
+
+- `APP_NAME` now defaults to `Starter Core`
+- a Herd-specific `APP_URL` example is documented inline
+
+Representative diff:
+
+```diff
+- APP_NAME="Laravel Boilerplate"
++ APP_NAME="Starter Core"
++ # For Laravel Herd, set APP_URL to your Herd domain, for example:
++ # APP_URL=https://distro-app.test
+```
+
+Why:
+
+- environment templates are part of the boilerplate product
+- a new clone should not need tribal knowledge just to line up branding and local URL configuration
+
+### 3. `README.md`
+
+Before:
+
+- the README described the project reasonably well
+- but it did not yet act like a freeze-level release guide
+
+After:
+
+- clarified the repository identity as `Starter Core`
+- documented Herd-aware local setup more explicitly
+- documented `composer run dev` as the non-Herd multi-process workflow
+- added deployment target guidance for Laravel Cloud, Forge, and generic VPS hosting
+- added a freeze verification block and tag commands for `starter-core-v1`
+
+Why:
+
+- release docs should answer install, run, deploy, and tag questions in one place
+
+### 4. `TheRoadmap/starterCoreV1.md`
+
+Before:
+
+- release-readiness closeout was still listed as open
+
+After:
+
+- the release-readiness item is now marked complete
+- the remaining freeze focus is now `none`
+- the success condition now explicitly includes release docs and tag workflow accuracy
+
+Why:
+
+- the freeze document should not lag behind the actual repository state
+
+### 5. `TheRoadmap/BoilerplateTaskList.md`
+
+Before:
+
+- Phase 9 still showed release guidance as incomplete
+
+After:
+
+- the release guidance task is now checked off
+- Phase 9 notes now mention the new freeze verification and tag guidance
+
+Why:
+
+- the tracker should reflect that `starter-core-v1` now has its snapshot/release instructions
+
+### 6. `TheRoadmap/gitguidance.md`
+
+Before:
+
+- branch history stopped at the previous batch
+- there was no concrete tag command sequence for `starter-core-v1`
+
+After:
+
+- added `phase-18-release-readiness-closeout`
+- updated the current active phase record
+- added the exact merge, verify, tag, and push flow for `starter-core-v1`
+
+Representative diff:
+
+```diff
++ git merge --ff-only phase-18-release-readiness-closeout
++ composer validate --strict
++ php artisan test --compact tests/Feature/Auth/AuthenticationTest.php tests/Feature/Admin/PolicyConventionTest.php tests/Feature/Admin/PageCrudTest.php
++ npm run types:check
++ npm run build
++ git tag starter-core-v1
++ git push origin starter-core-v1
+```
+
+Why:
+
+- release engineering should be reproducible
+- a reusable starter needs a clear promotion path from working branch to named baseline
+
+### Verification run
+
+- `composer validate --strict`
+- `php artisan test --compact tests/Feature/Auth/AuthenticationTest.php tests/Feature/Admin/PolicyConventionTest.php tests/Feature/Admin/PageCrudTest.php`
+
+### Important files
+
+- `composer.json`
+- `.env.example`
+- `README.md`
+- `TheRoadmap/starterCoreV1.md`
+- `TheRoadmap/BoilerplateTaskList.md`
+- `TheRoadmap/gitguidance.md`
+
+### What to remember
+
+- release readiness is a product-quality task, not a paperwork task
+- the repository name, env defaults, setup docs, and tag workflow should all describe the same starter
+- a boilerplate is only truly reusable once a fresh clone can be installed and released from the documentation alone

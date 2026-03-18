@@ -119,25 +119,25 @@ Why it matters:
 
 ### 1. Release readiness checklist
 
-Before tagging `starter-core-v1`, do a final release closeout.
+This closeout item is now complete.
 
-Required closeout:
+Completed:
 
-- review `.env.example`
-- confirm README install steps still match reality
-- confirm seeded accounts and role docs are accurate
-- confirm CI still reflects the current commands
-- define tag instructions in `gitguidance.md`
+- reviewed `.env.example` and aligned the default app identity with `starter-core`
+- confirmed README install, Herd, deployment, and seeded-account guidance matches the actual repository
+- confirmed CI commands still match the current Composer, npm, and test workflow
+- added explicit tag and release instructions to `gitguidance.md`
+- aligned Composer package metadata with the repository's starter identity
 
-Why:
+Why it matters:
 
-- a boilerplate release should be installable from docs without tribal knowledge
+- a boilerplate release should be installable and taggable from docs without tribal knowledge
 
 ## Remaining freeze focus
 
 The biggest remaining `starter-core-v1` items are now:
 
-- release-readiness closeout
+- none
 
 ## What is intentionally deferred to `starter-business`
 
@@ -201,3 +201,4 @@ When this freeze is complete, the repository should be described as:
 - core platform features are complete
 - the remaining open tracker items are either finished or explicitly deferred
 - a new project can clone the repository and understand what belongs in the base versus higher starter levels
+- release documentation, environment defaults, and tag workflow all match the actual codebase

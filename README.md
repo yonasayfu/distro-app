@@ -1,6 +1,6 @@
-# Distro App Boilerplate
+# Starter Core
 
-Reusable Laravel 12 boilerplate for admin-style applications built with Inertia, Vue, Fortify, Sanctum, and Spatie Permission.
+Reusable Laravel 12 starter-core boilerplate for admin and public applications built with Inertia, Vue, Fortify, Sanctum, and Spatie Permission.
 
 ## Stack
 
@@ -65,6 +65,8 @@ php artisan key:generate
 npm install
 ```
 
+If you use Laravel Herd, update `APP_URL` in `.env` to your Herd domain before browser testing.
+
 ### Database
 
 For SQLite:
@@ -92,6 +94,12 @@ npm run dev
 ```
 
 If you are using Laravel Herd, open the Herd project URL in the browser. You do not need `php artisan serve`.
+
+If you want the multi-process local workflow outside Herd, you can also run:
+
+```bash
+composer run dev
+```
 
 ### Baseline Verification
 
@@ -175,6 +183,18 @@ And supervise:
 - queue worker
 - scheduler
 
+### Deployment Targets
+
+- Laravel Cloud:
+  - good fit for this starter
+  - set production env values, run migrations on deploy, and enable queue plus scheduler support
+- Laravel Forge:
+  - good fit for this starter
+  - configure PHP, queue worker, scheduler, and deployment script with the baseline commands above
+- Generic VPS such as GoDaddy:
+  - workable only if you control PHP/FPM, cron, queue workers, and deployment steps yourself
+  - shared hosting is not a good target for this starter
+
 ## CI
 
 GitHub Actions verifies:
@@ -185,6 +205,26 @@ GitHub Actions verifies:
 - TypeScript checks
 - production asset build
 - Pest test suite
+
+## Release Freeze
+
+This repository is currently being frozen as `starter-core-v1`.
+
+Before tagging a release:
+
+```bash
+composer validate --strict
+php artisan test --compact tests/Feature/Auth/AuthenticationTest.php tests/Feature/Admin/PolicyConventionTest.php tests/Feature/Admin/PageCrudTest.php
+npm run types:check
+npm run build
+```
+
+Then tag and push:
+
+```bash
+git tag starter-core-v1
+git push origin starter-core-v1
+```
 
 ## Project Workflow
 

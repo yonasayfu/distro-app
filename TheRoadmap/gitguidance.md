@@ -144,14 +144,34 @@ Branch history so far:
 - `phase-15-auth-review-closeout`
 - `phase-16-policy-conventions`
 - `phase-17-crud-wrappers`
+- `phase-18-release-readiness-closeout`
 
 Current active phase branch:
 
-- `phase-17-crud-wrappers`
+- `phase-18-release-readiness-closeout`
 
 Current phase purpose:
 
-- close the remaining shared CRUD wrapper items required for `starter-core-v1`
+- close the final release-readiness items required for `starter-core-v1`
+
+## Tagging `starter-core-v1`
+
+Once the freeze checklist is complete, use this release flow:
+
+```bash
+git checkout main
+git pull
+git merge --ff-only phase-18-release-readiness-closeout
+composer validate --strict
+php artisan test --compact tests/Feature/Auth/AuthenticationTest.php tests/Feature/Admin/PolicyConventionTest.php tests/Feature/Admin/PageCrudTest.php
+npm run types:check
+npm run build
+git tag starter-core-v1
+git push origin main
+git push origin starter-core-v1
+```
+
+If your mainline branch is not `main`, replace it with the correct branch name.
 
 ## Important Security Note
 
