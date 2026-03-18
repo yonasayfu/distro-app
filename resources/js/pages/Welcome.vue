@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import PublicLayout from '@/layouts/public/PublicLayout.vue';
 import { dashboard, login, register } from '@/routes';
 import { index as handbookIndex } from '@/routes/handbook';
-import type { Auth } from '@/types';
+import type { Auth, SharedSettings } from '@/types';
 
 withDefaults(
     defineProps<{
@@ -29,6 +29,7 @@ withDefaults(
 
 const page = usePage();
 const auth = computed(() => page.props.auth as Auth);
+const settings = computed(() => page.props.settings as SharedSettings);
 const appName = computed(() => page.props.name as string ?? 'Laravel Boilerplate');
 
 const capabilityCards = [
@@ -133,6 +134,9 @@ const learningCards = [
                         polished public website, a controlled admin workspace, and reusable Laravel patterns for the
                         modules you add next.
                     </p>
+                    <p v-if="settings.publicTagline" class="mt-3 max-w-2xl text-sm leading-7 text-stone-600 md:text-base">
+                        {{ settings.publicTagline }}
+                    </p>
 
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                         <Button
@@ -157,9 +161,9 @@ const learningCards = [
                             as-child
                             class="rounded-full border-stone-900/15 bg-white/70 px-6"
                         >
-                            <Link :href="handbookIndex()">
+                            <Link :href="settings.publicCtaUrl ?? handbookIndex()">
                                 <BookOpenText class="size-4" />
-                                Read the handbook
+                                {{ settings.publicCtaLabel ?? 'Read the handbook' }}
                             </Link>
                         </Button>
                     </div>

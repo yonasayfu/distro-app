@@ -33,6 +33,23 @@ export type ManagedPage = {
     publicUrl: string | null;
 };
 
+export type ManagedSettingField = {
+    key: string;
+    label: string;
+    description: string;
+    type: string;
+    placeholder: string | null;
+    rows?: number;
+    value: string | null;
+};
+
+export type ManagedSettingGroup = {
+    key: string;
+    title: string;
+    description: string;
+    fields: ManagedSettingField[];
+};
+
 export type RoleOption = {
     name: string;
     label: string;

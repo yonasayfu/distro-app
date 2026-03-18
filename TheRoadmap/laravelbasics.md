@@ -7122,3 +7122,209 @@ Why:
 - create the next level from the frozen release tag
 - define the level boundary before implementation starts
 - reusable business foundations are different from domain modules
+
+## Entry 033: `starter-business` Settings Foundation
+
+### Goal
+
+Implement the first real `starter-business` module by adding a reusable settings foundation on top of `starter-core-v1`.
+
+### What we built
+
+This batch added a real business-level settings system for:
+
+- application identity
+- organization profile
+- public website shared copy
+
+It is not hardcoded in Vue components or `.env`. It is now persisted in the database and managed from an admin page.
+
+### 1. Settings storage model
+
+Files:
+
+- `app/Models/Setting.php`
+- `database/migrations/2026_03_18_081015_create_settings_table.php`
+- `database/seeders/SettingsSeeder.php`
+
+Before:
+
+- there was no shared settings table
+- public and app branding text lived directly in components or config values
+
+After:
+
+- added a `settings` table with:
+  - `group`
+  - `key`
+  - `value`
+- added a `Setting` model
+- added a seeder for known default values
+
+Representative change:
+
+```diff
++ $table->string('group')->index();
++ $table->string('key')->unique();
++ $table->text('value')->nullable();
+```
+
+Why:
+
+- a business starter needs persistent settings that can change per project without editing code
+
+### 2. Registry and store layer
+
+Files:
+
+- `app/Support/SettingRegistry.php`
+- `app/Support/SettingStore.php`
+
+Before:
+
+- there was no central definition of which settings exist
+
+After:
+
+- `SettingRegistry` defines the allowed settings and their group/type/default metadata
+- `SettingStore` resolves defaults plus stored values and exposes them to the rest of the app
+
+Why:
+
+- the settings layer should be typed and intentional, not an unbounded key-value dump
+- future modules can add settings by extending the registry instead of inventing a separate storage pattern
+
+### 3. Admin settings module
+
+Files:
+
+- `app/Http/Controllers/Admin/SettingsManagementController.php`
+- `app/Http/Requests/Admin/UpdateSettingsRequest.php`
+- `app/Policies/SettingPolicy.php`
+- `resources/js/pages/admin/Settings/Edit.vue`
+- `routes/web.php`
+
+Before:
+
+- there was no shared business settings page
+
+After:
+
+- added `GET /admin/settings`
+- added `PUT /admin/settings`
+- added policy-based authorization
+- added validation through a Form Request
+- added an Inertia page that renders grouped settings sections
+
+Representative change:
+
+```diff
++ Route::get('admin/settings', [SettingsManagementController::class, 'edit'])
++     ->middleware('permission:settings.view')
++     ->name('admin-settings.edit');
++
++ Route::put('admin/settings', [SettingsManagementController::class, 'update'])
++     ->middleware('permission:settings.update')
++     ->name('admin-settings.update');
+```
+
+Why:
+
+- this follows the same Laravel pattern as the rest of the starter:
+  - route middleware
+  - controller authorization
+  - Form Request validation
+  - Inertia page rendering
+
+### 4. RBAC integration
+
+Files:
+
+- `database/seeders/RolePermissionSeeder.php`
+- `app/Http/Controllers/Admin/RoleManagementController.php`
+- `resources/js/navigation/app.ts`
+
+Before:
+
+- settings was not part of the permission matrix
+
+After:
+
+- added:
+  - `settings.view`
+  - `settings.update`
+- `Admin` gets both
+- `Manager` gets view-only access
+- the settings module now appears in the sidebar only for roles with access
+
+Why:
+
+- business-level configuration should still obey the shared RBAC system
+
+### 5. Shared frontend props
+
+Files:
+
+- `app/Http/Middleware/HandleInertiaRequests.php`
+- `resources/js/types/settings.ts`
+- `resources/js/layouts/public/PublicLayout.vue`
+- `resources/js/pages/Welcome.vue`
+
+Before:
+
+- the public site and app branding mostly read from static strings
+
+After:
+
+- shared settings values now flow through Inertia props
+- the public layout footer and CTA now read from the database-backed settings layer
+- the shared app name prop now resolves from stored settings first
+
+Representative change:
+
+```diff
+- 'name' => config('app.name'),
++ 'name' => $sharedSettings['appDisplayName'],
++ 'settings' => $sharedSettings,
+```
+
+Why:
+
+- a settings system matters only if the UI actually consumes it
+
+### 6. Test coverage
+
+File:
+
+- `tests/Feature/Admin/SettingsManagementTest.php`
+
+What it proves:
+
+- `Admin` can view and update settings
+- updated settings are persisted
+- updated settings change shared public props
+- `Manager` can view but not update
+- `Member` is forbidden
+
+### Verification run
+
+- `php artisan migrate --no-interaction`
+- `php artisan wayfinder:generate --with-form --no-interaction`
+- `php artisan test --compact tests/Feature/Admin/SettingsManagementTest.php tests/Feature/Public/PublicPageTest.php`
+- `npm run types:check`
+- `npm run build`
+- `vendor/bin/pint --dirty --format agent`
+
+### Important files
+
+- `app/Support/SettingRegistry.php`
+- `app/Support/SettingStore.php`
+- `app/Http/Controllers/Admin/SettingsManagementController.php`
+- `app/Http/Middleware/HandleInertiaRequests.php`
+- `resources/js/pages/admin/Settings/Edit.vue`
+
+### What to remember
+
+- a reusable business-level settings system needs both storage and a fixed registry
+- settings should flow through the same RBAC, policy, validation, and Inertia patterns as the rest of the app
+- if the UI does not consume the stored values, the settings module is only a form, not a real foundation

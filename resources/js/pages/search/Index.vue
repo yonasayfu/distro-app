@@ -8,7 +8,7 @@ import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index as searchIndex } from '@/routes/search';
+import { index as searchIndex } from '@/routes/search/index';
 import type { BreadcrumbItem, SearchFilters, SearchResultGroup } from '@/types';
 
 type Props = {

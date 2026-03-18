@@ -13,7 +13,7 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { dashboard, home, login, register } from '@/routes';
-import type { Auth } from '@/types';
+import type { Auth, SharedSettings } from '@/types';
 
 withDefaults(defineProps<{
     title?: string;
@@ -23,7 +23,8 @@ withDefaults(defineProps<{
 
 const page = usePage();
 const auth = computed(() => page.props.auth as Auth);
-const appName = computed(() => page.props.name as string ?? 'Laravel Boilerplate');
+const settings = computed(() => page.props.settings as SharedSettings);
+const appName = computed(() => settings.value.publicSiteTitle ?? (page.props.name as string) ?? 'Starter Core');
 const canRegister = computed(() => page.props.canRegister as boolean ?? false);
 const mobileMenuOpen = ref(false);
 
@@ -175,8 +176,7 @@ const primaryAction = computed(() => {
                 <div>
                     <div class="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-stone-500">Foundation</div>
                     <p class="mt-3 max-w-xl text-sm leading-7 text-stone-700">
-                        A reusable Laravel platform with a public website layer, private admin shell, RBAC,
-                        notifications, audit logs, and API baseline.
+                        {{ settings.publicFooterText ?? 'A reusable Laravel platform with a public website layer, private admin shell, RBAC, notifications, audit logs, and API baseline.' }}
                     </p>
                 </div>
                 <div>

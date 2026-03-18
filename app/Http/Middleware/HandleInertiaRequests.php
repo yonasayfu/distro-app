@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\SettingStore;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Middleware;
@@ -37,10 +38,12 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $sharedSettings = SettingStore::shared();
 
         return [
             ...parent::share($request),
-            'name' => config('app.name'),
+            'name' => $sharedSettings['appDisplayName'],
+            'settings' => $sharedSettings,
             'auth' => [
                 'user' => $user,
                 'roles' => $user?->getRoleNames()->values()->all() ?? [],
@@ -50,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                     'viewSearch' => $user?->can('search.view') ?? false,
                     'viewHandbook' => $user?->can('handbook.view') ?? false,
                     'viewExports' => $user?->can('exports.view') ?? false,
+                    'manageSettings' => $user?->can('settings.view') ?? false,
                     'managePages' => $user?->can('pages.view') ?? false,
                     'manageUsers' => $user?->can('users.view') ?? false,
                     'manageRoles' => $user?->can('roles.view') ?? false,

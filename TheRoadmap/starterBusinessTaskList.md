@@ -8,10 +8,10 @@ Status keys:
 
 ## Phase B0: Scope Lock
 
-- [ ] `[P0]` Confirm `starter-business` starts from `starter-core-v1`.
-- [ ] `[P0]` Confirm domain exclusions so ERP/ecommerce/HR features stay out of this level.
-- [ ] `[P0]` Define the `starter-business-v1` freeze boundary.
-- [ ] `[P1]` Map each new feature to business-level reuse, not domain logic.
+- [x] `[P0]` Confirm `starter-business` starts from `starter-core-v1`.
+- [x] `[P0]` Confirm domain exclusions so ERP/ecommerce/HR features stay out of this level.
+- [x] `[P0]` Define the `starter-business-v1` freeze boundary.
+- [x] `[P1]` Map each new feature to business-level reuse, not domain logic.
 
 Acceptance criteria:
 
@@ -20,16 +20,23 @@ Acceptance criteria:
 
 ## Phase B1: Settings Foundation
 
-- [ ] `[P0]` Define a reusable settings storage strategy.
-- [ ] `[P0]` Add application settings management.
-- [ ] `[P0]` Add organization profile settings.
-- [ ] `[P1]` Add public website shared settings such as contact/footer basics.
-- [ ] `[P1]` Add typed shared frontend settings props.
-- [ ] `[P1]` Add settings tests.
+- [x] `[P0]` Define a reusable settings storage strategy.
+- [x] `[P0]` Add application settings management.
+- [x] `[P0]` Add organization profile settings.
+- [x] `[P1]` Add public website shared settings such as contact/footer basics.
+- [x] `[P1]` Add typed shared frontend settings props.
+- [x] `[P1]` Add settings tests.
 
 Acceptance criteria:
 
 - app-wide and organization-wide configuration no longer requires hardcoded values
+
+Implementation notes:
+
+- shared settings now persist through the `settings` table instead of hardcoded config or page-local constants
+- the first business-level settings scope covers application identity, organization profile, and public website copy
+- `HandleInertiaRequests` now shares resolved settings values so the public layout and shell branding can read from the database
+- `Admin > Settings` is now a real permission-aware module with policy checks, activity logging, and Pest coverage
 
 ## Phase B2: Media and File Foundation
 

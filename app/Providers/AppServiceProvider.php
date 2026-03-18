@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Models\Page;
+use App\Models\Setting;
 use App\Models\User;
 use App\Policies\PagePolicy;
 use App\Policies\RolePolicy;
+use App\Policies\SettingPolicy;
 use App\Policies\UserPolicy;
 use App\Support\ActivityLogger;
 use Carbon\CarbonImmutable;
@@ -46,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Page::class, PagePolicy::class);
+        Gate::policy(Setting::class, SettingPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
 
         Gate::before(fn (User $user, string $ability): ?bool => $user->hasRole('Admin') ? true : null);

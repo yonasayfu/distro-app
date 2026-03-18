@@ -147,14 +147,15 @@ Branch history so far:
 - `phase-18-release-readiness-closeout`
 - `phase-19-starter-core-usage-guidance`
 - `level/starter-business-planning`
+- `level/starter-business-settings-foundation`
 
 Current active phase branch:
 
-- `level/starter-business-planning`
+- `level/starter-business-settings-foundation`
 
 Current phase purpose:
 
-- define the roadmap, scope, and freeze plan for `starter-business`
+- implement the first `starter-business` slice through the shared settings foundation
 
 ## Tagging `starter-core-v1`
 

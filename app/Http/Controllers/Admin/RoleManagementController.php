@@ -210,6 +210,8 @@ class RoleManagementController extends Controller
             'dashboard.view' => 'Allows the role to enter the dashboard workspace.',
             'search.view' => 'Allows use of the shared global search page across enabled modules.',
             'exports.view' => 'Allows access to the shared export and print center.',
+            'settings.view' => 'Shows the shared business settings workspace and its read-only metadata.',
+            'settings.update' => 'Allows updating shared application, organization, and public website settings.',
             'pages.view' => 'Shows the public pages module and allows access to the page index.',
             'pages.create' => 'Allows creating new public pages for the guest-facing website.',
             'pages.update' => 'Allows editing page content, slug, SEO, and publish state.',

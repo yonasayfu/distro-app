@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\PageManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
+use App\Http\Controllers\Admin\SettingsManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ExportCenterController;
 use App\Http\Controllers\GlobalSearchController;
@@ -46,6 +47,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('admin/pages', [PageManagementController::class, 'index'])
         ->middleware('permission:pages.view')
         ->name('pages.index');
+
+    Route::get('admin/settings', [SettingsManagementController::class, 'edit'])
+        ->middleware('permission:settings.view')
+        ->name('admin-settings.edit');
+
+    Route::put('admin/settings', [SettingsManagementController::class, 'update'])
+        ->middleware('permission:settings.update')
+        ->name('admin-settings.update');
 
     Route::get('admin/pages/create', [PageManagementController::class, 'create'])
         ->middleware('permission:pages.create')

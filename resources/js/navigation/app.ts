@@ -4,11 +4,13 @@ import {
     FileOutput,
     FileText,
     LayoutGrid,
+    Settings2,
     Shield,
     ScrollText,
     Users,
 } from 'lucide-vue-next';
 import { index as activityLogsIndex } from '@/routes/activity-logs';
+import { edit as adminSettingsEdit } from '@/routes/admin-settings';
 import { dashboard } from '@/routes';
 import { index as exportsIndex } from '@/routes/exports';
 import { index as handbookIndex } from '@/routes/handbook';
@@ -61,6 +63,12 @@ export const appNavigation: NavGroup[] = [
                 href: exportsIndex(),
                 icon: FileOutput,
                 permission: 'exports.view',
+            },
+            {
+                title: 'Settings',
+                href: adminSettingsEdit(),
+                icon: Settings2,
+                permission: 'settings.view',
             },
             {
                 title: 'Pages',
